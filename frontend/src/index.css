@@ -1,0 +1,97 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-on-surface font-body-md antialiased overflow-x-hidden;
+  }
+}
+
+@layer utilities {
+  /* Glassmorphism panel - the core surface treatment across GlowCut */
+  .glass-panel {
+    background: rgba(30, 30, 30, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .glass-card {
+    background: rgba(30, 30, 30, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  /* Neon glow effects - simulate light-emitting elements */
+  .neon-glow-orange {
+    box-shadow: 0 0 15px rgba(255, 95, 31, 0.4);
+  }
+
+  .neon-glow-emerald,
+  .neon-glow-green {
+    box-shadow: 0 0 15px rgba(102, 221, 139, 0.4);
+  }
+
+  .edge-light {
+    border-image: linear-gradient(to bottom right, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0)) 1;
+  }
+
+  .emerald-overlay {
+    background: linear-gradient(180deg, rgba(15, 15, 15, 0.4) 0%, rgba(0, 57, 25, 0.7) 100%);
+  }
+
+  .hologram-effect {
+    background: radial-gradient(circle at center, rgba(102, 221, 139, 0.2) 0%, transparent 70%);
+  }
+
+  .map-gradient-overlay {
+    background: linear-gradient(to bottom, transparent 70%, #131313 100%);
+  }
+
+  .text-gradient-primary {
+    background: linear-gradient(135deg, #ffb59c 0%, #ff5f1f 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
+
+/* Custom scrollbar - matches the Cyber-Chic aesthetic */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #131313;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #353535;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #0e0e0e;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #ff5f1f;
+  border-radius: 10px;
+}
