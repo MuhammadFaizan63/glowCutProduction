@@ -1,0 +1,175 @@
+🔹  ---   1. register — User signup ho raha hai -------
+
+👉 Is function me kya ho raha hai:
+
+User se username, email, password liya
+Check kiya:
+user already exist to nahi?
+Password ko hash kiya (security ke liye)
+Database me new user create kiya
+Ek refresh token (7 days) banaya
+Uska hash session DB me store kiya
+Ek access token (15 min) banaya
+Refresh token ko Cookie me store kiya
+
+👉 Final output:
+
+User create ho gaya
+Access token mil gaya
+Refresh token browser cookie me save ho gaya
+
+📌 Simple line:
+👉 User register hota hai + login ho jata hai automatically
+
+🔹------    2. refreshToken — Access token dobara lena ------
+
+👉 Problem:
+Access token sirf 15 min ka hota hai
+
+👉 Solution:
+Refresh token use karke naya access token banate ho
+
+👉 Flow:
+
+Cookie se refresh token uthaya
+Verify kiya (valid hai ya nahi)
+Uska hash DB me check kiya (session exist?)
+Agar valid:
+Naya access token generate
+Naya refresh token bhi generate (rotation 🔥)
+Session update ki
+
+👉 Final:
+
+Naya access token mil gaya
+Naya refresh token cookie me set
+
+📌 Simple line:
+👉 User bina login kiye dobara access le sakta hai
+
+🔹------    3. getMe — Current user ka data lena ------
+
+👉 Flow:
+
+Header se access token liya
+Verify kiya
+Token se user id nikali
+Database se user find kiya
+
+👉 Final:
+
+User ka data return
+
+📌 Simple line:
+👉 “Main kaun hoon?” ka answer deta hai
+
+🔹------    4. logout — User logout ho raha hai ------
+
+👉 Flow:
+
+Cookie se refresh token liya
+Uska hash banaya
+DB me session find ki
+Session ko revoked = true kar diya
+Cookie delete kar di
+
+👉 Final:
+
+User completely logout
+
+📌 Simple line:
+👉 Session destroy + token useless
+
+
+
+
+
+
+
+
+
+
+
+
+
+🔐 🔹 1. register — Signup + auto login
+
+👉 Kya ho raha hai:
+
+User data liya (username, email, password)
+Check: user already exist?
+Password hash kiya (security)
+User database me save
+Refresh token (7 days) banaya
+Uska hash session DB me store
+Access token (15 min) banaya
+Refresh token cookie me save
+
+📌 Result:
+👉 User create + login dono ek sath
+
+🔐 🔹 2. login — Existing user login
+
+👉 Flow:
+
+Email se user find kiya
+Password hash karke compare kiya
+Agar match:
+Refresh token generate
+Session create
+Access token generate
+Cookie me refresh token save
+
+📌 Result:
+👉 User successfully login + tokens mil gaye
+
+🔄 🔹 3. refreshToken — Token renew system
+
+👉 Jab access token expire ho jaye:
+
+Cookie se refresh token liya
+Verify kiya
+Hash karke DB me session check kiya
+Agar valid:
+Naya access token
+Naya refresh token (rotation 🔥)
+Session update
+
+📌 Result:
+👉 User bina login kiye continue kar sakta hai
+
+👤 🔹 4. getMe — Current user data
+
+👉 Flow:
+
+Header se access token liya
+Verify kiya
+User ID nikali
+DB se user fetch kiya
+
+📌 Result:
+👉 Logged-in user ka data milta hai
+
+🚪 🔹 5. logout — Single device logout
+
+👉 Flow:
+
+Refresh token liya
+Hash banaya
+Session find ki
+revoked = true kar diya
+Cookie delete
+
+📌 Result:
+👉 Sirf current device logout
+
+🌍 🔹 6. logoutAll — All devices logout
+
+👉 Flow:
+
+Refresh token se user identify
+Us user ki saari sessions revoke
+Cookie delete
+
+📌 Result:
+👉 Har device se logout (mobile + laptop sab)
