@@ -27,7 +27,7 @@ const SLIDES = [
 
 export default function Signup() {
   const navigate = useNavigate();
-  const { loginAsGuest, login } = useAuth(); // signup ko hata diya kyunki directly integrate kar rahe hain
+  const { signup, loginAsGuest, login } = useAuth();
 
   const [mode, setMode] = useState('choice'); // 'choice' | 'email-form'
   const [slide, setSlide] = useState(0);
@@ -60,40 +60,12 @@ export default function Signup() {
     e.preventDefault();
     if (!validate()) return;
     setSubmitting(true);
-    
     try {
-      const response = await fetch('https://glow-cut-product-complete-backend.vercel.app/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: form.name,
-          phone: form.phone,
-          email: form.email,
-          password: form.password,
-          city: form.city,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        // Agar register hote hi backend direct login token de raha hai:
-        if (data.token) {
-          localStorage.setItem('token', data.token);
-        } else if (data.data?.token) {
-          localStorage.setItem('token', data.data.token);
-        }
-
-        toast.success(data.message || 'Welcome to GlowCut!');
-        navigate('/');
-      } else {
-        toast.error(data.message || 'Registration failed — please try again');
-      }
-    } catch (error) {
-      console.error('Signup Error:', error);
-      toast.error('Something went wrong. Please try again!');
+      await signup({ name: form.name, phone: form.phone, email: form.email, city: form.city });
+      toast.success('Welcome to GlowCut!');
+      navigate('/');
+    } catch {
+      toast.error('Registration failed — please try again');
     } finally {
       setSubmitting(false);
     }
