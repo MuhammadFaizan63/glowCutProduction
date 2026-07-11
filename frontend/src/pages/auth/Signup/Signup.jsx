@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { MdMail, MdLock, MdPerson } from 'react-icons/md';
+import { useNavigate, Link } from 'react-router-dom';
+import { MdMail, MdLock, MdPerson, MdPhone, MdLocationCity } from 'react-icons/md';
 import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 import Loader from '../../../components/ui/Loader';
 import { useAuth } from '../../../hooks/useAuth';
+
+const CITIES = ['Karachi', 'Lahore', 'Islamabad', 'Faisalabad', 'Peshawar', 'Multan'];
 
 const SLIDES = [
   {
@@ -28,25 +31,27 @@ export default function Signup() {
 
   const [mode, setMode] = useState('choice'); // 'choice' | 'email-form'
   const [slide, setSlide] = useState(0);
-  const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [form, setForm] = useState({ name: '', phone: '', email: '', password: '', city: '' });
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
   React.useEffect(() => {
-    const interval = setInterval(() => {
-      setSlide((s) => (s + 1) % SLIDES.length);
-    }, 4000);
+    const interval = setInterval(() => setSlide((s) => (s + 1) % SLIDES.length), 4000);
     return () => clearInterval(interval);
   }, []);
 
   const validate = () => {
     const next = {};
-    if (!form.name.trim()) next.name = 'Please enter your name';
+    if (!form.name.trim()) next.name = 'Full name is required';
+    if (!form.phone.trim()) next.phone = 'Phone number is required';
+    else if (!/^0\d{10}$/.test(form.phone.replace(/\s/g, '')))
+      next.phone = 'Enter a valid Pakistani number (e.g. 03001234567)';
     if (!form.email.trim()) next.email = 'Email is required';
     else if (!/^\S+@\S+\.\S+$/.test(form.email)) next.email = 'Enter a valid email';
     if (!form.password || form.password.length < 6)
       next.password = 'Password must be at least 6 characters';
+    if (!form.city) next.city = 'Please select your city';
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -56,10 +61,11 @@ export default function Signup() {
     if (!validate()) return;
     setSubmitting(true);
     try {
-      await signup({ name: form.name, email: form.email, method: 'email' });
+      await signup({ name: form.name, phone: form.phone, email: form.email, city: form.city });
+      toast.success('Welcome to GlowCut!');
       navigate('/');
     } catch {
-      // toast handled in context
+      toast.error('Registration failed — please try again');
     } finally {
       setSubmitting(false);
     }
@@ -69,6 +75,7 @@ export default function Signup() {
     setGoogleLoading(true);
     try {
       await login({ email: 'google.user@gmail.com', password: 'google-oauth' });
+      toast.success('Signed in with Google!');
       navigate('/');
     } finally {
       setGoogleLoading(false);
@@ -77,8 +84,11 @@ export default function Signup() {
 
   const handleGuest = () => {
     loginAsGuest();
+    toast('Browsing as guest — booking is disabled', { icon: '👀' });
     navigate('/');
   };
+
+  const setField = (key) => (e) => setForm({ ...form, [key]: e.target.value });
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-xl w-full max-w-6xl items-center">
@@ -97,7 +107,6 @@ export default function Signup() {
             <Loader variant="scan" className="mt-md" />
           </div>
         </div>
-
         <div className="text-center w-full">
           <div className="h-24 overflow-hidden relative">
             <AnimatePresence mode="wait">
@@ -135,7 +144,7 @@ export default function Signup() {
         <div className="glass-panel w-full max-w-md p-lg rounded-xl shadow-2xl flex flex-col">
           <div className="mb-lg">
             <h3 className="font-headline-md text-headline-md text-white mb-xs">
-              Welcome to GlowCut
+              Create Your Account
             </h3>
             <p className="font-body-md text-on-surface-variant">
               Elevate your grooming experience with precision and AI-driven style.
@@ -168,7 +177,6 @@ export default function Signup() {
                   )}
                   Continue with Google
                 </Button>
-
                 <Button
                   variant="ghost"
                   size="full"
@@ -186,39 +194,53 @@ export default function Signup() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onSubmit={handleEmailSubmit}
-                className="space-y-md"
+                className="space-y-sm"
               >
                 <Input
-                  name="name"
-                  label="Full Name"
-                  placeholder="Ayesha Khan"
-                  icon={MdPerson}
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  error={errors.name}
+                  name="name" label="Full Name" placeholder="Muhammad Faizan"
+                  icon={MdPerson} value={form.name} onChange={setField('name')}
+                  error={errors.name} variant="filled"
                 />
                 <Input
-                  name="email"
-                  type="email"
-                  label="Email"
-                  placeholder="you@example.com"
-                  icon={MdMail}
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  error={errors.email}
+                  name="phone" label="Phone Number" placeholder="03001234567"
+                  icon={MdPhone} value={form.phone} onChange={setField('phone')}
+                  error={errors.phone} variant="filled"
                 />
                 <Input
-                  name="password"
-                  type="password"
-                  label="Password"
-                  placeholder="At least 6 characters"
-                  icon={MdLock}
-                  value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  error={errors.password}
+                  name="email" type="email" label="Email" placeholder="you@example.com"
+                  icon={MdMail} value={form.email} onChange={setField('email')}
+                  error={errors.email} variant="filled"
                 />
+                <Input
+                  name="password" type="password" label="Password" placeholder="At least 6 characters"
+                  icon={MdLock} value={form.password} onChange={setField('password')}
+                  error={errors.password} variant="filled"
+                />
+                {/* City Dropdown */}
+                <div className="flex flex-col gap-xs">
+                  <label className="font-label-md text-label-md text-on-surface-variant">
+                    City <span className="text-error ml-1">*</span>
+                  </label>
+                  <div className="relative">
+                    <MdLocationCity className="absolute left-3 top-1/2 -translate-y-1/2 text-outline text-lg pointer-events-none" />
+                    <select
+                      value={form.city}
+                      onChange={setField('city')}
+                      className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-3 text-white font-body-md focus:outline-none focus:border-primary-container appearance-none"
+                    >
+                      <option value="" disabled className="bg-surface">Select your city</option>
+                      {CITIES.map((c) => (
+                        <option key={c} value={c} className="bg-surface">{c}</option>
+                      ))}
+                    </select>
+                  </div>
+                  {errors.city && (
+                    <p className="text-error text-caption font-caption">{errors.city}</p>
+                  )}
+                </div>
+
                 <Button type="submit" variant="primary" size="full" loading={submitting}>
-                  Create Account
+                  Register Account
                 </Button>
                 <button
                   type="button"
@@ -245,14 +267,21 @@ export default function Signup() {
             </button>
           </div>
 
-          <p className="mt-xl text-center text-caption font-caption text-on-tertiary-fixed-variant leading-relaxed">
-            By continuing, you agree to GlowCut's <br />
+          <p className="mt-md text-center text-body-md text-on-surface-variant">
+            Already have an account?{' '}
+            <Link to="/auth/login" className="text-primary-container font-bold hover:text-primary transition-colors">
+              Login
+            </Link>
+          </p>
+
+          <p className="mt-md text-center text-caption font-caption text-on-tertiary-fixed-variant leading-relaxed">
+            By continuing, you agree to GlowCut's{' '}
             <a className="text-on-surface-variant hover:text-primary transition-colors" href="#">
-              Terms of Service
+              Terms
             </a>{' '}
             &amp;{' '}
             <a className="text-on-surface-variant hover:text-primary transition-colors" href="#">
-              Privacy Policy
+              Privacy
             </a>
           </p>
         </div>

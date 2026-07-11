@@ -37,8 +37,8 @@ const STYLES = [
 
 const NAV_ITEMS = [
   { label: 'AR Mirror', icon: MdVisibility, active: true },
-  { label: 'Stylists', icon: MdContentCut, to: '/salons/nearby' },
-  { label: 'Services', icon: MdAutoAwesome, to: '/salons/nearby' },
+  { label: 'Stylists', icon: MdContentCut, to: '/stylists' },
+  { label: 'Services', icon: MdAutoAwesome, to: '/services' },
   { label: 'Gallery', icon: MdAutoStories, to: '/salons/style-gallery' },
 ];
 

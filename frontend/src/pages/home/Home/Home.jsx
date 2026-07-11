@@ -1,15 +1,114 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   MdLocationOn,
   MdArrowForward,
   MdFace,
   MdBrush,
+  MdStar,
+  MdAccessTime,
+  MdExpandMore,
+  MdMyLocation,
 } from 'react-icons/md';
 import Button from '../../../components/ui/Button';
 import Card from '../../../components/ui/Card';
 import SalonCard from '../../../components/salon/SalonCard';
 import { useSalonList } from '../../../hooks/useSalon';
+
+/* ─── Area-based salon data ─────────────────────────────────────── */
+const AREA_SALONS = {
+  'Gulshan-e-Iqbal': [
+    { id: 'gs-1', name: 'Royal Cuts Gulshan', rating: 4.8, address: 'Block 13-D, Gulshan-e-Iqbal', token: 14, waitMins: 15, pinX: 62, pinY: 38 },
+    { id: 'gs-2', name: 'Urban Edge Studio', rating: 4.6, address: 'Block 6, University Road', token: 7, waitMins: 8, pinX: 48, pinY: 55 },
+  ],
+  Clifton: [
+    { id: 'cl-1', name: 'Clifton Premium Salon', rating: 4.9, address: 'Block 5, Clifton', token: 3, waitMins: 5, pinX: 30, pinY: 65 },
+    { id: 'cl-2', name: 'The Chrome Lounge', rating: 4.7, address: 'Khayaban-e-Iqbal, DHA', token: 21, waitMins: 22, pinX: 45, pinY: 72 },
+  ],
+  DHA: [
+    { id: 'dha-1', name: 'Modern Cuts PECHS', rating: 4.8, address: 'Phase II, DHA', token: 9, waitMins: 12, pinX: 70, pinY: 60 },
+    { id: 'dha-2', name: 'Blaze Barbershop DHA', rating: 4.5, address: 'Badar Commercial, DHA', token: 16, waitMins: 18, pinX: 80, pinY: 45 },
+  ],
+  'Gulistan-e-Johar': [
+    { id: 'gj-1', name: 'Johar Cuts & Style', rating: 4.4, address: 'Johar Chowrangi', token: 2, waitMins: 3, pinX: 55, pinY: 25 },
+  ],
+  'North Nazimabad': [
+    { id: 'nn-1', name: 'North Elite Barbers', rating: 4.6, address: 'Block L, North Nazimabad', token: 11, waitMins: 14, pinX: 35, pinY: 30 },
+    { id: 'nn-2', name: 'Cyber Fade Studio', rating: 4.7, address: 'Block H, North Naz', token: 5, waitMins: 7, pinX: 22, pinY: 45 },
+  ],
+};
+const AREAS = Object.keys(AREA_SALONS);
+
+/** Glowing SVG dot-grid map with dynamic salon pins */
+function SalonMapSVG({ salons, area }) {
+  return (
+    <svg
+      viewBox="0 0 100 100"
+      className="w-full h-full"
+      xmlns="http://www.w3.org/2000/svg"
+      style={{ background: 'rgba(255,255,255,0.02)' }}
+    >
+      {/* Grid lines */}
+      {[10, 20, 30, 40, 50, 60, 70, 80, 90].map((v) => (
+        <g key={v}>
+          <line x1={v} y1="0" x2={v} y2="100" stroke="rgba(255,255,255,0.05)" strokeWidth="0.3" />
+          <line x1="0" y1={v} x2="100" y2={v} stroke="rgba(255,255,255,0.05)" strokeWidth="0.3" />
+        </g>
+      ))}
+      {/* Dot grid */}
+      {[15,30,45,60,75].map(x => [15,30,45,60,75].map(y => (
+        <circle key={`${x}-${y}`} cx={x} cy={y} r="0.6" fill="rgba(255,255,255,0.15)" />
+      )))}
+      {/* Area label */}
+      {area && (
+        <text x="50" y="8" textAnchor="middle" fontSize="3.5" fill="rgba(255,181,156,0.6)" fontFamily="sans-serif">
+          {area}
+        </text>
+      )}
+      {/* Salon pins */}
+      {salons.map((s, i) => (
+        <g key={s.id}>
+          {/* Glow ring */}
+          <circle cx={s.pinX} cy={s.pinY} r="5" fill="rgba(255,95,31,0.1)" />
+          {/* Pin dot */}
+          <circle
+            cx={s.pinX}
+            cy={s.pinY}
+            r="3"
+            fill={i === 0 ? '#FF5F1F' : '#66DD8B'}
+            style={{ filter: `drop-shadow(0 0 3px ${i === 0 ? '#FF5F1F' : '#66DD8B'})` }}
+          />
+          {/* Token badge */}
+          <rect
+            x={s.pinX - 6} y={s.pinY - 10}
+            width="12" height="5"
+            rx="2"
+            fill="rgba(26,26,26,0.9)"
+            stroke={i === 0 ? '#FF5F1F' : '#66DD8B'}
+            strokeWidth="0.4"
+          />
+          <text
+            x={s.pinX}
+            y={s.pinY - 6.5}
+            textAnchor="middle"
+            fontSize="2.5"
+            fill={i === 0 ? '#FF5F1F' : '#66DD8B'}
+            fontFamily="sans-serif"
+          >
+            #{s.token}
+          </text>
+        </g>
+      ))}
+      {/* User pin */}
+      {area && (
+        <>
+          <circle cx="50" cy="50" r="4" fill="rgba(102,221,139,0.15)" />
+          <circle cx="50" cy="50" r="2" fill="#66DD8B" style={{ filter: 'drop-shadow(0 0 4px #66DD8B)' }} />
+        </>
+      )}
+    </svg>
+  );
+}
 
 const STYLISTS = [
   {
@@ -53,12 +152,17 @@ const STYLISTS = [
 export default function Home() {
   const navigate = useNavigate();
   const { salons, isLoading } = useSalonList();
-  const [area, setArea] = useState('');
 
-  const handleAreaSearch = (e) => {
-    e.preventDefault();
-    navigate(`/salons/nearby${area ? `?area=${encodeURIComponent(area)}` : ''}`);
-  };
+  // Area finder state
+  const [selectedArea, setSelectedArea] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredAreaSalons = useMemo(() => {
+    if (!selectedArea) return [];
+    return (AREA_SALONS[selectedArea] || []).filter((s) =>
+      s.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [selectedArea, searchQuery]);
 
   return (
     <>
@@ -85,35 +189,82 @@ export default function Home() {
             stylists, and a cyber-chic atmosphere await.
           </p>
 
-          <Card edgeLight className="p-md max-w-md">
+          {/* ── Interactive Salon Finder ── */}
+          <Card edgeLight className="p-md max-w-lg w-full">
             <div className="flex items-center gap-sm mb-md">
-              <MdLocationOn className="text-primary-container text-xl" />
+              <MdMyLocation className="text-primary-container text-xl" />
               <h3 className="font-headline-md text-headline-md">Find Nearest Salon</h3>
             </div>
-            <div className="flex flex-col gap-md">
-              <div className="relative h-32 rounded-lg overflow-hidden border border-white/5">
-                <img
-                  alt="Location Map"
-                  className="w-full h-full object-cover"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzzKrIhBRP8ZkQ4xJ-SArC7kqB7cQyFdxlDf__pemmIpRb5KZez8O7KYrlXro9pYfR3HURBQZDS1u7SykinlMo3JQTGYM2QMnJK2OcoqFphKOqutRkV9QjipL1t0u5m_tXCOxInBcbEA6aFqV5QQOeV2v-BiZhC19JvTJmbcfC90UZDZtyVR-BhSYE494GmbICSKU2lkiJn8GvQu-1Qr_-4_wXX5h32FdCFia36gTialuO5fzzWiExcSnLUJLGHUvnKsRUQBGTxW4"
-                />
-                <div className="absolute inset-0 bg-primary-container/10 flex items-center justify-center">
-                  <div className="w-6 h-6 bg-primary-container rounded-full animate-pulse shadow-neon-orange border-2 border-white" />
+
+            {/* Area Dropdown */}
+            <div className="relative mb-sm">
+              <select
+                value={selectedArea}
+                onChange={(e) => { setSelectedArea(e.target.value); setSearchQuery(''); }}
+                className="w-full bg-white/5 border border-primary-container/40 rounded-lg px-4 py-3 text-white font-body-md focus:outline-none focus:border-primary-container appearance-none cursor-pointer"
+              >
+                <option value="" className="bg-surface">Select an area in Karachi…</option>
+                {AREAS.map((a) => (
+                  <option key={a} value={a} className="bg-surface">{a}</option>
+                ))}
+              </select>
+              <MdExpandMore className="absolute right-3 top-1/2 -translate-y-1/2 text-primary-container pointer-events-none" />
+            </div>
+
+            {/* Search within area */}
+            {selectedArea && (
+              <input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-white/5 border-0 border-b border-primary-container/40 focus:ring-0 focus:border-primary-container text-white placeholder-white/30 font-body-md px-2 py-2 mb-md"
+                placeholder={`Search salons in ${selectedArea}…`}
+              />
+            )}
+
+            {/* SVG Map */}
+            <div className="relative h-36 rounded-lg overflow-hidden border border-white/10 mb-md bg-surface-container-high">
+              <SalonMapSVG salons={filteredAreaSalons} area={selectedArea} />
+              {!selectedArea && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-on-surface-variant gap-xs">
+                  <MdLocationOn className="text-primary-container text-2xl" />
+                  <p className="font-label-md text-label-md text-xs">Select an area to see pins</p>
+                </div>
+              )}
+            </div>
+
+            {/* Salon result cards */}
+            {selectedArea && filteredAreaSalons.length === 0 && (
+              <p className="text-center text-on-surface-variant text-sm py-sm">
+                No salons found in {selectedArea}
+              </p>
+            )}
+            {filteredAreaSalons.map((s) => (
+              <div
+                key={s.id}
+                className="flex items-center justify-between p-sm rounded-lg bg-white/5 border border-white/5 hover:border-primary-container/30 transition-all mb-xs"
+              >
+                <div className="flex-1">
+                  <p className="font-label-md text-on-surface font-bold text-sm">{s.name}</p>
+                  <p className="text-caption text-on-surface-variant flex items-center gap-xs">
+                    <MdLocationOn className="text-xs" /> {s.address}
+                  </p>
+                  <p className="text-[11px] text-secondary mt-xs">
+                    🎫 Active Token: #{s.token} &nbsp;·&nbsp; ⏱ Avg Wait: {s.waitMins} mins
+                  </p>
+                </div>
+                <div className="flex flex-col items-end gap-xs ml-md">
+                  <span className="flex items-center gap-xs text-secondary font-bold text-xs">
+                    <MdStar className="text-xs" />{s.rating}
+                  </span>
+                  <button
+                    onClick={() => navigate(`/salons/${s.id}`)}
+                    className="text-[11px] px-sm py-xs bg-primary-container text-on-primary rounded-lg font-bold active:scale-95 transition-transform shadow-neon-orange-sm"
+                  >
+                    View Details
+                  </button>
                 </div>
               </div>
-              <form onSubmit={handleAreaSearch} className="flex gap-sm">
-                <input
-                  value={area}
-                  onChange={(e) => setArea(e.target.value)}
-                  className="flex-grow bg-white/5 border-0 border-b border-primary-container focus:ring-0 focus:border-primary-container text-white placeholder-white/30 font-body-md text-body-md px-2 py-2"
-                  placeholder="Enter your area..."
-                  type="text"
-                />
-                <Button type="submit" variant="secondary" size="sm">
-                  Search
-                </Button>
-              </form>
-            </div>
+            ))}
           </Card>
         </div>
       </section>
