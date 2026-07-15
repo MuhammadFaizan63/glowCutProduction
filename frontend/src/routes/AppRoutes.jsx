@@ -1,12 +1,16 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
+// Guard
+import AuthGuard from '../components/auth/AuthGuard';
+
 // Layouts
 import UserLayout from '../layouts/UserLayout';
 import AdminLayout from '../layouts/AdminLayout';
 import AuthLayout from '../layouts/AuthLayout';
 
-// Auth
+// Auth pages
+import Login from '../pages/auth/Login';
 import Signup from '../pages/auth/Signup';
 
 // Home
@@ -16,6 +20,10 @@ import Home from '../pages/home/Home';
 import NearbySalons from '../pages/salons/NearbySalons';
 import SalonDetail from '../pages/salons/SalonDetail';
 import StyleGallery from '../pages/salons/StyleGallery';
+
+// New split pages
+import Services from '../pages/services/Services';
+import Stylists from '../pages/stylists/Stylists';
 
 // Booking
 import ConfirmBooking from '../pages/booking/ConfirmBooking';
@@ -53,32 +61,50 @@ import NotFound from '../pages/NotFound';
 /**
  * AppRoutes
  *
- * Route tree organized by layout:
- *  - AuthLayout  -> /auth/*               (no header/footer/bottom-nav chrome)
- *  - UserLayout  -> everything client-facing (header + footer + mobile nav)
- *  - AdminLayout -> /admin/*              (sidebar + localized admin header)
- *  - ARVirtualMirror renders its own full-screen immersive chrome, so it is
- *    deliberately NOT nested inside UserLayout (it would duplicate nav bars).
+ * Gate logic:
+ *  - null (unauthenticated) → /auth/login (AuthGuard redirects)
+ *  - 'guest' → full browse access, booking actions blocked at component level
+ *  - 'authenticated' → unrestricted access
+ *
+ * ARVirtualMirror renders its own full-screen chrome → outside UserLayout.
  */
 export default function AppRoutes() {
   return (
     <Routes>
-      {/* ---------------- Auth ---------------- */}
+      {/* ── Public Auth (no guard needed) ── */}
       <Route element={<AuthLayout />}>
+        <Route path="/auth/login" element={<Login />} />
         <Route path="/auth/signup" element={<Signup />} />
       </Route>
 
-      {/* ---------------- Standalone (own chrome) ---------------- */}
-      <Route path="/ai/ar-mirror" element={<ARVirtualMirror />} />
+      {/* ── Standalone immersive (own chrome) ── */}
+      <Route
+        path="/ai/ar-mirror"
+        element={
+          <AuthGuard>
+            <ARVirtualMirror />
+          </AuthGuard>
+        }
+      />
 
-      {/* ---------------- User-facing app ---------------- */}
-      <Route element={<UserLayout />}>
+      {/* ── All guarded user-facing routes ── */}
+      <Route
+        element={
+          <AuthGuard>
+            <UserLayout />
+          </AuthGuard>
+        }
+      >
         <Route path="/" element={<Home />} />
 
         {/* Salons */}
         <Route path="/salons/nearby" element={<NearbySalons />} />
         <Route path="/salons/:id" element={<SalonDetail />} />
         <Route path="/salons/style-gallery" element={<StyleGallery />} />
+
+        {/* Split Service & Stylist pages */}
+        <Route path="/services" element={<Services />} />
+        <Route path="/stylists" element={<Stylists />} />
 
         {/* Booking */}
         <Route path="/booking/confirm" element={<ConfirmBooking />} />
@@ -106,14 +132,21 @@ export default function AppRoutes() {
         <Route path="/profile/privacy" element={<PrivacyCenter />} />
       </Route>
 
-      {/* ---------------- Admin ---------------- */}
-      <Route element={<AdminLayout />}>
+      {/* ── Admin ── */}
+      <Route
+        element={
+          <AuthGuard>
+            <AdminLayout />
+          </AuthGuard>
+        }
+      >
         <Route path="/admin/shop" element={<ShopkeeperDashboard />} />
         <Route path="/admin/global" element={<GlobalDashboard />} />
       </Route>
 
-      {/* ---------------- Fallbacks ---------------- */}
+      {/* ── Fallbacks / legacy redirects ── */}
       <Route path="/signup" element={<Navigate to="/auth/signup" replace />} />
+      <Route path="/login" element={<Navigate to="/auth/login" replace />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

@@ -123,7 +123,7 @@ export default function AIStyleConsultant() {
 
           <div className="flex flex-col gap-sm">
             <button
-              onClick={() => navigate('/salons/nearby')}
+              onClick={() => navigate('/ai/ar-mirror')}
               className="w-full bg-secondary text-on-secondary-container py-md rounded-xl font-sora font-bold text-headline-md shadow-neon-emerald flex items-center justify-center gap-md active:scale-[0.98] transition-all"
             >
               <MdCalendarToday />
