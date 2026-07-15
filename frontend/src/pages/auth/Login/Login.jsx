@@ -9,7 +9,7 @@ import { useAuth } from '../../../hooks/useAuth';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login, loginAsGuest } = useAuth();
+  const { loginAsGuest } = useAuth(); // custom hook se login ko hata diya kyunki hum directly yahan call kar rahe hain
 
   const [form, setForm] = useState({ identifier: '', password: '' });
   const [errors, setErrors] = useState({});
@@ -17,7 +17,7 @@ export default function Login() {
 
   const validate = () => {
     const e = {};
-    if (!form.identifier.trim()) e.identifier = 'Phone or email is required';
+    if (!form.identifier.trim()) e.identifier = 'Email is required';
     if (!form.password) e.password = 'Password is required';
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -27,12 +27,38 @@ export default function Login() {
     ev.preventDefault();
     if (!validate()) return;
     setSubmitting(true);
+
     try {
-      await login({ email: form.identifier, password: form.password });
-      toast.success('Welcome back!');
-      navigate('/');
-    } catch {
-      toast.error('Invalid credentials — try again');
+      const response = await fetch('https://glow-cut-product-complete-backend.vercel.app/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: form.identifier, // API jo email expect kar rahi hai
+          password: form.password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Token save karna (agar backend token return kar raha hai)
+        if (data.token) {
+          localStorage.setItem('token', data.token);
+        } else if (data.data?.token) {
+          localStorage.setItem('token', data.data.token);
+        }
+        
+        toast.success(data.message || 'Welcome back!');
+        navigate('/');
+      } else {
+        // Backend se aane wala error message dikhane ke liye
+        toast.error(data.message || 'Invalid credentials — try again');
+      }
+    } catch (error) {
+      console.error('Login Error:', error);
+      toast.error('Something went wrong. Please try again!');
     } finally {
       setSubmitting(false);
     }
@@ -45,7 +71,7 @@ export default function Login() {
   };
 
   return (
-    <div className="relative min-h-screen w-full flex flex-col items-center justify-center  overflow-hidden">
+    <div className="relative min-h-screen w-full flex flex-col items-center justify-center overflow-hidden">
       {/* Ambient glows */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-primary/10 rounded-full blur-[140px]" />
@@ -84,8 +110,8 @@ export default function Login() {
           <form onSubmit={handleLogin} className="space-y-md">
             <Input
               name="identifier"
-              label="Phone Number or Email"
-              placeholder="03001234567 or name@email.com"
+              label="Email"
+              placeholder="name@email.com"
               icon={MdPhone}
               value={form.identifier}
               onChange={(e) => setForm({ ...form, identifier: e.target.value })}
