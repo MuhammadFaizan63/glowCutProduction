@@ -8,7 +8,8 @@ import Input from '../../../components/ui/Input';
 import Loader from '../../../components/ui/Loader';
 import { useAuth } from '../../../hooks/useAuth';
 
-const CITIES = ['Karachi', 'Lahore', 'Islamabad', 'Faisalabad', 'Peshawar', 'Multan'];
+// Backend ke Schema match karne ke liye cities array
+const CITIES = ["Karachi", "Lahore", "Islamabad", "Peshawar", "Quetta", "Multan", "Faisalabad", "Hyderabad", "Sialkot", "Gujranwala"];
 
 const SLIDES = [
   {
@@ -27,11 +28,13 @@ const SLIDES = [
 
 export default function Signup() {
   const navigate = useNavigate();
-  const { signup, loginAsGuest, login } = useAuth();
+  const { loginAsGuest, login } = useAuth();
 
   const [mode, setMode] = useState('choice'); // 'choice' | 'email-form'
   const [slide, setSlide] = useState(0);
-  const [form, setForm] = useState({ name: '', phone: '', email: '', password: '', city: '' });
+  
+  // ⚡ Backend naming keys ke mutabiq state variables updates
+  const [form, setForm] = useState({ userName: '', PhoneNumber: '', email: '', password: '', cities: '' });
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -43,15 +46,20 @@ export default function Signup() {
 
   const validate = () => {
     const next = {};
-    if (!form.name.trim()) next.name = 'Full name is required';
-    if (!form.phone.trim()) next.phone = 'Phone number is required';
-    else if (!/^0\d{10}$/.test(form.phone.replace(/\s/g, '')))
-      next.phone = 'Enter a valid Pakistani number (e.g. 03001234567)';
+    if (!form.userName.trim()) next.userName = 'Full name is required';
+    
+    if (!form.PhoneNumber.trim()) next.PhoneNumber = 'Phone number is required';
+    else if (!/^0\d{10}$/.test(form.PhoneNumber.replace(/\s/g, '')))
+      next.PhoneNumber = 'Enter a valid Pakistani number (e.g. 03001234567)';
+      
     if (!form.email.trim()) next.email = 'Email is required';
     else if (!/^\S+@\S+\.\S+$/.test(form.email)) next.email = 'Enter a valid email';
+    
     if (!form.password || form.password.length < 6)
       next.password = 'Password must be at least 6 characters';
-    if (!form.city) next.city = 'Please select your city';
+      
+    if (!form.cities) next.cities = 'Please select your city';
+    
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -60,12 +68,35 @@ export default function Signup() {
     e.preventDefault();
     if (!validate()) return;
     setSubmitting(true);
+    
     try {
-      await signup({ name: form.name, phone: form.phone, email: form.email, city: form.city });
-      toast.success('Welcome to GlowCut!');
-      navigate('/');
-    } catch {
-      toast.error('Registration failed — please try again');
+      const response = await fetch('https://glow-cut-product-complete-backend.vercel.app/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userName: form.userName,
+          PhoneNumber: form.PhoneNumber,
+          email: form.email,
+          password: form.password,
+          cities: form.cities,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        toast.success(data.message || 'OTP sent successfully!');
+        // 🚀 Backend validation match hone par verification route par bhej dega
+        navigate('/auth/verify-otp', { state: { email: form.email } });
+      } else {
+        // Backend ka response status handling aur custom model errors return karna
+        toast.error(data.message || 'Registration failed');
+      }
+    } catch (error) {
+      console.error('Signup Error:', error);
+      toast.error('Something went wrong. Please try again!');
     } finally {
       setSubmitting(false);
     }
@@ -197,14 +228,14 @@ export default function Signup() {
                 className="space-y-sm"
               >
                 <Input
-                  name="name" label="Full Name" placeholder="Muhammad Faizan"
-                  icon={MdPerson} value={form.name} onChange={setField('name')}
-                  error={errors.name} variant="filled"
+                  name="userName" label="Full Name" placeholder="Muhammad Faizan"
+                  icon={MdPerson} value={form.userName} onChange={setField('userName')}
+                  error={errors.userName} variant="filled"
                 />
                 <Input
-                  name="phone" label="Phone Number" placeholder="03001234567"
-                  icon={MdPhone} value={form.phone} onChange={setField('phone')}
-                  error={errors.phone} variant="filled"
+                  name="PhoneNumber" label="Phone Number" placeholder="03001234567"
+                  icon={MdPhone} value={form.PhoneNumber} onChange={setField('PhoneNumber')}
+                  error={errors.PhoneNumber} variant="filled"
                 />
                 <Input
                   name="email" type="email" label="Email" placeholder="you@example.com"
@@ -224,8 +255,8 @@ export default function Signup() {
                   <div className="relative">
                     <MdLocationCity className="absolute left-3 top-1/2 -translate-y-1/2 text-outline text-lg pointer-events-none" />
                     <select
-                      value={form.city}
-                      onChange={setField('city')}
+                      value={form.cities}
+                      onChange={setField('cities')}
                       className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-3 text-white font-body-md focus:outline-none focus:border-primary-container appearance-none"
                     >
                       <option value="" disabled className="bg-surface">Select your city</option>
@@ -234,8 +265,8 @@ export default function Signup() {
                       ))}
                     </select>
                   </div>
-                  {errors.city && (
-                    <p className="text-error text-caption font-caption">{errors.city}</p>
+                  {errors.cities && (
+                    <p className="text-error text-caption font-caption">{errors.cities}</p>
                   )}
                 </div>
 

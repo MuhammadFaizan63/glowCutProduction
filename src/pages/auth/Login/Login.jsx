@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MdPhone, MdLock, MdArrowForward } from 'react-icons/md';
+import { MdEmail, MdLock, MdArrowForward } from 'react-icons/md';
 import toast from 'react-hot-toast';
 import Input from '../../../components/ui/Input';
 import Button from '../../../components/ui/Button';
-import { useAuth } from '../../../hooks/useAuth';
+import { useAuth } from '../../../hooks/useAuth'; // Context hook ko sahi use karne ke liye
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login, loginAsGuest } = useAuth();
+  
+  // 1️⃣ Apne useAuth hook se actual state/login functions nikalein
+  // Agar aapke useAuth me setToken ya user state update karne ka function hai, to use extract karein
+  const auth = useAuth(); 
 
   const [form, setForm] = useState({ identifier: '', password: '' });
   const [errors, setErrors] = useState({});
@@ -17,7 +20,11 @@ export default function Login() {
 
   const validate = () => {
     const e = {};
-    if (!form.identifier.trim()) e.identifier = 'Phone or email is required';
+    if (!form.identifier.trim()) {
+      e.identifier = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.identifier)) {
+      e.identifier = 'Please enter a valid email address';
+    }
     if (!form.password) e.password = 'Password is required';
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -27,25 +34,73 @@ export default function Login() {
     ev.preventDefault();
     if (!validate()) return;
     setSubmitting(true);
+
     try {
-      await login({ email: form.identifier, password: form.password });
-      toast.success('Welcome back!');
-      navigate('/');
-    } catch {
-      toast.error('Invalid credentials — try again');
+      const response = await fetch('https://glow-cut-product-complete-backend.vercel.app/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: form.identifier.trim(),
+          password: form.password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // 2️⃣ Token ko save karna (Dono key names ke sath safe side rehne ke liye)
+        const tokenToSave = data.accessToken || data.token;
+        if (tokenToSave) {
+          localStorage.setItem('token', tokenToSave);
+          localStorage.setItem('accessToken', tokenToSave);
+        }
+
+        // 3️⃣ Global Auth State Update karna (CRITICAL FIX)
+        // Agar aapke useAuth hook me custom login/setToken function hai, to use call karein:
+        if (auth && typeof auth.setToken === 'function') {
+          auth.setToken(tokenToSave);
+        } else if (auth && typeof auth.login === 'function') {
+          // Agar apka custom login function login(user, token) accept karta hai:
+          auth.login(data.user, tokenToSave);
+        }
+
+        toast.success(data.message || 'Welcome back!');
+        
+        // 4️⃣ Forcefully Redirect to UI (Home/Dashboard)
+        // Kuch cases me React Router state lost kar deta hai, isliye window trigger ya direct push safe hota hai
+        navigate('/'); 
+        
+      } else {
+        // Unverified User Handling
+        if (response.status === 401 || data.message?.toLowerCase().includes('not verified')) {
+          toast.error('Email not verified. Redirecting to verification page...');
+          setTimeout(() => {
+            navigate('/auth/verify-otp', { state: { email: form.identifier.trim() } });
+          }, 1500);
+        } else {
+          toast.error(data.message || 'Invalid credentials');
+        }
+      }
+    } catch (error) {
+      console.error('Login Error:', error);
+      toast.error('Something went wrong. Please check your connection.');
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleGuest = () => {
-    loginAsGuest();
+    if (auth && typeof auth.loginAsGuest === 'function') {
+      auth.loginAsGuest();
+    }
     toast('Browsing as guest — booking is disabled', { icon: '👀' });
     navigate('/');
   };
 
   return (
-    <div className="relative min-h-screen w-full flex flex-col items-center justify-center  overflow-hidden">
+    <div className="relative min-h-screen w-full flex flex-col items-center justify-center overflow-hidden">
       {/* Ambient glows */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-primary/10 rounded-full blur-[140px]" />
@@ -84,9 +139,9 @@ export default function Login() {
           <form onSubmit={handleLogin} className="space-y-md">
             <Input
               name="identifier"
-              label="Phone Number or Email"
-              placeholder="03001234567 or name@email.com"
-              icon={MdPhone}
+              label="Email"
+              placeholder="name@email.com"
+              icon={MdEmail}
               value={form.identifier}
               onChange={(e) => setForm({ ...form, identifier: e.target.value })}
               error={errors.identifier}
@@ -141,7 +196,7 @@ export default function Login() {
       </motion.div>
 
       <p className="relative z-10 mt-lg text-caption text-on-surface-variant/60 text-center px-margin-mobile">
-        © 2024 GlowCut Cyber-Chic Salons. All rights reserved.
+        © 2026 GlowCut Cyber-Chic Salons. All rights reserved.
       </p>
     </div>
   );

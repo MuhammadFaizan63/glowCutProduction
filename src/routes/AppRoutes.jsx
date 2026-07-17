@@ -12,6 +12,7 @@ import AuthLayout from '../layouts/AuthLayout';
 // Auth pages
 import Login from '../pages/auth/Login';
 import Signup from '../pages/auth/Signup';
+import VerifyOtp from '../pages/auth/VerifyOtp/VerifyOtp';
 
 // Home
 import Home from '../pages/home/Home';
@@ -55,6 +56,7 @@ import PrivacyCenter from '../pages/profile/PrivacyCenter';
 import ShopkeeperDashboard from '../pages/admin/ShopkeeperDashboard';
 import GlobalDashboard from '../pages/admin/GlobalDashboard';
 
+
 // Misc
 import NotFound from '../pages/NotFound';
 
@@ -75,7 +77,12 @@ export default function AppRoutes() {
       <Route element={<AuthLayout />}>
         <Route path="/auth/login" element={<Login />} />
         <Route path="/auth/signup" element={<Signup />} />
+        <Route path="/auth/verify-otp" element={<VerifyOtp />} />
+        <Route path="/role-selection" element={<RoleSelection />} />
+        <Route path="/setup-salon" element={<SalonSetup />} />
       </Route>
+
+
 
       {/* ── Standalone immersive (own chrome) ── */}
       <Route
