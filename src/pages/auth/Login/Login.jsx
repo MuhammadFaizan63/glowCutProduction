@@ -9,10 +9,9 @@ import { useAuth } from '../../../hooks/useAuth'; // Context hook ko sahi use ka
 
 export default function Login() {
   const navigate = useNavigate();
-  
+
   // 1️⃣ Apne useAuth hook se actual state/login functions nikalein
-  // Agar aapke useAuth me setToken ya user state update karne ka function hai, to use extract karein
-  const auth = useAuth(); 
+  const auth = useAuth();
 
   const [form, setForm] = useState({ identifier: '', password: '' });
   const [errors, setErrors] = useState({});
@@ -31,65 +30,97 @@ export default function Login() {
   };
 
   const handleLogin = async (ev) => {
-    ev.preventDefault();
-    if (!validate()) return;
-    setSubmitting(true);
+  ev.preventDefault();
+  if (!validate()) return;
+  setSubmitting(true);
 
-    try {
-      const response = await fetch('https://glow-cut-product-complete-backend.vercel.app/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: form.identifier.trim(),
-          password: form.password,
-        }),
-      });
+  try {
+    const response = await fetch('https://glow-cut-product-complete-backend.vercel.app/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: form.identifier.trim(),
+        password: form.password,
+      }),
+    });
 
-      const data = await response.json();
+    const data = await response.json();
 
-      if (response.ok && data.success) {
-        // 2️⃣ Token ko save karna (Dono key names ke sath safe side rehne ke liye)
-        const tokenToSave = data.accessToken || data.token;
-        if (tokenToSave) {
-          localStorage.setItem('token', tokenToSave);
-          localStorage.setItem('accessToken', tokenToSave);
-        }
-
-        // 3️⃣ Global Auth State Update karna (CRITICAL FIX)
-        // Agar aapke useAuth hook me custom login/setToken function hai, to use call karein:
-        if (auth && typeof auth.setToken === 'function') {
-          auth.setToken(tokenToSave);
-        } else if (auth && typeof auth.login === 'function') {
-          // Agar apka custom login function login(user, token) accept karta hai:
-          auth.login(data.user, tokenToSave);
-        }
-
-        toast.success(data.message || 'Welcome back!');
-        
-        // 4️⃣ Forcefully Redirect to UI (Home/Dashboard)
-        // Kuch cases me React Router state lost kar deta hai, isliye window trigger ya direct push safe hota hai
-        navigate('/'); 
-        
-      } else {
-        // Unverified User Handling
-        if (response.status === 401 || data.message?.toLowerCase().includes('not verified')) {
-          toast.error('Email not verified. Redirecting to verification page...');
-          setTimeout(() => {
-            navigate('/auth/verify-otp', { state: { email: form.identifier.trim() } });
-          }, 1500);
-        } else {
-          toast.error(data.message || 'Invalid credentials');
-        }
+    if (response.ok && data.success) {
+      // 1️⃣ Token ko save karna
+      const tokenToSave = data.accessToken || data.token;
+      if (tokenToSave) {
+        localStorage.setItem('token', tokenToSave);
+        localStorage.setItem('accessToken', tokenToSave);
       }
-    } catch (error) {
-      console.error('Login Error:', error);
-      toast.error('Something went wrong. Please check your connection.');
-    } finally {
-      setSubmitting(false);
+
+      // 2️⃣ Global Auth State Update karna
+      if (auth && typeof auth.setToken === 'function') {
+        auth.setToken(tokenToSave);
+      } else if (auth && typeof auth.login === 'function') {
+        auth.login(data.user, tokenToSave);
+      }
+
+      toast.success(data.message || 'Welcome back!');
+
+      const userRole = data.user?.role;
+
+      // 3️⃣ Role wise verification and redirection
+      if (userRole === 'admin') {
+        try {
+          // Backend ke 'getMySalon' controller ko call karke active salon check kar rahe hain
+          const salonResponse = await fetch('https://glow-cut-product-complete-backend.vercel.app/api/salons/salons/my', {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${tokenToSave}`
+            }
+          });
+
+          const salonData = await salonResponse.json();
+
+          // Agar backend se salon successfully mil jata hai (Data existing hai)
+          if (salonResponse.ok && salonData.success && salonData.data) {
+            // Live board ke liye salonId ko local storage mein save karlety hain
+            localStorage.setItem('salonId', salonData.data._id);
+            navigate('/admin/shop');
+          } else {
+            // Agar active salon nahi milta ya status 404 hai, toh form setup par bhejein
+            navigate('/setup-salon');
+          }
+        } catch (salonErr) {
+          console.error('Error fetching salon status:', salonErr);
+          // Network issue ya kisi fault par safer side ke liye setup form par redirect
+          navigate('/setup-salon');
+        }
+      } else if (userRole === 'user') {
+        // Normal customer direct home page par jaye
+        navigate('/');
+      } else {
+        // Agar role missing ya undefined ha
+        navigate('/role-selection');
+      }
+
+    } else {
+      // Unverified User Handling
+      if (response.status === 401 || data.message?.toLowerCase().includes('not verified')) {
+        toast.error('Email not verified. Redirecting to verification page...');
+        setTimeout(() => {
+          navigate('/auth/verify-otp', { state: { email: form.identifier.trim() } });
+        }, 1500);
+      } else {
+        toast.error(data.message || 'Invalid credentials');
+      }
     }
-  };
+  } catch (error) {
+    console.error('Login Error:', error);
+    toast.error('Something went wrong. Please check your connection.');
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   const handleGuest = () => {
     if (auth && typeof auth.loginAsGuest === 'function') {

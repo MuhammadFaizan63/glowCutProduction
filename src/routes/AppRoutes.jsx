@@ -1,5 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuthContext } from '../context/AuthContext'; // 🔑 Auth Context import kiya
 
 // Guard
 import AuthGuard from '../components/auth/AuthGuard';
@@ -13,6 +14,8 @@ import AuthLayout from '../layouts/AuthLayout';
 import Login from '../pages/auth/Login';
 import Signup from '../pages/auth/Signup';
 import VerifyOtp from '../pages/auth/VerifyOtp/VerifyOtp';
+import RoleSelection from '../pages/RoleSelection/RoleSelection';
+import SalonSetup from '../pages/SalonSetup/SalonSetup';
 
 // Home
 import Home from '../pages/home/Home';
@@ -56,21 +59,15 @@ import PrivacyCenter from '../pages/profile/PrivacyCenter';
 import ShopkeeperDashboard from '../pages/admin/ShopkeeperDashboard';
 import GlobalDashboard from '../pages/admin/GlobalDashboard';
 
-
 // Misc
 import NotFound from '../pages/NotFound';
+import ServiceMenu from '../pages/admin/ServiceMenu/ServiceMenu';
+import StaffManager from '../pages/admin/StaffManager/StaffManager';
+import BookingManager from '../pages/admin/BookingManager/BookingManager';
 
-/**
- * AppRoutes
- *
- * Gate logic:
- *  - null (unauthenticated) → /auth/login (AuthGuard redirects)
- *  - 'guest' → full browse access, booking actions blocked at component level
- *  - 'authenticated' → unrestricted access
- *
- * ARVirtualMirror renders its own full-screen chrome → outside UserLayout.
- */
 export default function AppRoutes() {
+  const { profile, isAuthenticated } = useAuthContext(); // 🔑 Checking global session attributes
+
   return (
     <Routes>
       {/* ── Public Auth (no guard needed) ── */}
@@ -79,10 +76,19 @@ export default function AppRoutes() {
         <Route path="/auth/signup" element={<Signup />} />
         <Route path="/auth/verify-otp" element={<VerifyOtp />} />
         <Route path="/role-selection" element={<RoleSelection />} />
-        <Route path="/setup-salon" element={<SalonSetup />} />
+
+        {/* 🔒 Smart Gate: Agar admin pehle se salon register kar chuka hai toh form par access block */}
+        <Route
+          path="/setup-salon"
+          element={
+            isAuthenticated && profile?.role === 'admin' && profile?.hasSalon ? (
+              <Navigate to="/admin/shop" replace />
+            ) : (
+              <SalonSetup />
+            )
+          }
+        />
       </Route>
-
-
 
       {/* ── Standalone immersive (own chrome) ── */}
       <Route
@@ -149,6 +155,9 @@ export default function AppRoutes() {
       >
         <Route path="/admin/shop" element={<ShopkeeperDashboard />} />
         <Route path="/admin/global" element={<GlobalDashboard />} />
+        <Route path="/admin/services" element={<ServiceMenu />} />
+        <Route path="/admin/barbers" element={<StaffManager />} />
+        <Route path="/admin/booking" element={<BookingManager />} />
       </Route>
 
       {/* ── Fallbacks / legacy redirects ── */}

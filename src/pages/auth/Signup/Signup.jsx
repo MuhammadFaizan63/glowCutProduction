@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { MdMail, MdLock, MdPerson, MdPhone, MdLocationCity } from 'react-icons/md';
+import { MdMail, MdLock, MdPerson, MdPhone, MdLocationCity, MdAssignmentInd } from 'react-icons/md';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import Button from '../../../components/ui/Button';
@@ -33,8 +33,8 @@ export default function Signup() {
   const [mode, setMode] = useState('choice'); // 'choice' | 'email-form'
   const [slide, setSlide] = useState(0);
   
-  // ⚡ Backend naming keys ke mutabiq state variables updates
-  const [form, setForm] = useState({ userName: '', PhoneNumber: '', email: '', password: '', cities: '' });
+  // ⚡ Added 'role' with default value 'user' to sync with backend enum ['user', 'admin']
+  const [form, setForm] = useState({ userName: '', PhoneNumber: '', email: '', password: '', cities: '', role: 'user' });
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -59,6 +59,7 @@ export default function Signup() {
       next.password = 'Password must be at least 6 characters';
       
     if (!form.cities) next.cities = 'Please select your city';
+    if (!form.role) next.role = 'Please select an account type';
     
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -76,27 +77,26 @@ export default function Signup() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userName: form.userName,
-          PhoneNumber: form.PhoneNumber,
-          email: form.email,
+          userName: form.userName.trim(),
+          PhoneNumber: form.PhoneNumber.trim(),
+          email: form.email.trim().toLowerCase(),
           password: form.password,
           cities: form.cities,
+          role: form.role, // ⚡ Bheja ja raha hai role backend schema ke mutabiq
         }),
       });
 
       const data = await response.json();
 
       if (response.ok && data.success) {
-        toast.success(data.message || 'OTP sent successfully!');
-        // 🚀 Backend validation match hone par verification route par bhej dega
-        navigate('/auth/verify-otp', { state: { email: form.email } });
+        toast.success(data.message || 'User registered successfully. OTP sent!');
+        navigate('/auth/verify-otp', { state: { email: form.email.trim().toLowerCase() } });
       } else {
-        // Backend ka response status handling aur custom model errors return karna
-        toast.error(data.message || 'Registration failed');
+        toast.error(data.message || 'Registration failed.');
       }
     } catch (error) {
-      console.error('Signup Error:', error);
-      toast.error('Something went wrong. Please try again!');
+      console.error('Signup Network Error:', error);
+      toast.error('Connection refused. Please check live database cluster status.');
     } finally {
       setSubmitting(false);
     }
@@ -247,6 +247,7 @@ export default function Signup() {
                   icon={MdLock} value={form.password} onChange={setField('password')}
                   error={errors.password} variant="filled"
                 />
+                
                 {/* City Dropdown */}
                 <div className="flex flex-col gap-xs">
                   <label className="font-label-md text-label-md text-on-surface-variant">
@@ -257,16 +258,37 @@ export default function Signup() {
                     <select
                       value={form.cities}
                       onChange={setField('cities')}
-                      className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-3 text-white font-body-md focus:outline-none focus:border-primary-container appearance-none"
+                      className="w-full bg-surface border border-white/10 rounded-lg pl-10 pr-4 py-3 text-white font-body-md focus:outline-none focus:border-primary-container appearance-none"
                     >
-                      <option value="" disabled className="bg-surface">Select your city</option>
+                      <option value="" disabled className="bg-surface text-outline">Select your city</option>
                       {CITIES.map((c) => (
-                        <option key={c} value={c} className="bg-surface">{c}</option>
+                        <option key={c} value={c} className="bg-surface text-white">{c}</option>
                       ))}
                     </select>
                   </div>
                   {errors.cities && (
                     <p className="text-error text-caption font-caption">{errors.cities}</p>
+                  )}
+                </div>
+
+                {/* ⚡ NEW: Role Dropdown to Sync with Backend Schema ['user', 'admin'] */}
+                <div className="flex flex-col gap-xs">
+                  <label className="font-label-md text-label-md text-on-surface-variant">
+                    Account Type <span className="text-error ml-1">*</span>
+                  </label>
+                  <div className="relative">
+                    <MdAssignmentInd className="absolute left-3 top-1/2 -translate-y-1/2 text-outline text-lg pointer-events-none" />
+                    <select
+                      value={form.role}
+                      onChange={setField('role')}
+                      className="w-full bg-surface border border-white/10 rounded-lg pl-10 pr-4 py-3 text-white font-body-md focus:outline-none focus:border-primary-container appearance-none"
+                    >
+                      <option value="user" className="bg-surface text-white">Customer</option>
+                      <option value="admin" className="bg-surface text-white">Salon Owner</option>
+                    </select>
+                  </div>
+                  {errors.role && (
+                    <p className="text-error text-caption font-caption">{errors.role}</p>
                   )}
                 </div>
 
