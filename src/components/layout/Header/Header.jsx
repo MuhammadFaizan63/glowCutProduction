@@ -6,7 +6,6 @@ import Button from '../../ui/Button';
 import Avatar from '../../ui/Avatar';
 import AuthContext from '../../../context/AuthContext';
 
-// Nav tabs differ per user type
 const AUTH_NAV = [
   { label: 'Home', to: '/' },
   { label: 'Services', to: '/services' },
@@ -22,26 +21,31 @@ const GUEST_NAV = [
   { label: 'AI Scanner', to: '/ai/style-consultant', guestWarning: true },
 ];
 
-/**
- * Header — dual-state nav bar.
- * Authenticated: full nav + profile avatar (click → /profile).
- * Guest: restricted nav + "Login / Signup" CTA + generic icon placeholder.
- */
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
   const { userType, profile, logout } = useContext(AuthContext);
+  console.log("CURRENT PROFILE DATA:", profile); 
+console.log("USER ROLE:", profile?.role);
 
   const isAuthenticated = userType === 'authenticated';
   const isGuest = userType === 'guest';
-  const navLinks = isAuthenticated ? AUTH_NAV : GUEST_NAV;
+  
+  // 💡 Strictly check if the role is 'admin' (ignoring case delays)
+  const isAdmin = profile?.role?.toLowerCase() === 'admin';
+
+  // 💡 Dynamically inject "Manage Salon" ONLY if user is authenticated and an Admin
+  let navLinks = isAuthenticated ? [...AUTH_NAV] : [...GUEST_NAV];
+  if (isAuthenticated && isAdmin) {
+    navLinks.push({ label: 'Manage Salon', to: '/admin/shop' });
+  }
 
   const handleGuestIconClick = () => {
     toast('Login to set up your profile', { icon: '👤' });
   };
 
   const handleLoginSignup = () => {
-    logout(); // clear guest state → null → redirected to login by AuthGuard
+    logout(); 
     navigate('/auth/login');
   };
 
@@ -68,6 +72,8 @@ export default function Header() {
               `font-label-md text-label-md px-2 py-1 rounded transition-colors ${
                 isActive
                   ? 'text-primary-container border-b-2 border-primary-container'
+                  : link.label === 'Manage Salon'
+                  ? 'text-primary hover:text-primary-container font-bold shadow-neon-orange-sm bg-primary/5 rounded'
                   : 'text-on-surface-variant hover:text-primary hover:bg-white/5'
               } ${link.guestWarning && isGuest ? 'opacity-60' : ''}`
             }
@@ -90,7 +96,6 @@ export default function Header() {
         </button>
 
         {isAuthenticated ? (
-          /* Authenticated: real profile avatar */
           <button
             onClick={() => navigate('/profile')}
             className="flex items-center gap-xs group"
@@ -105,7 +110,6 @@ export default function Header() {
             />
           </button>
         ) : isGuest ? (
-          /* Guest: login button + placeholder icon */
           <div className="flex items-center gap-sm">
             <Button
               size="sm"
@@ -124,7 +128,6 @@ export default function Header() {
             </button>
           </div>
         ) : (
-          /* Unauthenticated (shouldn't reach nav, but fallback) */
           <Button size="sm" onClick={() => navigate('/auth/login')}>
             Login
           </Button>
@@ -148,7 +151,15 @@ export default function Header() {
               key={link.label}
               to={link.to}
               onClick={() => setMobileOpen(false)}
-              className="font-label-md text-label-md text-on-surface-variant hover:text-primary px-2 py-3 rounded hover:bg-white/5"
+              className={({ isActive }) =>
+                `font-label-md text-label-md px-2 py-3 rounded block ${
+                  isActive
+                    ? 'text-primary-container bg-white/5 font-bold'
+                    : link.label === 'Manage Salon'
+                    ? 'text-primary font-bold bg-primary/5'
+                    : 'text-on-surface-variant hover:text-primary hover:bg-white/5'
+                }`
+              }
             >
               {link.label}
             </NavLink>
@@ -167,9 +178,6 @@ export default function Header() {
   );
 }
 
-/**
- * AdminHeader — unchanged from before, kept as named export.
- */
 export function AdminHeader({ title = 'Dashboard', avatarSrc, unreadChat = false }) {
   return (
     <header className="flex justify-between items-center w-full px-container-margin py-base bg-background/60 backdrop-blur-2xl border-b border-white/5 sticky top-0 z-50">

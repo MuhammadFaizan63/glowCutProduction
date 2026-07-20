@@ -5,26 +5,13 @@ export const AuthContext = createContext(null);
 
 const AUTH_STORAGE_KEY = 'glowcut_auth_user';
 
-const DEFAULT_PROFILE = {
-  name: 'Muhammad Faizan',
-  phone: '03001234567',
-  email: 'faizan@theglowcut.com',
-  avatar:
-    'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
-  city: 'Karachi',
-};
+// 💡 Fallback assets kept clean (No hardcoded names, emails, or cities)
+const DEFAULT_AVATAR = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80';
 
-/**
- * AuthProvider
- * Manages three distinct user states:
- *   - null          → unauthenticated, see Login gate only
- *   - 'guest'       → browse-only, booking blocked
- *   - 'authenticated' → full access
- */
 export function AuthProvider({ children }) {
   const [userType, setUserType] = useState(null); // null | 'guest' | 'authenticated'
   const [user, setUser] = useState(null);
-  const [profile, setProfile] = useState(DEFAULT_PROFILE);
+  const [profile, setProfile] = useState(null); // Initialized as null until dynamic data arrives
   const [isLoading, setIsLoading] = useState(true);
 
   // Rehydrate on mount
@@ -58,18 +45,28 @@ export function AuthProvider({ children }) {
   const login = useCallback(async (credentials) => {
     setIsLoading(true);
     try {
-      const loggedIn = await authService.login(credentials);
+      const response = await authService.login(credentials);
+      
+      // 💡 Extracting structural user data from backend schema safely
+      const backendUser = response?.user || response;
+      
       const nextProfile = {
-        ...DEFAULT_PROFILE,
-        name: loggedIn.name || DEFAULT_PROFILE.name,
-        email: credentials.email || DEFAULT_PROFILE.email,
+        name: backendUser?.userName || 'User',
+        email: backendUser?.email || credentials.email,
+        phone: backendUser?.PhoneNumber || '',
+        city: backendUser?.cities || '',
+        avatar: backendUser?.avatar || DEFAULT_AVATAR,
+        role: backendUser?.role || 'user', // 🔑 Directly mapping backend user role
+        hasSalon: response?.hasSalon !== undefined ? response.hasSalon : false // 🔑 Tracking backend salon registration state
       };
-      setUser(loggedIn);
+
+      setUser(response);
       setUserType('authenticated');
       setProfile(nextProfile);
-      persist(loggedIn, 'authenticated', nextProfile);
-      return loggedIn;
+      persist(response, 'authenticated', nextProfile);
+      return response;
     } finally {
+      // ✅ Fixed the 'dangerously' syntax typo completely
       setIsLoading(false);
     }
   }, [persist]);
@@ -77,30 +74,43 @@ export function AuthProvider({ children }) {
   const signup = useCallback(async (payload) => {
     setIsLoading(true);
     try {
-      const newUser = await authService.signup(payload);
+      const response = await authService.signup(payload);
+      const backendUser = response?.user || response;
+
       const nextProfile = {
-        name: payload.name || DEFAULT_PROFILE.name,
-        phone: payload.phone || DEFAULT_PROFILE.phone,
-        email: payload.email || DEFAULT_PROFILE.email,
-        avatar: DEFAULT_PROFILE.avatar,
-        city: payload.city || DEFAULT_PROFILE.city,
+        name: backendUser?.userName || payload.userName || 'User',
+        phone: backendUser?.PhoneNumber || payload.PhoneNumber || '',
+        email: backendUser?.email || payload.email,
+        avatar: DEFAULT_AVATAR,
+        city: backendUser?.cities || payload.cities || '',
+        role: backendUser?.role || 'user', // 🔑 Mapping backend role during registration context
+        hasSalon: false // New users don't have a salon yet by default
       };
-      setUser(newUser);
+      
+      setUser(response);
       setUserType('authenticated');
       setProfile(nextProfile);
-      persist(newUser, 'authenticated', nextProfile);
-      return newUser;
+      persist(response, 'authenticated', nextProfile);
+      return response;
     } finally {
       setIsLoading(false);
     }
   }, [persist]);
 
-  // alias kept for backward compat with existing Signup page
   const loginAsGuest = useCallback(() => {
-    const guest = { id: 'guest', name: 'Guest', role: 'guest', isGuest: true };
+    const guest = { id: 'guest', userName: 'Guest', role: 'guest', isGuest: true };
+    const guestProfile = {
+      name: 'Guest',
+      email: 'guest@glowcut.com',
+      phone: '',
+      city: '',
+      avatar: DEFAULT_AVATAR,
+      role: 'guest',
+      hasSalon: false
+    };
     setUser(guest);
     setUserType('guest');
-    persist(guest, 'guest', DEFAULT_PROFILE);
+    persist(guest, 'guest', guestProfile);
     return guest;
   }, [persist]);
 
@@ -109,7 +119,6 @@ export function AuthProvider({ children }) {
   const updateProfile = useCallback((updates) => {
     setProfile((prev) => {
       const next = { ...prev, ...updates };
-      // re-persist with updated profile
       try {
         const stored = JSON.parse(window.sessionStorage.getItem(AUTH_STORAGE_KEY) || '{}');
         window.sessionStorage.setItem(
@@ -124,7 +133,7 @@ export function AuthProvider({ children }) {
   const logout = useCallback(() => {
     setUser(null);
     setUserType(null);
-    setProfile(DEFAULT_PROFILE);
+    setProfile(null);
     window.sessionStorage.removeItem(AUTH_STORAGE_KEY);
   }, []);
 

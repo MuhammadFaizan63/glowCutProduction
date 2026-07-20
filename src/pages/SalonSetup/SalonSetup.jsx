@@ -1,105 +1,132 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { MdStore, MdPhone, MdLocationOn, MdGroup, MdAdd, MdClose } from 'react-icons/md';
-
-const BASE_URL = 'http://localhost:3000';
+import { MdStore, MdPhone, MdLocationOn, MdAccessTime, MdOutlineDescription, MdEmail, MdLink, MdMyLocation } from 'react-icons/md';
+import { useAuthContext } from '../../context/AuthContext'; // 🔑 Context import kiya state update karne ke liye
 
 export default function SalonSetup() {
   const navigate = useNavigate();
+  const { updateProfile } = useAuthContext(); // 🔑 Extracting the profile update modifier
   const [loading, setLoading] = useState(false);
+  
+  // Backend Schema ke mutabiq strictly COMPLETE allowed fields (including nested location)
   const [salonData, setSalonData] = useState({
-    salonName: '',
-    salonContact: '',
-    location: '',
+    name: '',
+    description: '',
+    phone: '',
+    email: '',
+    logo: '',
+    coverImage: '',
+    openingTime: '',
+    closingTime: '',
+    address: {
+      country: 'Pakistan',
+      city: 'Karachi',
+      area: '',
+      street: '',
+      postalCode: ''
+    },
+    location: {
+      type: 'Point',
+      longitude: '',
+      latitude: ''
+    }
   });
 
-  // Dynamic Members State
-  const [memberInput, setMemberInput] = useState('');
-  const [salonMembers, setSalonMembers] = useState([]);
-
-  // Dynamic Services State
-  const [serviceName, setServiceName] = useState('');
-  const [servicePrice, setServicePrice] = useState('');
-  const [services, setServices] = useState([]);
-
-  // Add Member
-  const addMember = () => {
-    if (memberInput.trim() && !salonMembers.includes(memberInput.trim())) {
-      setSalonMembers([...salonMembers, memberInput.trim()]);
-      setMemberInput('');
-    }
+  // Handle Input Changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setSalonData({ ...salonData, [name]: value });
   };
 
-  // Remove Member
-  const removeMember = (index) => {
-    setSalonMembers(salonMembers.filter((_, i) => i !== index));
+  const handleAddressChange = (e) => {
+    const { name, value } = e.target;
+    setSalonData({
+      ...salonData,
+      address: { ...salonData.address, [name]: value }
+    });
   };
 
-  // Add Service
-  const addService = () => {
-    if (serviceName.trim() && servicePrice.trim()) {
-      setServices([...services, { name: serviceName.trim(), price: parseFloat(servicePrice) }]);
-      setServiceName('');
-      setServicePrice('');
-    }
-  };
-
-  // Remove Service
-  const removeService = (index) => {
-    setServices(services.filter((_, i) => i !== index));
+  const handleLocationChange = (e) => {
+    const { name, value } = e.target;
+    setSalonData({
+      ...salonData,
+      location: { ...salonData.location, [name]: value }
+    });
   };
 
   // Submit Salon Data
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (salonMembers.length === 0) {
-      toast.error("Please add at least one staff member.");
-      return;
-    }
-    if (services.length === 0) {
-      toast.error("Please add at least one service offered.");
-      return;
-    }
+    setLoading(true);
 
-    setLoading(false);
     try {
       const token = localStorage.getItem('accessToken');
       
-      // Hit your Backend Salon Setup / Become Partner API endpoint here
-      const res = await fetch(`${BASE_URL}/api/salons/setup`, {
+      // Validation check for location metrics
+      const lng = parseFloat(salonData.location.longitude);
+      const lat = parseFloat(salonData.location.latitude);
+      
+      // Backend schema format validation builder
+      const hasValidCoords = !isNaN(lng) && !isNaN(lat) && lng >= -180 && lng <= 180 && lat >= -90 && lat <= 90;
+
+      // Backend controller aur schema ke mutabiq complete clean payload
+      const payload = {
+        name: salonData.name.trim(),
+        description: salonData.description.trim() || undefined,
+        phone: salonData.phone.trim(),
+        email: salonData.email.trim() || undefined,
+        logo: salonData.logo.trim() || undefined,
+        coverImage: salonData.coverImage.trim() || undefined,
+        openingTime: salonData.openingTime || undefined,
+        closingTime: salonData.closingTime || undefined,
+        address: {
+          country: salonData.address.country.trim(),
+          city: salonData.address.city.trim(),
+          area: salonData.address.area.trim(),
+          street: salonData.address.street.trim(),
+          postalCode: salonData.address.postalCode.trim() || undefined
+        },
+        // Agar coordinates accurate hain to pass karega warna drop karega backend error se bachne ke liye
+        location: hasValidCoords ? {
+          type: 'Point',
+          coordinates: [lng, lat] // [longitude, latitude] array formatting format according to 2dsphere index
+        } : undefined
+      };
+
+      const res = await fetch(`https://glow-cut-product-complete-backend.vercel.app/api/salons`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          ...salonData,
-          salonMembers,
-          services
-        })
+        body: JSON.stringify(payload)
       });
 
       const data = await res.json();
       
-      if (data.success) {
+      if (res.ok && data.success) {
         toast.success("Salon Setup Completed Successfully!");
-        // User update ho chuka hai, redirect to new Shopkeeper dashboard area!
-        navigate('/admin/shop');
+        
+        // 🔑 Atomic session lock update: profile structure sync to keep routes guarded
+        updateProfile({ hasSalon: true });
+
+        // 🚀 Direct dynamic dashboard rerouting instead of generic dashboard fallback
+        navigate('/admin/shop', { replace: true }); 
       } else {
         toast.error(data.message || "Failed to save details.");
       }
     } catch (err) {
       console.error(err);
-      // Backend connectivity issues handle karne ke liye local override simulation fallback:
-      toast.success("Salon details registered locally! (Offline Demo Mode Active)");
-      navigate('/admin/shop');
+      toast.error("Connectivity issue or validation failure.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-background py-12 px-4 relative overflow-hidden">
-      {/* Decorative Blur */}
+    <div className="min-h-screen py-12 px-4 relative overflow-hidden">
+      {/* Decorative Cyber Blur */}
       <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-primary-container/5 rounded-full blur-[150px] pointer-events-none" />
 
       <div className="max-w-2xl mx-auto glass-card p-8 rounded-2xl border border-white/5 relative z-10">
@@ -112,133 +139,232 @@ export default function SalonSetup() {
           
           {/* Salon Name Input */}
           <div>
-            <label className="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Salon Name</label>
+            <label className="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Salon Name *</label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-outline"><MdStore /></span>
               <input
                 type="text"
+                name="name"
                 required
+                minLength={3}
+                maxLength={100}
                 placeholder="GlowCut Station 01"
-                value={salonData.salonName}
-                onChange={(e) => setSalonData({...salonData, salonName: e.target.value})}
-                className="w-full bg-surface-container/50 border border-white/5 rounded-lg py-3 pl-10 pr-4 text-sm text-on-surface focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container/30"
+                value={salonData.name}
+                onChange={handleInputChange}
+                className="w-full bg-surface-container/50 border border-white/5 rounded-lg py-3 pl-10 pr-4 text-sm text-on-surface focus:outline-none focus:border-primary-container"
               />
             </div>
           </div>
 
-          {/* Contact Number & Location */}
+          {/* Description */}
+          <div>
+            <label className="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Description</label>
+            <div className="relative">
+              <span className="absolute top-3 left-3 text-outline"><MdOutlineDescription /></span>
+              <textarea
+                name="description"
+                maxLength={500}
+                placeholder="Brief details about your cyber-salon..."
+                value={salonData.description}
+                onChange={handleInputChange}
+                rows="2"
+                className="w-full bg-surface-container/50 border border-white/5 rounded-lg py-3 pl-10 pr-4 text-sm text-on-surface focus:outline-none focus:border-primary-container resize-none"
+              />
+            </div>
+          </div>
+
+          {/* Contact & Email Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Contact Number</label>
+              <label className="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Contact Number *</label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-outline"><MdPhone /></span>
                 <input
                   type="tel"
+                  name="phone"
                   required
-                  placeholder="+92 300 1234567"
-                  value={salonData.salonContact}
-                  onChange={(e) => setSalonData({...salonData, salonContact: e.target.value})}
-                  className="w-full bg-surface-container/50 border border-white/5 rounded-lg py-3 pl-10 pr-4 text-sm text-on-surface focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container/30"
+                  placeholder="+923001234567"
+                  value={salonData.phone}
+                  onChange={handleInputChange}
+                  className="w-full bg-surface-container/50 border border-white/5 rounded-lg py-3 pl-10 pr-4 text-sm text-on-surface focus:outline-none focus:border-primary-container"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Location/Address</label>
+              <label className="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Email Address</label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-outline"><MdLocationOn /></span>
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-outline"><MdEmail /></span>
                 <input
-                  type="text"
-                  required
-                  placeholder="Phase 6, DHA, Karachi"
-                  value={salonData.location}
-                  onChange={(e) => setSalonData({...salonData, location: e.target.value})}
-                  className="w-full bg-surface-container/50 border border-white/5 rounded-lg py-3 pl-10 pr-4 text-sm text-on-surface focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container/30"
+                  type="email"
+                  name="email"
+                  placeholder="owner@glowcut.com"
+                  value={salonData.email}
+                  onChange={handleInputChange}
+                  className="w-full bg-surface-container/50 border border-white/5 rounded-lg py-3 pl-10 pr-4 text-sm text-on-surface focus:outline-none focus:border-primary-container"
                 />
               </div>
             </div>
           </div>
 
-          {/* Salon Members / Barbers Setup */}
-          <div>
-            <label className="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Salon Staff / Barbers</label>
-            <div className="flex gap-2 mb-3">
-              <input
-                type="text"
-                placeholder="Barber name (e.g. Ali)"
-                value={memberInput}
-                onChange={(e) => setMemberInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addMember())}
-                className="flex-1 bg-surface-container/50 border border-white/5 rounded-lg px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:border-primary-container"
-              />
-              <button
-                type="button"
-                onClick={addMember}
-                className="px-4 py-2 bg-primary-container text-on-primary-container rounded-lg hover:opacity-90 active:scale-95 transition-all flex items-center justify-center"
-              >
-                <MdAdd className="text-lg" />
-              </button>
+          {/* Logo & Cover Image Branding Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Logo Image URL</label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-outline"><MdLink /></span>
+                <input
+                  type="url"
+                  name="logo"
+                  placeholder="https://example.com/logo.png"
+                  value={salonData.logo}
+                  onChange={handleInputChange}
+                  className="w-full bg-surface-container/50 border border-white/5 rounded-lg py-3 pl-10 pr-4 text-sm text-on-surface focus:outline-none focus:border-primary-container"
+                />
+              </div>
             </div>
-            
-            {/* Added Members Chips */}
-            <div className="flex flex-wrap gap-2">
-              {salonMembers.map((member, index) => (
-                <span key={index} className="flex items-center gap-1.5 bg-surface-container text-on-surface-variant text-xs px-3 py-1.5 rounded-full border border-white/5">
-                  <MdGroup className="text-primary-container/70" />
-                  {member}
-                  <button type="button" onClick={() => removeMember(index)} className="hover:text-primary-container"><MdClose /></button>
-                </span>
-              ))}
+
+            <div>
+              <label className="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Cover Image URL</label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-outline"><MdLink /></span>
+                <input
+                  type="url"
+                  name="coverImage"
+                  placeholder="https://example.com/cover.png"
+                  value={salonData.coverImage}
+                  onChange={handleInputChange}
+                  className="w-full bg-surface-container/50 border border-white/5 rounded-lg py-3 pl-10 pr-4 text-sm text-on-surface focus:outline-none focus:border-primary-container"
+                />
+              </div>
             </div>
           </div>
 
-          {/* Services Menu Setup */}
-          <div>
-            <label className="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Services & Pricing</label>
-            <div className="flex gap-2 mb-3">
-              <input
-                type="text"
-                placeholder="Service (e.g. Haircut)"
-                value={serviceName}
-                onChange={(e) => setServiceName(e.target.value)}
-                className="flex-[2] bg-surface-container/50 border border-white/5 rounded-lg px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:border-primary-container"
-              />
-              <input
-                type="number"
-                placeholder="Price ($)"
-                value={servicePrice}
-                onChange={(e) => setServicePrice(e.target.value)}
-                className="flex-[1] bg-surface-container/50 border border-white/5 rounded-lg px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:border-primary-container"
-              />
-              <button
-                type="button"
-                onClick={addService}
-                className="px-4 py-2 bg-primary-container text-on-primary-container rounded-lg hover:opacity-90 active:scale-95 transition-all flex items-center justify-center"
-              >
-                <MdAdd className="text-lg" />
-              </button>
+          {/* Timing Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Opening Time (HH:mm)</label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-outline"><MdAccessTime /></span>
+                <input
+                  type="text"
+                  name="openingTime"
+                  placeholder="09:00"
+                  value={salonData.openingTime}
+                  onChange={handleInputChange}
+                  className="w-full bg-surface-container/50 border border-white/5 rounded-lg py-3 pl-10 pr-4 text-sm text-on-surface focus:outline-none focus:border-primary-container"
+                />
+              </div>
             </div>
-            
-            {/* Added Services list */}
-            <div className="space-y-2">
-              {services.map((svc, index) => (
-                <div key={index} className="flex items-center justify-between bg-surface-container/40 border border-white/5 px-4 py-2 rounded-lg text-xs text-on-surface">
-                  <span>{svc.name}</span>
-                  <div className="flex items-center gap-3">
-                    <span className="text-primary font-bold">${svc.price}</span>
-                    <button type="button" onClick={() => removeService(index)} className="hover:text-primary-container"><MdClose /></button>
-                  </div>
-                </div>
-              ))}
+
+            <div>
+              <label className="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Closing Time (HH:mm)</label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-outline"><MdAccessTime /></span>
+                <input
+                  type="text"
+                  name="closingTime"
+                  placeholder="21:00"
+                  value={salonData.closingTime}
+                  onChange={handleInputChange}
+                  className="w-full bg-surface-container/50 border border-white/5 rounded-lg py-3 pl-10 pr-4 text-sm text-on-surface focus:outline-none focus:border-primary-container"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Address Fields */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Area / Sector *</label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-outline"><MdLocationOn /></span>
+                <input
+                  type="text"
+                  name="area"
+                  required
+                  placeholder="e.g. DHA Phase 6"
+                  value={salonData.address.area}
+                  onChange={handleAddressChange}
+                  className="w-full bg-surface-container/50 border border-white/5 rounded-lg py-3 pl-10 pr-4 text-sm text-on-surface focus:outline-none focus:border-primary-container"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Street Address *</label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-outline"><MdLocationOn /></span>
+                <input
+                  type="text"
+                  name="street"
+                  required
+                  placeholder="e.g. Commercial St 2"
+                  value={salonData.address.street}
+                  onChange={handleAddressChange}
+                  className="w-full bg-surface-container/50 border border-white/5 rounded-lg py-3 pl-10 pr-4 text-sm text-on-surface focus:outline-none focus:border-primary-container"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Postal Code</label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-outline"><MdLocationOn /></span>
+                <input
+                  type="text"
+                  name="postalCode"
+                  placeholder="e.g. 75500"
+                  value={salonData.address.postalCode}
+                  onChange={handleAddressChange}
+                  className="w-full bg-surface-container/50 border border-white/5 rounded-lg py-3 pl-10 pr-4 text-sm text-on-surface focus:outline-none focus:border-primary-container"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Geo-Location (2dsphere coordinates) Input Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-white/5 pt-4">
+            <div>
+              <label className="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Longitude (-180 to 180)</label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-outline"><MdMyLocation /></span>
+                <input
+                  type="number"
+                  step="any"
+                  name="longitude"
+                  placeholder="e.g. 67.0011"
+                  value={salonData.location.longitude}
+                  onChange={handleLocationChange}
+                  className="w-full bg-surface-container/50 border border-white/5 rounded-lg py-3 pl-10 pr-4 text-sm text-on-surface focus:outline-none focus:border-primary-container"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Latitude (-90 to 90)</label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-outline"><MdMyLocation /></span>
+                <input
+                  type="number"
+                  step="any"
+                  name="latitude"
+                  placeholder="e.g. 24.8607"
+                  value={salonData.location.latitude}
+                  onChange={handleLocationChange}
+                  className="w-full bg-surface-container/50 border border-white/5 rounded-lg py-3 pl-10 pr-4 text-sm text-on-surface focus:outline-none focus:border-primary-container"
+                />
+              </div>
             </div>
           </div>
 
           {/* Submit Button */}
           <button
             type="submit"
-            className="w-full bg-primary-container text-on-primary-container py-3.5 rounded-xl font-bold tracking-wider hover:opacity-95 active:scale-98 transition-all shadow-neon-orange mt-8"
+            disabled={loading}
+            className="w-full bg-primary-container text-on-primary-container py-3.5 rounded-xl font-bold tracking-wider hover:opacity-95 active:scale-98 transition-all shadow-neon-orange mt-8 disabled:opacity-50"
           >
-            Deploy Shopkeeper Dashboard
+            {loading ? "Deploying Station..." : "Deploy Shopkeeper Dashboard"}
           </button>
         </form>
       </div>
