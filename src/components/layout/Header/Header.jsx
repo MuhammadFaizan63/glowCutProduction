@@ -179,15 +179,27 @@ console.log("USER ROLE:", profile?.role);
 }
 
 export function AdminHeader({ title = 'Dashboard', avatarSrc, unreadChat = false }) {
+  const navigate = useNavigate();
+  const { profile } = useContext(AuthContext);
+
+  // Fallback profile image: agar avatarSrc na ho toh AuthContext ki image use ho
+  const imageSource =
+    avatarSrc ||
+    profile?.avatar ||
+    profile?.profileImage ||
+    'https://via.placeholder.com/150';
+
   return (
     <header className="flex justify-between items-center w-full px-container-margin py-base bg-background/60 backdrop-blur-2xl border-b border-white/5 sticky top-0 z-50">
       <div>
-        <h2 className="font-headline-md text-headline-md text-primary tracking-tighter">{title}</h2>
+        <h2 className="font-headline-md text-headline-md text-primary tracking-tighter">
+          {title}
+        </h2>
       </div>
       <div className="flex items-center gap-gutter">
         <div className="relative hidden lg:block">
           <input
-            className="bg-surface-container-lowest border-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 text-sm py-2 px-4 w-64 transition-all duration-300"
+            className="bg-surface-container-lowest border-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 text-sm py-2 px-4 w-64 transition-all duration-300 text-white"
             placeholder="Search data..."
             type="text"
           />
@@ -196,12 +208,29 @@ export function AdminHeader({ title = 'Dashboard', avatarSrc, unreadChat = false
         <div className="flex items-center gap-4">
           <button className="text-on-surface hover:text-primary-container transition-colors relative">
             <MdChat className="text-xl" />
-            {unreadChat && <span className="absolute top-0 right-0 w-2 h-2 bg-primary rounded-full" />}
+            {unreadChat && (
+              <span className="absolute top-0 right-0 w-2 h-2 bg-primary rounded-full" />
+            )}
           </button>
           <button className="text-on-surface hover:text-primary-container transition-colors">
             <MdNotifications className="text-xl" />
           </button>
-          {avatarSrc && <Avatar src={avatarSrc} size="sm" alt="Admin Avatar" />}
+
+          {/* 🚀 Clickable Admin Avatar Button */}
+          <button
+            onClick={() => navigate('/profile')}
+            aria-label="Admin Profile Settings"
+            className="flex items-center justify-center group focus:outline-none"
+            title="Update Profile"
+          >
+            <Avatar
+              src={imageSource}
+              size="sm"
+              alt={profile?.name || 'Admin Avatar'}
+              ring
+              className="group-hover:scale-105 group-hover:shadow-neon-orange transition-all cursor-pointer"
+            />
+          </button>
         </div>
       </div>
     </header>

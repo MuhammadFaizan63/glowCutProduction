@@ -20,7 +20,7 @@ export default function RoleSelection() {
       
       // 2️⃣ URL ko aapke router mapping ke mutabiq set kiya hai.
       // (Agar server.js/app.js mein main prefix '/api/users' hai to yahan users kar dein, warna auth)
-      const res = await fetch(`https://glow-cut-product-complete-backend.vercel.app/api/auth/update-role`, {
+      const res = await fetch(`https://herself-pusher-marathon.ngrok-free.dev/api/auth/update-role`, {
         method: 'PUT', 
         headers: {
           'Content-Type': 'application/json',

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
@@ -12,18 +12,8 @@ import {
   MdVisibility,
   MdFavorite,
 } from 'react-icons/md';
-
-const TOTAL_WAIT_SECONDS = 12 * 60;
-
-const VIDEOS = [
-  {
-    title: 'Classic Fade Tutorial',
-    views: '12.4K',
-    likes: 892,
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuBHghyCHZ8Mgjf-31cDlTgDu4Sd2pf7yDtBYS22C-P0eZsofUEoU177c4OdhLTd1KrQCdDywUSS32hTTlTLg7udD8NIaGkMOlvtkL7yMm9Wusl1e9CYmziljMZfRd68mjVHCqcchpUOIEjK-4XU6y7yV0xFc9obALf1uRUFo2syowoSaXlU8ez9BxjHBszG6lIofXkNq5BhclkcpwMY9LNN1gWgm09UHu_Y5Psn86k54j-47Q3Rod5DjHqCv6B8I3klGSK2Y5mC9lA',
-  },
-];
+import { useBooking } from '../../../hooks/useBooking';
+import * as bookingService from '../../../services/bookingService';
 
 const GAMES = [
   {
@@ -40,36 +30,63 @@ const GAMES = [
   },
 ];
 
+// The "Trending Styles" reel and mini-games below are entertainment filler
+// with no backend model at all (no content/video API exists), so they stay
+// static placeholders — clearly non-business-critical, unlike the queue
+// status above which is now driven by the real booking record.
+const VIDEOS = [
+  {
+    title: 'Classic Fade Tutorial',
+    views: '12.4K',
+    likes: 892,
+    image:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuBHghyCHZ8Mgjf-31cDlTgDu4Sd2pf7yDtBYS22C-P0eZsofUEoU177c4OdhLTd1KrQCdDywUSS32hTTlTLg7udD8NIaGkMOlvtkL7yMm9Wusl1e9CYmziljMZfRd68mjVHCqcchpUOIEjK-4XU6y7yV0xFc9obALf1uRUFo2syowoSaXlU8ez9BxjHBszG6lIofXkNq5BhclkcpwMY9LNN1gWgm09UHu_Y5Psn86k54j-47Q3Rod5DjHqCv6B8I3klGSK2Y5mC9lA',
+  },
+];
+
 export default function WaitingLounge() {
   const navigate = useNavigate();
-  const [secondsLeft, setSecondsLeft] = useState(TOTAL_WAIT_SECONDS);
+  const { booking } = useBooking();
+  const createdBooking = booking.createdBookings?.[0];
 
+  const [liveBooking, setLiveBooking] = useState(createdBooking || null);
+  const [minutesLeft, setMinutesLeft] = useState(createdBooking?.estimatedWaitingMinutes ?? null);
+
+  // Poll the real booking status/queue position every 15s. Once the salon
+  // marks it "confirmed" (checked-in) we push the customer to live tracking.
   useEffect(() => {
-    const interval = setInterval(() => {
-      setSecondsLeft((s) => {
-        if (s <= 1) {
-          clearInterval(interval);
-          return 0;
+    if (!createdBooking?._id) return;
+    let cancelled = false;
+
+    const poll = async () => {
+      try {
+        const updated = await bookingService.getBookingStatus(createdBooking._id);
+        if (cancelled) return;
+        setLiveBooking(updated);
+        if (updated.status === 'confirmed') {
+          toast.success("It's your turn! Heading to live tracking...");
+          setTimeout(() => navigate('/booking/live-tracking'), 1500);
+        } else if (updated.status === 'cancelled' || updated.status === 'rejected') {
+          toast.error('Your booking was cancelled by the salon.');
+          navigate('/salons/nearby');
         }
-        return s - 1;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
+      } catch (err) {
+        // Non-fatal — keep showing the last known state and retry next tick.
+      }
+    };
 
-  useEffect(() => {
-    if (secondsLeft === 0) {
-      toast.success("It's your turn! Heading to live tracking...");
-      const timeout = setTimeout(() => navigate('/booking/live-tracking'), 1500);
-      return () => clearTimeout(timeout);
-    }
-  }, [secondsLeft, navigate]);
+    poll();
+    const interval = setInterval(poll, 15000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [createdBooking?._id, navigate]);
 
-  const minutesLeft = Math.ceil(secondsLeft / 60);
-  const progressPercent = Math.max(
-    5,
-    100 - (secondsLeft / TOTAL_WAIT_SECONDS) * 100
-  );
+  const stylistName = liveBooking?.barberId?.name || booking.stylist?.name || 'Your stylist';
+  const stylistImage = booking.stylist?.profileImage || 'https://via.placeholder.com/150?text=?';
+  const queuePosition = liveBooking?.queueNumber ?? createdBooking?.queueNumber;
+  const progressPercent = liveBooking?.status === 'confirmed' ? 100 : liveBooking?.status === 'pending' ? 30 : 60;
 
   return (
     <main className="relative z-10 pt-8 pb-xl px-margin-mobile md:px-margin-desktop max-w-[1440px] mx-auto">
@@ -84,7 +101,11 @@ export default function WaitingLounge() {
               </span>
             </div>
             <h1 className="font-display-lg text-display-lg mb-md">
-              Your Turn in: <span className="text-secondary">{minutesLeft} Minutes</span>
+              {minutesLeft != null ? (
+                <>Your Turn in: <span className="text-secondary">~{minutesLeft} Minutes</span></>
+              ) : (
+                <>Status: <span className="text-secondary capitalize">{liveBooking?.status || 'Pending'}</span></>
+              )}
             </h1>
             <div className="w-full h-3 bg-white/5 rounded-full overflow-hidden mb-base">
               <div
@@ -96,15 +117,13 @@ export default function WaitingLounge() {
             </div>
             <div className="flex justify-between items-center text-on-surface-variant">
               <p className="font-body-md text-body-md flex items-center gap-xs">
-                Current Stylist: <span className="text-on-surface font-bold">Usman K.</span>
+                Current Stylist: <span className="text-on-surface font-bold">{stylistName}</span>
               </p>
-              <span className="text-caption font-caption opacity-60">
-                Estimated:{' '}
-                {new Date(Date.now() + secondsLeft * 1000).toLocaleTimeString('en-US', {
-                  hour: 'numeric',
-                  minute: '2-digit',
-                })}
-              </span>
+              {queuePosition != null && (
+                <span className="text-caption font-caption opacity-60">
+                  Queue Position: #{queuePosition}
+                </span>
+              )}
             </div>
           </div>
 
@@ -113,28 +132,27 @@ export default function WaitingLounge() {
           <div className="flex items-center gap-md">
             <div className="relative">
               <img
-                className="w-24 h-24 rounded-full border-2 border-secondary-container p-1 object-cover"
-                alt="Usman K."
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAqWA6m7hqOVa_6jq3WSfuJN00Gwoi20ycefl1zkQ7754x7WD-vlib_vVp-TvO_VA2jdLVLYAbTy6O3-C8sVKVozUzcB78VFXHIBMpgJkYjB3WMoRgrv6BIDIuimgBnodVu0vl1oaCENe0uAVdjL92tCPQaMEq-_m0o1Tg-x327MUlMfsYuNO7PuGgBwHDlXiKVE5yu8XFOhzQgWlnsdsNhy9bOuRMp2Y-2iilKAap6YN2e7nS9auLlsdGibrT0LBkVO7VAkWNUbSM"
+                className="w-24 h-24 rounded-full border-2 border-secondary-container p-1 object-cover bg-surface-container"
+                alt={stylistName}
+                src={stylistImage}
               />
               <div className="absolute bottom-1 right-1 w-5 h-5 bg-secondary-container rounded-full border-2 border-surface" />
             </div>
             <div>
               <p className="text-on-surface-variant text-caption uppercase tracking-wider mb-xs">
-                Next Up
+                Assigned To
               </p>
-              <p className="font-headline-md text-headline-md leading-none">Usman K.</p>
+              <p className="font-headline-md text-headline-md leading-none">{stylistName}</p>
               <p className="text-secondary font-label-md text-label-md mt-xs italic">
-                Master Stylist
+                GlowCut Specialist
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Glow Entertainment */}
+      {/* Glow Entertainment (filler — no backend content API exists) */}
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-xl">
-        {/* Quick Play Games */}
         <div className="lg:col-span-5">
           <div className="flex items-center justify-between mb-md">
             <h2 className="font-headline-lg text-headline-lg">Quick Play Games</h2>
@@ -171,21 +189,20 @@ export default function WaitingLounge() {
               );
             })}
           </div>
-          <div className="mt-md glass-card rounded-xl p-md flex items-center justify-between cursor-pointer hover:bg-white/5 transition-colors">
+          <div className="mt-md glass-card rounded-xl p-md flex items-center justify-between opacity-60 cursor-not-allowed">
             <div className="flex items-center gap-sm">
               <div className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center border border-white/5">
                 <MdLeaderboard className="text-secondary" />
               </div>
               <div>
-                <p className="font-label-md text-label-md">Current Rank</p>
-                <p className="text-on-surface-variant text-caption">#12 in the Lounge</p>
+                <p className="font-label-md text-label-md">Lounge Leaderboard</p>
+                <p className="text-on-surface-variant text-caption">Coming soon</p>
               </div>
             </div>
             <MdChevronRight className="text-on-surface-variant" />
           </div>
         </div>
 
-        {/* Trending Styles */}
         <div className="lg:col-span-7">
           <div className="flex items-center justify-between mb-md">
             <h2 className="font-headline-lg text-headline-lg">Trending Styles</h2>

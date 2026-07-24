@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { MdStore, MdPhone, MdLocationOn, MdAccessTime, MdOutlineDescription, MdEmail, MdLink, MdMyLocation } from 'react-icons/md';
-import { useAuthContext } from '../../context/AuthContext'; // 🔑 Context import kiya state update karne ke liye
+import { useAuthContext } from '../../context/AuthContext';
+import * as salonService from '../../services/salonService';
 
 export default function SalonSetup() {
   const navigate = useNavigate();
-  const { updateProfile } = useAuthContext(); // 🔑 Extracting the profile update modifier
+  const { markSalonSetupComplete } = useAuthContext();
   const [loading, setLoading] = useState(false);
-  
+
   // Backend Schema ke mutabiq strictly COMPLETE allowed fields (including nested location)
   const [salonData, setSalonData] = useState({
     name: '',
@@ -61,12 +62,11 @@ export default function SalonSetup() {
     setLoading(true);
 
     try {
-      const token = localStorage.getItem('accessToken');
-      
+
       // Validation check for location metrics
       const lng = parseFloat(salonData.location.longitude);
       const lat = parseFloat(salonData.location.latitude);
-      
+
       // Backend schema format validation builder
       const hasValidCoords = !isNaN(lng) && !isNaN(lat) && lng >= -180 && lng <= 180 && lat >= -90 && lat <= 90;
 
@@ -94,27 +94,18 @@ export default function SalonSetup() {
         } : undefined
       };
 
-      const res = await fetch(`https://glow-cut-product-complete-backend.vercel.app/api/salons`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(payload)
-      });
+      const createdSalon = await salonService.createSalon(payload);
 
-      const data = await res.json();
-      
-      if (res.ok && data.success) {
+      if (createdSalon?._id || createdSalon?.id) {
         toast.success("Salon Setup Completed Successfully!");
-        
+
         // 🔑 Atomic session lock update: profile structure sync to keep routes guarded
-        updateProfile({ hasSalon: true });
+        markSalonSetupComplete(createdSalon);
 
         // 🚀 Direct dynamic dashboard rerouting instead of generic dashboard fallback
-        navigate('/admin/shop', { replace: true }); 
+        navigate('/admin/shop', { replace: true });
       } else {
-        toast.error(data.message || "Failed to save details.");
+        toast.error("Failed to save details.");
       }
     } catch (err) {
       console.error(err);
@@ -136,7 +127,7 @@ export default function SalonSetup() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          
+
           {/* Salon Name Input */}
           <div>
             <label className="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Salon Name *</label>

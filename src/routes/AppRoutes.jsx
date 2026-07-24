@@ -4,6 +4,7 @@ import { useAuthContext } from '../context/AuthContext'; // 🔑 Auth Context im
 
 // Guard
 import AuthGuard from '../components/auth/AuthGuard';
+import RoleGuard from '../components/auth/RoleGuard';
 
 // Layouts
 import UserLayout from '../layouts/UserLayout';
@@ -81,7 +82,7 @@ export default function AppRoutes() {
         <Route
           path="/setup-salon"
           element={
-            isAuthenticated && profile?.role === 'admin' && profile?.hasSalon ? (
+            isAuthenticated && profile?.role === 'owner' && profile?.hasSalon ? (
               <Navigate to="/admin/shop" replace />
             ) : (
               <SalonSetup />
@@ -153,11 +154,26 @@ export default function AppRoutes() {
           </AuthGuard>
         }
       >
-        <Route path="/admin/shop" element={<ShopkeeperDashboard />} />
-        <Route path="/admin/global" element={<GlobalDashboard />} />
-        <Route path="/admin/services" element={<ServiceMenu />} />
-        <Route path="/admin/barbers" element={<StaffManager />} />
-        <Route path="/admin/booking" element={<BookingManager />} />
+        <Route
+          path="/admin/shop"
+          element={<RoleGuard allow={['owner', 'admin']}><ShopkeeperDashboard /></RoleGuard>}
+        />
+        <Route
+          path="/admin/global"
+          element={<RoleGuard allow={['owner', 'admin']}><GlobalDashboard /></RoleGuard>}
+        />
+        <Route
+          path="/admin/services"
+          element={<RoleGuard allow={['owner', 'admin']}><ServiceMenu /></RoleGuard>}
+        />
+        <Route
+          path="/admin/barbers"
+          element={<RoleGuard allow={['owner', 'admin']}><StaffManager /></RoleGuard>}
+        />
+        <Route
+          path="/admin/booking"
+          element={<RoleGuard allow={['owner', 'admin']}><BookingManager /></RoleGuard>}
+        />
       </Route>
 
       {/* ── Fallbacks / legacy redirects ── */}

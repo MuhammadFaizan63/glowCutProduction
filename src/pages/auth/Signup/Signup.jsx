@@ -28,13 +28,20 @@ const SLIDES = [
 
 export default function Signup() {
   const navigate = useNavigate();
-  const { loginAsGuest, login } = useAuth();
+  const { loginAsGuest, register } = useAuth();
 
   const [mode, setMode] = useState('choice'); // 'choice' | 'email-form'
   const [slide, setSlide] = useState(0);
   
-  // ⚡ Added 'role' with default value 'user' to sync with backend enum ['user', 'admin']
-  const [form, setForm] = useState({ userName: '', PhoneNumber: '', email: '', password: '', cities: '', role: 'user' });
+  // Role 'user' or 'admin' aligned with User model schema & controller requirements
+  const [form, setForm] = useState({ 
+    userName: '', 
+    PhoneNumber: '', 
+    email: '', 
+    password: '', 
+    cities: '', 
+    role: 'user' 
+  });
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -71,46 +78,30 @@ export default function Signup() {
     setSubmitting(true);
     
     try {
-      const response = await fetch('https://glow-cut-product-complete-backend.vercel.app/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userName: form.userName.trim(),
-          PhoneNumber: form.PhoneNumber.trim(),
-          email: form.email.trim().toLowerCase(),
-          password: form.password,
-          cities: form.cities,
-          role: form.role, // ⚡ Bheja ja raha hai role backend schema ke mutabiq
-        }),
+      const email = form.email.trim().toLowerCase();
+      const res = await register({
+        userName: form.userName.trim(),
+        PhoneNumber: form.PhoneNumber.trim(),
+        email,
+        password: form.password,
+        cities: form.cities,
+        role: form.role,
       });
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        toast.success(data.message || 'User registered successfully. OTP sent!');
-        navigate('/auth/verify-otp', { state: { email: form.email.trim().toLowerCase() } });
-      } else {
-        toast.error(data.message || 'Registration failed.');
-      }
+      toast.success(res.message || 'User registered successfully. OTP sent!');
+      navigate('/auth/verify-otp', { state: { email } });
     } catch (error) {
-      console.error('Signup Network Error:', error);
-      toast.error('Connection refused. Please check live database cluster status.');
+      toast.error(error?.message || 'Registration failed.');
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleGoogleSignup = async () => {
-    setGoogleLoading(true);
-    try {
-      await login({ email: 'google.user@gmail.com', password: 'google-oauth' });
-      toast.success('Signed in with Google!');
-      navigate('/');
-    } finally {
-      setGoogleLoading(false);
-    }
+    // The backend does not yet expose a Google OAuth endpoint — surface this
+    // clearly instead of faking a session, and fall back to email signup.
+    toast.error('Google sign-in is coming soon. Please sign up with email for now.');
+    setMode('email-form');
   };
 
   const handleGuest = () => {
@@ -271,7 +262,7 @@ export default function Signup() {
                   )}
                 </div>
 
-                {/* ⚡ NEW: Role Dropdown to Sync with Backend Schema ['user', 'admin'] */}
+                {/* Role Dropdown */}
                 <div className="flex flex-col gap-xs">
                   <label className="font-label-md text-label-md text-on-surface-variant">
                     Account Type <span className="text-error ml-1">*</span>
@@ -284,7 +275,7 @@ export default function Signup() {
                       className="w-full bg-surface border border-white/10 rounded-lg pl-10 pr-4 py-3 text-white font-body-md focus:outline-none focus:border-primary-container appearance-none"
                     >
                       <option value="user" className="bg-surface text-white">Customer</option>
-                      <option value="admin" className="bg-surface text-white">Salon Owner</option>
+                      <option value="owner" className="bg-surface text-white">Salon Owner</option>
                     </select>
                   </div>
                   {errors.role && (

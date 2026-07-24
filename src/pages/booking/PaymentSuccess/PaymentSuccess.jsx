@@ -8,16 +8,32 @@ export default function PaymentSuccess() {
   const navigate = useNavigate();
   const { booking, totalPrice, resetBooking } = useBooking();
 
-  const invoiceNumber = `GC-${Math.floor(9000 + Math.random() * 999)}`;
-  const now = new Date();
-  const dateLabel = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  const timeLabel = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  const createdBookings = booking.createdBookings || [];
+  const firstBooking = createdBookings[0];
 
-  const lineItems = booking.services.length
-    ? booking.services
-    : [{ id: 'svc-default', name: 'Signature Service', price: totalPrice || 2000 }];
+  // Real invoice reference — the first created booking's Mongo _id — instead
+  // of a random placeholder number.
+  const invoiceNumber = firstBooking?._id ? firstBooking._id.slice(-8).toUpperCase() : 'PENDING';
+  const createdAt = firstBooking?.createdAt ? new Date(firstBooking.createdAt) : new Date();
+  const dateLabel = createdAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const timeLabel = createdAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 
-  const grandTotal = totalPrice || lineItems.reduce((sum, s) => sum + (s.price || 0), 0);
+  // Prefer real booking documents (with their actual finalAmount) over the
+  // in-memory cart, since discounts/fees are computed server-side.
+  const lineItems = createdBookings.length
+    ? createdBookings.map((b) => ({
+        id: b._id,
+        name: b.serviceId?.name || 'Service',
+        price: b.finalAmount ?? 0,
+      }))
+    : booking.services.map((s) => ({ id: s._id || s.id, name: s.name, price: s.price || 0 }));
+
+  const grandTotal = createdBookings.length
+    ? createdBookings.reduce((sum, b) => sum + (b.finalAmount ?? 0), 0)
+    : totalPrice;
+
+  const paymentStatus = firstBooking?.paymentStatus || 'pending';
+  const paymentMethod = firstBooking?.paymentMethod || booking.paymentMethod || 'cash';
 
   const handleDownload = () => {
     toast.success('Receipt downloaded (simulated)');
@@ -59,6 +75,9 @@ export default function PaymentSuccess() {
             <div className="text-right">
               <p className="font-body-md text-body-md text-on-surface-variant">{dateLabel}</p>
               <p className="font-body-md text-body-md text-on-surface-variant">{timeLabel}</p>
+              <p className="font-caption text-caption text-secondary uppercase mt-xs">
+                {paymentStatus} · {paymentMethod}
+              </p>
             </div>
           </div>
 
@@ -113,8 +132,14 @@ export default function PaymentSuccess() {
           Download PDF Receipt
         </button>
         <button
-          onClick={handleBackHome}
+          onClick={() => navigate('/profile/feedback')}
           className="w-full h-14 border border-secondary/40 text-secondary font-headline-md text-headline-md rounded-xl flex items-center justify-center gap-sm active:scale-95 transition-all hover:bg-secondary/5"
+        >
+          Rate Your Experience
+        </button>
+        <button
+          onClick={handleBackHome}
+          className="w-full h-14 text-on-surface-variant font-label-md rounded-xl flex items-center justify-center gap-sm active:scale-95 transition-all hover:text-on-surface"
         >
           <MdHome />
           Back to Home

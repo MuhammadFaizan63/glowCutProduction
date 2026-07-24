@@ -6,133 +6,128 @@ import ServiceCard from '../../../components/salon/ServiceCard';
 import BarberCard from '../../../components/salon/BarberCard';
 import ReviewCard from '../../../components/salon/ReviewCard';
 import Loader from '../../../components/ui/Loader';
+import EmptyState from '../../../components/ui/EmptyState';
 import { useSalon } from '../../../hooks/useSalon';
 import { useBooking } from '../../../hooks/useBooking';
 import * as bookingService from '../../../services/bookingService';
+import * as salonService from '../../../services/salonService';
 
-const SERVICE_CATEGORIES = [
-  {
-    category: 'Haircuts',
-    items: [
-      {
-        id: 'svc-precision-fade',
-        name: 'Precision Fade',
-        price: 'PKR 1,500',
-        priceValue: 1500,
-        description: 'A sharp, digitally-precise fade tailored to your head shape. Includes wash and style.',
-        duration: '45 mins',
-      },
-      {
-        id: 'svc-cyber-undercut',
-        name: 'Cyber-Undercut',
-        price: 'PKR 2,200',
-        priceValue: 2200,
-        description: 'Edgy geometric patterns etched with razor precision for a high-tech street look.',
-        duration: '60 mins',
-      },
-    ],
-  },
-  {
-    category: 'Cyber-Treatments',
-    items: [
-      {
-        id: 'svc-scalp-detox',
-        name: 'Neon Glow Scalp Detox',
-        price: 'PKR 3,500',
-        priceValue: 3500,
-        description: 'Ultrasonic treatment with bio-available nutrients to refresh stressed scalps.',
-        duration: '30 mins',
-      },
-    ],
-  },
-];
-
-const STYLISTS = [
-  {
-    id: 'stylist-usman',
-    name: 'Usman K.',
-    specialty: 'Fade Specialist',
-    rating: 4.9,
-    reviewCount: 120,
-    available: true,
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuDsLpEtK2nspMtqZ8-eiJmxab5w48-j-06oss6R9E2W_KgPfWcbanZqysEtSQoqBJdm6qohZDh-eOILbvNukxNyV2kliByTTLCF4iVhx9fzorykM-MxWr_qUSqZtehx7a3cCmQ2TwNPuupqTLOPIf3vWyISiHzsrMmhSUYd1Rd7YbXWAcboNf73X8TNkHP6Wu13ePE6V16AIjGrwB94l-rRD2zFbq4VCOfK69fginVtp_LLXBK3l1yd2bpOLlroPFz25xkOv_jNDqM',
-  },
-  {
-    id: 'stylist-zara',
-    name: 'Zara',
-    specialty: 'Color & Style',
-    rating: 4.8,
-    reviewCount: 85,
-    available: false,
-    nextSlot: '2PM',
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuDb-09FEBqZV_QEb-8HceaNERsrkaAlpOPWO3LbxPCCQA2E_TipMygejrUY0VW4xTSGokEcAfnynEAeoMWx-N_TMEpY2SiesfUtsTI7eqKykzQliuwPAskwnF488MeEN3bhwDnPtqumk1saJ_DgqNR5lIX9TE6wQ0GzTotL7gW6XQLsp9HA9WCG0AFwCyt7H90IkIZ7A1vHcAaoiqCH2nKFDQXOslY-NPrg-E9Uhxtpy3bBSFcaEVnOridpH6D0Z6dK9fdLz7nCTzs',
-  },
-];
-
-const REVIEWS = [
-  {
-    author: 'Ahmed K.',
-    rating: 5,
-    timeAgo: '2 days ago',
-    comment: 'Best fade in the city. The vibe at Modern Cuts PECHS is unmatched. Usman really knows his craft.',
-  },
-  {
-    author: 'Bilal R.',
-    rating: 4,
-    timeAgo: '1 week ago',
-    comment: 'Loved the cyber-chic atmosphere. Scalp detox left my hair feeling amazing.',
-  },
-];
-
-const DATES = [
-  { label: 'Today', day: '24' },
-  { label: 'Tue', day: '25' },
-  { label: 'Wed', day: '26' },
-];
+// Next 3 calendar days, used for the Quick Book date picker.
+const buildDates = () => {
+  const days = [];
+  for (let i = 0; i < 3; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    days.push({
+      label: i === 0 ? 'Today' : d.toLocaleDateString('en-US', { weekday: 'short' }),
+      day: String(d.getDate()),
+      iso: d.toISOString().split('T')[0],
+    });
+  }
+  return days;
+};
 
 export default function SalonDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { salon, isLoading } = useSalon(id);
-  const { booking, setSalon, toggleService, setTimeSlot, totalPrice } = useBooking();
+  const { booking, setSalon, toggleService, setStylist, setTimeSlot, totalPrice } = useBooking();
 
+  const [dates] = useState(buildDates);
   const [selectedDate, setSelectedDate] = useState(0);
   const [slots, setSlots] = useState([]);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [slotsLoading, setSlotsLoading] = useState(true);
 
+  const [services, setServices] = useState([]);
+  const [loadingServices, setLoadingServices] = useState(true);
+  const [barbers, setBarbers] = useState([]);
+  const [loadingBarbers, setLoadingBarbers] = useState(true);
+  const [reviews, setReviews] = useState([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
+
   useEffect(() => {
     if (salon) setSalon(salon);
   }, [salon, setSalon]);
 
+  // Real services for this salon
   useEffect(() => {
+    if (!id) return;
+    setLoadingServices(true);
+    salonService
+      .getSalonServices(id)
+      .then((list) => setServices(Array.isArray(list) ? list : []))
+      .catch(() => setServices([]))
+      .finally(() => setLoadingServices(false));
+  }, [id]);
+
+  // Real barbers for this salon
+  useEffect(() => {
+    if (!id) return;
+    setLoadingBarbers(true);
+    salonService
+      .getSalonBarbers(id)
+      .then((list) => setBarbers(Array.isArray(list) ? list : []))
+      .catch(() => setBarbers([]))
+      .finally(() => setLoadingBarbers(false));
+  }, [id]);
+
+  // Reviews for the currently selected stylist (backend reviews are
+  // per-barber, not per-salon — see review.routes.js).
+  useEffect(() => {
+    const barberId = booking.stylist?._id || booking.stylist?.id;
+    if (!barberId) {
+      setReviews([]);
+      return;
+    }
+    setLoadingReviews(true);
+    salonService
+      .getBarberReviews(barberId)
+      .then((list) => setReviews(Array.isArray(list) ? list : []))
+      .catch(() => setReviews([]))
+      .finally(() => setLoadingReviews(false));
+  }, [booking.stylist]);
+
+  // Real time-slot availability, scoped to the selected stylist once chosen.
+  useEffect(() => {
+    if (!id) return;
     setSlotsLoading(true);
-    bookingService.getAvailableTimeSlots(id, DATES[selectedDate].label).then((data) => {
+    const barberId = booking.stylist?._id || booking.stylist?.id;
+    bookingService.getAvailableTimeSlots(id, barberId, dates[selectedDate].iso).then((data) => {
       setSlots(data);
       const firstAvailable = data.find((s) => s.status === 'available');
       setSelectedSlot(firstAvailable?.time || null);
       setSlotsLoading(false);
     });
-  }, [id, selectedDate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, selectedDate, booking.stylist]);
 
   const handleConfirm = () => {
     if (booking.services.length === 0) {
       toast.error('Select at least one service first');
       return;
     }
+    if (!booking.stylist) {
+      toast.error('Please choose a stylist');
+      return;
+    }
     if (!selectedSlot) {
       toast.error('Please pick an available time slot');
       return;
     }
-    setTimeSlot(DATES[selectedDate].label, selectedSlot);
+    setTimeSlot(dates[selectedDate].iso, selectedSlot, dates[selectedDate].label);
     navigate('/booking/confirm');
   };
 
   if (isLoading || !salon) {
     return <Loader variant="full" label="Loading Salon" />;
   }
+
+  const salonId = salon._id || salon.id;
+  const areaLabel = salon.address
+    ? [salon.address.area, salon.address.city].filter(Boolean).join(', ')
+    : salon.area || 'Location unavailable';
+  const heroImage = salon.coverImage || salon.logo || salon.image || 'https://via.placeholder.com/1200x600?text=GlowCut';
 
   const techFee = 0;
   const grandTotal = totalPrice + techFee;
@@ -143,23 +138,23 @@ export default function SalonDetail() {
       <nav className="flex items-center gap-xs text-on-surface-variant font-caption text-caption mb-md opacity-70">
         <span>Search</span>
         <span>›</span>
-        <span>{salon.area?.split(',')[0]}</span>
+        <span>{areaLabel.split(',')[0]}</span>
         <span>›</span>
         <span className="text-secondary">{salon.name}</span>
       </nav>
 
       {/* Hero */}
       <section className="relative h-[500px] rounded-xl overflow-hidden mb-xl border border-white/10">
-        <img className="w-full h-full object-cover" alt={salon.name} src={salon.image} />
+        <img className="w-full h-full object-cover" alt={salon.name} src={heroImage} />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
         <div className="absolute bottom-lg left-lg">
           <h1 className="font-display-lg text-display-lg text-white mb-xs">{salon.name}</h1>
           <p className="text-secondary font-label-md flex items-center gap-xs">
-            <MdVerified /> Premium Cyber-Grooming Destination
+            <MdVerified /> {salon.isVerified ? 'Verified GlowCut Partner' : 'Premium Cyber-Grooming Destination'}
           </p>
         </div>
         <div className="absolute bottom-lg right-lg flex gap-sm">
-          <button className="w-10 h-10 rounded-full glass-panel flex items-center justify-center hover:bg-white/10 transition-all">
+          <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-full glass-panel flex items-center justify-center hover:bg-white/10 transition-all">
             <MdArrowBack />
           </button>
           <button className="w-10 h-10 rounded-full glass-panel flex items-center justify-center hover:bg-white/10 transition-all">
@@ -178,35 +173,45 @@ export default function SalonDetail() {
                 <MdContentCut className="text-primary-container" /> Services Menu
               </h2>
             </div>
-            <div className="space-y-lg">
-              {SERVICE_CATEGORIES.map((cat) => (
-                <div key={cat.category}>
-                  <h3 className="font-headline-md text-headline-md text-secondary mb-md border-l-4 border-secondary pl-md">
-                    {cat.category}
-                  </h3>
-                  <div className="grid grid-cols-1 gap-md">
-                    {cat.items.map((service) => {
-                      const isSelected = booking.services.some((s) => s.id === service.id);
-                      return (
-                        <ServiceCard
-                          key={service.id}
-                          service={service}
-                          selected={isSelected}
-                          onSelect={() =>
-                            toggleService({
-                              id: service.id,
-                              name: service.name,
-                              price: service.priceValue,
-                              duration: parseInt(service.duration, 10),
-                            })
-                          }
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
+            {loadingServices ? (
+              <div className="grid grid-cols-1 gap-md">
+                {[1, 2, 3].map((n) => <div key={n} className="h-24 glass-panel rounded-xl animate-pulse" />)}
+              </div>
+            ) : services.length === 0 ? (
+              <EmptyState
+                icon={MdContentCut}
+                title="No services listed yet"
+                description="This salon hasn't published its service menu yet — check back soon."
+              />
+            ) : (
+              <div className="grid grid-cols-1 gap-md">
+                {services.map((service) => {
+                  const serviceId = service._id || service.id;
+                  const isSelected = booking.services.some((s) => (s._id || s.id) === serviceId);
+                  return (
+                    <ServiceCard
+                      key={serviceId}
+                      service={{
+                        name: service.name,
+                        price: `PKR ${(service.price ?? 0).toLocaleString()}`,
+                        description: service.description,
+                        duration: `${service.duration ?? 0} mins`,
+                      }}
+                      selected={isSelected}
+                      onSelect={() =>
+                        toggleService({
+                          _id: serviceId,
+                          id: serviceId,
+                          name: service.name,
+                          price: service.price ?? 0,
+                          duration: service.duration ?? 0,
+                        })
+                      }
+                    />
+                  );
+                })}
+              </div>
+            )}
           </section>
 
           {/* Stylists */}
@@ -214,21 +219,71 @@ export default function SalonDetail() {
             <h2 className="font-headline-lg text-headline-lg mb-lg flex items-center gap-sm">
               <MdGroup className="text-primary-container" /> Master Stylists
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
-              {STYLISTS.map((stylist) => (
-                <BarberCard key={stylist.id} barber={stylist} />
-              ))}
-            </div>
+            {loadingBarbers ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+                {[1, 2].map((n) => <div key={n} className="h-32 glass-panel rounded-xl animate-pulse" />)}
+              </div>
+            ) : barbers.length === 0 ? (
+              <EmptyState
+                icon={MdGroup}
+                title="No stylists on staff yet"
+                description="This salon hasn't added any specialists yet — check back soon."
+              />
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+                {barbers.map((barber) => {
+                  const barberId = barber._id || barber.id;
+                  const isSelected = (booking.stylist?._id || booking.stylist?.id) === barberId;
+                  return (
+                    <div key={barberId} className={isSelected ? 'ring-2 ring-secondary rounded-xl' : ''}>
+                      <BarberCard
+                        barber={{
+                          name: barber.name,
+                          specialty: barber.description || 'GlowCut Specialist',
+                          rating: barber.rating ?? 0,
+                          reviewCount: barber.reviewCount ?? 0,
+                          image: barber.profileImage || 'https://via.placeholder.com/150?text=?',
+                          available: barber.isAvailable && barber.status === 'active',
+                          nextSlot: barber.startTime,
+                        }}
+                        onClick={() => setStylist(barber)}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </section>
 
           {/* Reviews */}
           <section>
             <h2 className="font-headline-md text-headline-md mb-md">Community Feedback</h2>
-            <div className="space-y-gutter">
-              {REVIEWS.map((review, i) => (
-                <ReviewCard key={i} review={review} />
-              ))}
-            </div>
+            {!booking.stylist ? (
+              <EmptyState
+                title="Pick a stylist to see their reviews"
+                description="Reviews are tied to individual specialists — select one above."
+              />
+            ) : loadingReviews ? (
+              <div className="space-y-gutter">
+                {[1, 2].map((n) => <div key={n} className="h-20 glass-panel rounded-xl animate-pulse" />)}
+              </div>
+            ) : reviews.length === 0 ? (
+              <EmptyState title="No reviews yet" description={`Be the first to review ${booking.stylist.name}.`} />
+            ) : (
+              <div className="space-y-gutter">
+                {reviews.map((review) => (
+                  <ReviewCard
+                    key={review._id}
+                    review={{
+                      author: review.user?.userName || review.user?.name || 'GlowCut Customer',
+                      rating: review.rating,
+                      timeAgo: new Date(review.createdAt).toLocaleDateString(),
+                      comment: review.comment || 'No comment left.',
+                    }}
+                  />
+                ))}
+              </div>
+            )}
           </section>
         </div>
 
@@ -242,9 +297,9 @@ export default function SalonDetail() {
                 Select Date
               </label>
               <div className="grid grid-cols-3 gap-xs">
-                {DATES.map((d, i) => (
+                {dates.map((d, i) => (
                   <button
-                    key={d.label}
+                    key={d.iso}
                     onClick={() => setSelectedDate(i)}
                     className={`py-md rounded-lg text-center flex flex-col items-center transition-colors ${
                       selectedDate === i
@@ -261,7 +316,7 @@ export default function SalonDetail() {
 
             <div className="mb-xl">
               <label className="font-label-md text-label-md block mb-sm text-on-surface-variant">
-                Available Times
+                Available Times {booking.stylist ? `for ${booking.stylist.name}` : '(pick a stylist first)'}
               </label>
               {slotsLoading ? (
                 <div className="grid grid-cols-3 gap-xs">
@@ -296,9 +351,9 @@ export default function SalonDetail() {
                 <p className="text-on-surface-variant text-sm italic">No services selected yet.</p>
               ) : (
                 booking.services.map((s) => (
-                  <div key={s.id} className="flex justify-between items-center mb-xs">
+                  <div key={s._id || s.id} className="flex justify-between items-center mb-xs">
                     <span className="text-on-surface-variant font-body-md">{s.name}</span>
-                    <span className="text-white font-bold">PKR {s.price.toLocaleString()}</span>
+                    <span className="text-white font-bold">PKR {(s.price ?? 0).toLocaleString()}</span>
                   </div>
                 ))
               )}
@@ -327,17 +382,10 @@ export default function SalonDetail() {
               Location
             </h4>
             <p className="text-on-surface-variant font-body-md mb-md flex items-center gap-xs">
-              <MdLocationOn /> {salon.area}
+              <MdLocationOn /> {areaLabel}
             </p>
-            <div className="w-full h-32 bg-surface-container-high rounded-lg overflow-hidden relative">
-              <img
-                className="w-full h-full object-cover grayscale brightness-50"
-                alt="Map location"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCpgynpW5r3FztPxvFPuus4DGDxsjr6_uE1RCHttTgLeudziQeArtt8aMMGr8ZVQsPmA2NiLJNJ3yQ_0w_ldZSyftZQ_gtiYUVuPDk210cTeUCa-NgTdRT4OlYgSCM-z-sDBvxvyHRLRRwqdf0wfXdWpVIh_ccb7lryZsQcU9wVvtdq1gQYDcYgLx08hBEMVjbxSv4fomgUgoPK6Lkv6qzKubzVSJAdG7Q-Vdr6nbQdXjYM-gKupplx3YyFDpm45GFgdHpiDfdO-cc"
-              />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <MdLocationOn className="text-secondary text-4xl" />
-              </div>
+            <div className="w-full h-32 bg-surface-container-high rounded-lg overflow-hidden relative flex items-center justify-center">
+              <MdLocationOn className="text-secondary text-4xl" />
             </div>
           </div>
         </aside>

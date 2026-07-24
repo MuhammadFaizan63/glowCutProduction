@@ -13,6 +13,10 @@ import Loader from '../../../components/ui/Loader';
 const BARBER_AVATAR =
   'https://lh3.googleusercontent.com/aida-public/AB6AXuCJTPCP8O6ZtCd3_CP4o6u_gOhHKd6LSq7ubUKYs7yLC8UY-BuhjLv7vLeyWf-dBea_-eKr4cFe1AacO1BJ0UD_liWhXSnlZsY_aYpgBxSJAvYNX9iYw3y-JEZ5N3gr7Ywmon1eqljk7dJ0GSjFwK-Ot4brmHUsY085zRQxdUQ_IjtHfW_VVhcCsIeShhfXe5S4LySjV9qAoxpWvjzRrCddK6F15S4mwVtJgEoOFnd9GgXhlojRoHMBrxINkMv3dvU85uNREWOYLjk';
 
+// NOTE: the backend has no chat/messaging model or routes at all, so this
+// screen is a simulated conversation for demonstrating the UI only — not
+// real prior messages with any actual stylist. Consistent with the same
+// decision made for the ShopkeeperDashboard chat panel.
 const INITIAL_MESSAGES = [
   {
     id: 'm1',

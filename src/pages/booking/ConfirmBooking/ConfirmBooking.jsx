@@ -11,16 +11,9 @@ import {
 } from 'react-icons/md';
 import { useBooking } from '../../../hooks/useBooking';
 import * as bookingService from '../../../services/bookingService';
+import * as salonService from '../../../services/salonService';
 import ReviewCard from '../../../components/salon/ReviewCard';
-
-const REVIEWS = [
-  {
-    author: 'Ahmed K.',
-    rating: 5,
-    timeAgo: '2 days ago',
-    comment: 'Best fade in the city. The vibe at Modern Cuts PECHS is unmatched. Usman really knows his craft.',
-  },
-];
+import EmptyState from '../../../components/ui/EmptyState';
 
 const TECH_FEE = 50;
 
@@ -32,9 +25,14 @@ export default function ConfirmBooking() {
   const [selectedSlot, setSelectedSlotState] = useState(booking.timeSlot);
   const [loadingSlots, setLoadingSlots] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [reviews, setReviews] = useState([]);
+  const [loadingReviews, setLoadingReviews] = useState(true);
 
   useEffect(() => {
-    bookingService.getAvailableTimeSlots(booking.salon?.id, 'today').then((data) => {
+    const salonId = booking.salon?._id || booking.salon?.id;
+    const barberId = booking.stylist?._id || booking.stylist?.id;
+    const dateStr = booking.date || 'today';
+    bookingService.getAvailableTimeSlots(salonId, barberId, dateStr).then((data) => {
       setSlots(data);
       setLoadingSlots(false);
       if (!selectedSlot) {
@@ -45,30 +43,73 @@ export default function ConfirmBooking() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    const barberId = booking.stylist?._id || booking.stylist?.id;
+    if (!barberId) {
+      setLoadingReviews(false);
+      return;
+    }
+    setLoadingReviews(true);
+    salonService
+      .getBarberReviews(barberId)
+      .then((list) => setReviews(Array.isArray(list) ? list : []))
+      .catch(() => setReviews([]))
+      .finally(() => setLoadingReviews(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleSelectSlot = (time) => {
     setSelectedSlotState(time);
-    setTimeSlot('Today', time);
+    setTimeSlot(booking.date, time, booking.dateLabel);
   };
 
   const grandTotal = totalPrice + TECH_FEE;
 
   const handleProceed = async () => {
-    if (!booking.salon) {
+    const salonId = booking.salon?._id || booking.salon?.id;
+    const barberId = booking.stylist?._id || booking.stylist?.id;
+
+    if (!salonId) {
       toast.error('No salon selected — start from a salon page');
       navigate('/salons/nearby');
       return;
     }
+    if (booking.services.length === 0) {
+      toast.error('Select at least one service before confirming.');
+      return;
+    }
+    if (!barberId) {
+      toast.error('Please choose a stylist for this booking.');
+      return;
+    }
+    if (!selectedSlot) {
+      toast.error('Please pick an available time slot.');
+      return;
+    }
+
     setSubmitting(true);
     try {
-      await bookingService.createBooking({
-        salonId: booking.salon.id,
-        services: booking.services,
-        timeSlot: selectedSlot,
-      });
-      confirmBooking();
+      // The backend's Booking schema links one service + one barber per
+      // booking document, so a multi-service cart becomes one POST /bookings
+      // call per selected service, all sharing the same slot/date/barber.
+      const bookingDate = booking.date || new Date().toISOString().split('T')[0];
+      const createdBookings = [];
+      for (const service of booking.services) {
+        const created = await bookingService.createBooking({
+          salonId,
+          barberId,
+          serviceId: service._id || service.id,
+          bookingDate,
+          startTime: selectedSlot,
+          paymentMethod: booking.paymentMethod || 'cash',
+          bookingType: 'appointment',
+        });
+        createdBookings.push(created);
+      }
+      confirmBooking(createdBookings);
       navigate('/booking/summary');
-    } catch {
-      toast.error('Something went wrong confirming your booking');
+    } catch (err) {
+      toast.error(err.message || 'Something went wrong confirming your booking');
     } finally {
       setSubmitting(false);
     }
@@ -157,7 +198,7 @@ export default function ConfirmBooking() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-gutter">
                   {booking.services.map((service, i) => (
                     <div
-                      key={service.id}
+                      key={service._id || service.id}
                       className={`glass-panel p-md rounded-xl flex justify-between items-center group ${
                         i % 2 === 1 ? 'border-l-4 border-secondary' : ''
                       }`}
@@ -229,11 +270,30 @@ export default function ConfirmBooking() {
             {/* Community Feedback */}
             <div>
               <h2 className="font-headline-md text-headline-md mb-md">Community Feedback</h2>
-              <div className="space-y-gutter">
-                {REVIEWS.map((review, i) => (
-                  <ReviewCard key={i} review={review} />
-                ))}
-              </div>
+              {loadingReviews ? (
+                <div className="space-y-gutter">
+                  {[1, 2].map((n) => <div key={n} className="h-20 glass-panel rounded-xl animate-pulse" />)}
+                </div>
+              ) : reviews.length === 0 ? (
+                <EmptyState
+                  title="No reviews yet"
+                  description={booking.stylist ? `Be the first to review ${booking.stylist.name}.` : 'Select a stylist to see their reviews.'}
+                />
+              ) : (
+                <div className="space-y-gutter">
+                  {reviews.map((review) => (
+                    <ReviewCard
+                      key={review._id}
+                      review={{
+                        author: review.user?.userName || review.user?.name || 'GlowCut Customer',
+                        rating: review.rating,
+                        timeAgo: new Date(review.createdAt).toLocaleDateString(),
+                        comment: review.comment || 'No comment left.',
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
@@ -263,22 +323,24 @@ export default function ConfirmBooking() {
                 <div className="flex items-center gap-4">
                   <div className="relative">
                     <img
-                      className="w-16 h-16 rounded-full border-2 border-primary object-cover"
-                      alt="Stylist Usman"
-                      src="https://lh3.googleusercontent.com/aida-public/AB6AXuBE692VQepZnu8F3jFCB9IqV7KjGKicvqPVTSc14wMhSn9xWEXFrqNmmOk85428B-jLi-X1AdVs2fjeJxDVHm3MF9cV7K4nru8ziFmpu9ZE6ktNFDkItdqswXrB8cU8D_MvbfTnZP8PV4yc_zDLqigIxBzRSdG5R9KDib87_KVg9YPQPX8NG7tWHImJlo_l7wPSIOA7HnXbrVYs_0VIJXSH8SWq8TPCGjq24ShxY1gvw_Yl1Tt1wR5uy3i64c676XraF-uPUKqMeq4"
+                      className="w-16 h-16 rounded-full border-2 border-primary object-cover bg-surface-container"
+                      alt={booking.stylist?.name || 'No stylist selected'}
+                      src={booking.stylist?.profileImage || 'https://via.placeholder.com/150?text=?'}
                     />
                     <div className="absolute bottom-0 right-0 w-4 h-4 bg-secondary rounded-full border-2 border-background" />
                   </div>
                   <div>
                     <h3 className="font-label-md text-white">
-                      {booking.stylist?.name || 'Usman'}
+                      {booking.stylist?.name || 'No stylist selected'}
                     </h3>
                     <p className="text-caption text-primary uppercase font-bold tracking-tighter">
                       GlowCut Specialist
                     </p>
                     <div className="flex items-center gap-1 mt-1">
                       <MdStar className="text-primary text-[14px]" />
-                      <span className="text-caption text-on-surface">4.9 (120+ Reviews)</span>
+                      <span className="text-caption text-on-surface">
+                        {(booking.stylist?.rating ?? 0).toFixed?.(1) ?? booking.stylist?.rating ?? '—'} ({reviews.length} Reviews)
+                      </span>
                     </div>
                   </div>
                 </div>

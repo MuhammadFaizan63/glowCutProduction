@@ -19,6 +19,8 @@ const SHARE_CHANNELS = [
   { label: 'More', icon: MdShare },
 ];
 
+// Mocked, like the rest of rewardService's data — the backend has no
+// referrals/invites model or routes at all.
 const INVITE_HISTORY = [
   {
     name: 'Alex Rivera',

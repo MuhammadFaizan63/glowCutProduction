@@ -3,51 +3,65 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { MdArrowBack, MdNotifications, MdPerson, MdCall, MdNearMe } from 'react-icons/md';
 import BookingTimeline from '../../../components/booking/BookingTimeline';
+import { useBooking } from '../../../hooks/useBooking';
+import * as bookingService from '../../../services/bookingService';
 
-const TOTAL_SECONDS = 8 * 60;
-
+/**
+ * LiveTracking — the backend has no GPS/dispatch model (a salon booking
+ * has no "stylist en route" concept — the customer travels to the salon,
+ * not the other way around), so the decorative map/pin animation below is
+ * kept purely as ambiance. What actually drives this screen is the real
+ * booking status, polled from the backend, which decides the timeline and
+ * when to auto-advance to Payment Success.
+ */
 export default function LiveTracking() {
   const navigate = useNavigate();
-  const [secondsLeft, setSecondsLeft] = useState(TOTAL_SECONDS);
+  const { booking } = useBooking();
+  const createdBooking = booking.createdBookings?.[0];
+
+  const [liveBooking, setLiveBooking] = useState(createdBooking || null);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setSecondsLeft((s) => (s <= 1 ? 0 : s - 1));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
+    if (!createdBooking?._id) return;
+    let cancelled = false;
 
-  useEffect(() => {
-    if (secondsLeft === 0) {
-      const timeout = setTimeout(() => navigate('/booking/payment-success'), 1500);
-      return () => clearTimeout(timeout);
-    }
-  }, [secondsLeft, navigate]);
+    const poll = async () => {
+      try {
+        const updated = await bookingService.getBookingStatus(createdBooking._id);
+        if (cancelled) return;
+        setLiveBooking(updated);
+        if (updated.status === 'completed') {
+          setTimeout(() => navigate('/booking/payment-success'), 1500);
+        }
+      } catch (err) {
+        // Non-fatal — keep last known state, retry next tick.
+      }
+    };
 
-  const minutesLeft = Math.ceil(secondsLeft / 60);
-  const progressPercent = Math.min(95, Math.max(5, 100 - (secondsLeft / TOTAL_SECONDS) * 100));
+    poll();
+    const interval = setInterval(poll, 10000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [createdBooking?._id, navigate]);
+
+  const status = liveBooking?.status || 'pending';
+  const progressPercent = { pending: 20, confirmed: 60, completed: 100 }[status] ?? 20;
+  const stylistName = liveBooking?.barberId?.name || booking.stylist?.name || 'Your stylist';
 
   const steps = useMemo(() => {
-    if (minutesLeft > 5) {
-      return [
-        { title: 'Booking Confirmed', subtitle: 'Slot reserved', status: 'done' },
-        { title: 'Stylist En Route', subtitle: `${minutesLeft} min away`, status: 'active' },
-        { title: 'Arrived & Check-In', subtitle: 'Awaiting arrival', status: 'upcoming' },
-      ];
-    }
-    if (minutesLeft > 0) {
-      return [
-        { title: 'Booking Confirmed', subtitle: 'Slot reserved', status: 'done' },
-        { title: 'Stylist En Route', subtitle: 'Almost there', status: 'done' },
-        { title: 'Arrived & Check-In', subtitle: `${minutesLeft} min away`, status: 'active' },
-      ];
-    }
-    return [
-      { title: 'Booking Confirmed', subtitle: 'Slot reserved', status: 'done' },
-      { title: 'Stylist En Route', subtitle: 'Arrived', status: 'done' },
-      { title: 'Arrived & Check-In', subtitle: 'You are checked in!', status: 'done' },
+    const base = [
+      { title: 'Booking Confirmed', subtitle: 'Slot reserved with your salon' },
+      { title: 'Checked In', subtitle: `Waiting on ${stylistName}` },
+      { title: 'Service Complete', subtitle: 'Ready for payment' },
     ];
-  }, [minutesLeft]);
+    const idx = { pending: 0, confirmed: 1, completed: 2 }[status] ?? 0;
+    return base.map((step, i) => ({
+      ...step,
+      status: i < idx ? 'done' : i === idx ? 'active' : 'upcoming',
+    }));
+  }, [status, stylistName]);
 
   return (
     <div className="bg-background min-h-screen">
@@ -79,36 +93,12 @@ export default function LiveTracking() {
           <div className="absolute bottom-1/4 -left-1/4 w-[400px] h-[400px] bg-primary-container/10 rounded-full blur-[100px]" />
         </div>
 
-        {/* Map Section */}
-        <section className="relative h-[460px] w-full overflow-hidden">
-          <div className="absolute inset-0 bg-[#121212]">
-            <img
-              className="w-full h-full object-cover opacity-50 grayscale contrast-125"
-              alt="Map of PECHS, Karachi"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCsXNbE5T2ik9YEjd2lnQOvC24CTRwKmXsm-Bke0YC8wWaHm56NO9Opcb9gmhZ6nNfa0A7oHeBGOvgtkBpgSEWg8YaTEGiPABZBaIR1o4poMIBSajFR16xna5Us_PGZyql_r72RACV3Ecy9ylu8mUHwy_ym4e31-Gp-sm8w54pOz0dzV9-K8hcUaNJgIFMz-aP0W58OMUPHnVBOFAIQomhq7HJ6zI1VZo55J5zL1tSERl_rdue3AnTegvgv2Kubkfy8yz70QTkjseg"
-            />
-          </div>
-          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2">
-            <div className="relative flex items-center justify-center">
-              <div className="absolute w-12 h-12 bg-secondary/20 rounded-full animate-ping" />
-              <div className="relative w-8 h-8 bg-secondary rounded-full shadow-[0_0_20px_rgba(102,221,139,0.8)] flex items-center justify-center border-2 border-white/20">
-                <span className="material-symbols-outlined text-on-secondary text-sm">storefront</span>
-              </div>
-            </div>
-          </div>
-          <div
-            className="absolute transition-all duration-1000"
-            style={{ bottom: `${20 + progressPercent * 0.3}%`, left: `${33 + progressPercent * 0.15}%` }}
-          >
-            <div className="relative flex items-center justify-center">
-              <div className="w-6 h-6 bg-primary-container rounded-full shadow-[0_0_15px_rgba(255,95,31,0.9)] flex items-center justify-center border-2 border-white/30">
-                <span
-                  className="material-symbols-outlined text-white text-[12px]"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                  navigation
-                </span>
-              </div>
+        {/* Decorative map (ambiance only — no live GPS backend) */}
+        <section className="relative h-[280px] w-full overflow-hidden flex items-center justify-center bg-[#121212]">
+          <div className="relative flex items-center justify-center">
+            <div className="absolute w-16 h-16 bg-secondary/20 rounded-full animate-ping" />
+            <div className="relative w-10 h-10 bg-secondary rounded-full shadow-[0_0_20px_rgba(102,221,139,0.8)] flex items-center justify-center border-2 border-white/20">
+              <span className="material-symbols-outlined text-on-secondary text-base">storefront</span>
             </div>
           </div>
         </section>
@@ -117,11 +107,13 @@ export default function LiveTracking() {
         <section className="px-margin-mobile -mt-12 relative z-10 space-y-6">
           <div className="glass-edge backdrop-blur-2xl rounded-xl p-8 flex flex-col items-center justify-center text-center shadow-[0_10px_40px_rgba(0,0,0,0.6)]">
             <span className="font-label-md text-primary tracking-[0.2em] mb-2">LIVE STATUS</span>
-            <h1 className="font-display-lg text-white mb-1">
-              {minutesLeft > 0 ? `${minutesLeft} Minutes to Go` : "You're Checked In!"}
+            <h1 className="font-display-lg text-white mb-1 capitalize">
+              {status === 'completed' ? "You're All Done!" : status}
             </h1>
             <p className="font-body-md text-on-surface-variant">
-              {minutesLeft > 0 ? 'Estimated Wait Time' : 'Enjoy your visit'}
+              {status === 'pending' && 'Waiting for the salon to confirm your check-in'}
+              {status === 'confirmed' && `${stylistName} is working on you`}
+              {status === 'completed' && 'Heading to payment...'}
             </p>
             <div className="w-full h-1 bg-white/5 mt-6 rounded-full overflow-hidden">
               <div
@@ -131,20 +123,22 @@ export default function LiveTracking() {
             </div>
           </div>
 
-          {/* Live Timeline */}
           <BookingTimeline steps={steps} />
 
-          {/* Action Buttons */}
           <div className="grid grid-cols-2 gap-4 pb-4">
             <button
-              onClick={() => toast.success('Calling Usman K. ...')}
+              onClick={() =>
+                liveBooking?.barberId?.phone
+                  ? (window.location.href = `tel:${liveBooking.barberId.phone}`)
+                  : toast.error('No phone number on file for this stylist.')
+              }
               className="flex items-center justify-center gap-2 py-4 px-4 rounded-xl glass-edge text-on-surface-variant font-label-md hover:bg-white/5 transition-all active:scale-95 duration-200"
             >
               <MdCall className="text-sm" />
-              Call Barber
+              Call {stylistName.split(' ')[0]}
             </button>
             <button
-              onClick={() => toast('Opening directions...')}
+              onClick={() => toast('Directions coming soon!')}
               className="flex items-center justify-center gap-2 py-4 px-4 rounded-xl bg-primary-container text-white font-label-md shadow-[0_0_15px_rgba(255,95,31,0.5)] hover:brightness-110 transition-all active:scale-95 duration-200"
             >
               <MdNearMe className="text-sm" />

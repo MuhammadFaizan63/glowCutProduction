@@ -5,62 +5,28 @@ import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import Button from '../../../components/ui/Button';
 import Loader from '../../../components/ui/Loader';
-
-// 🌐 Updated backend URL
-const BASE_URL = 'https://glow-cut-product-complete-backend.vercel.app/api/auth';
+import { useAuth } from '../../../hooks/useAuth';
 
 export default function VerifyOtp() {
   const navigate = useNavigate();
   const location = useLocation();
-  
-  // Signup page se pass kiya gaya email
+  const { verifyEmail, resendVerificationOtp } = useAuth();
+
+  // Email passed in from the Signup page (registration already triggered
+  // the first OTP email server-side, so we don't need to re-send on load).
   const email = location.state?.email || '';
 
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [submitting, setSubmitting] = useState(false);
   const [resending, setResending] = useState(false);
   const inputRefs = useRef([]);
-  const hasRequestedInitialOtp = useRef(false); // Double calling se bachne ke liye ref
 
-  // 1️⃣ Protection & Auto-Send on Load
   useEffect(() => {
     if (!email) {
       toast.error('Session expired. Please register first to get your OTP.');
       navigate('/auth/signup');
-      return;
-    }
-
-    // React 18 StrictMode double-trigger se bachne ke liye check aur Auto-Send trigger
-    if (!hasRequestedInitialOtp.current) {
-      hasRequestedInitialOtp.current = true;
-      triggerInitialOtp();
     }
   }, [email, navigate]);
-
-  // Initial land hone par OTP send karne wala function
-  const triggerInitialOtp = async () => {
-    setResending(true);
-    try {
-      // Backend ke forgot-password endpoint ko use karke verification code verify page load par trigger karna
-      const response = await fetch(`${BASE_URL}/forgot-password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email: email }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        toast.success('Verification OTP code sent to your email!');
-      }
-    } catch (error) {
-      console.error('Initial OTP Send Error:', error);
-    } finally {
-      setResending(false);
-    }
-  };
 
   const handleChange = (index, value) => {
     if (isNaN(value)) return;
@@ -68,14 +34,12 @@ export default function VerifyOtp() {
     newOtp[index] = value.substring(value.length - 1);
     setOtp(newOtp);
 
-    // Agle box me auto-focus
     if (value && index < 5) {
       inputRefs.current[index + 1].focus();
     }
   };
 
   const handleKeyDown = (index, e) => {
-    // Backspace par pichle box me focus
     if (e.key === 'Backspace' && !otp[index] && index > 0) {
       inputRefs.current[index - 1].focus();
     }
@@ -91,11 +55,10 @@ export default function VerifyOtp() {
     }
   };
 
-  // 2️⃣ Verify OTP API Hit
   const handleSubmit = async (e) => {
     e.preventDefault();
     const otpString = otp.join('');
-    
+
     if (otpString.length < 6) {
       toast.error('Please enter all 6 digits of the OTP');
       return;
@@ -104,60 +67,28 @@ export default function VerifyOtp() {
     setSubmitting(true);
 
     try {
-      const response = await fetch(`${BASE_URL}/verify-otp`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: email,
-          otp: otpString,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        toast.success(data.message || 'Email verified successfully!');
-        navigate('/auth/login');
-      } else {
-        toast.error(data.message || 'Invalid OTP code. Please try again.');
-      }
+      const res = await verifyEmail({ email, otp: otpString });
+      toast.success(res.message || 'Email verified successfully!');
+      navigate('/auth/login');
     } catch (error) {
-      console.error('OTP Verification Error:', error);
-      toast.error('Network error. Please check your internet connection.');
+      toast.error(error?.message || 'Invalid OTP code. Please try again.');
     } finally {
       setSubmitting(false);
     }
   };
 
-  // 3️⃣ Resend Code API Hit (Manual)
   const handleResendCode = async () => {
     if (resending) return;
     setResending(true);
     const toastId = toast.loading('Sending new OTP code...');
 
     try {
-      const response = await fetch(`${BASE_URL}/forgot-password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email: email }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        toast.success(data.message || 'A fresh OTP has been sent to your email!', { id: toastId });
-        setOtp(['', '', '', '', '', '']); // OTP fields clear
-        if (inputRefs.current[0]) inputRefs.current[0].focus();
-      } else {
-        toast.error(data.message || 'Failed to resend OTP.', { id: toastId });
-      }
+      const res = await resendVerificationOtp({ email });
+      toast.success(res.message || 'A fresh OTP has been sent to your email!', { id: toastId });
+      setOtp(['', '', '', '', '', '']);
+      if (inputRefs.current[0]) inputRefs.current[0].focus();
     } catch (error) {
-      console.error('Resend OTP Error:', error);
-      toast.error('Could not connect to the server. Try again.', { id: toastId });
+      toast.error(error?.message || 'Failed to resend OTP.', { id: toastId });
     } finally {
       setResending(false);
     }
@@ -165,7 +96,6 @@ export default function VerifyOtp() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-xl w-full max-w-6xl items-center">
-      {/* Left side: Holographic Theme Visual */}
       <div className="flex flex-col items-center justify-center space-y-lg">
         <div className="relative w-full aspect-square max-w-md flex items-center justify-center">
           <div className="absolute inset-0 hologram-effect animate-pulse" />
@@ -190,7 +120,6 @@ export default function VerifyOtp() {
         </div>
       </div>
 
-      {/* Right side: Verification Card */}
       <div className="flex items-center justify-center">
         <div className="glass-panel w-full max-w-md p-lg rounded-xl shadow-2xl flex flex-col">
           <div className="mb-lg">
@@ -218,7 +147,7 @@ export default function VerifyOtp() {
               ))}
             </div>
 
-            <Button type="submit" variant="primary" size="full" loading={submitting}>
+            <Button type="submit" variant="primary" size="full" loading={submitting} disabled={submitting}>
               Verify &amp; Activate Account
             </Button>
           </form>
@@ -226,7 +155,7 @@ export default function VerifyOtp() {
           <div className="mt-xl text-center">
             <p className="text-body-md text-on-surface-variant">
               Didn't get the code?{' '}
-              <button 
+              <button
                 type="button"
                 onClick={handleResendCode}
                 disabled={resending}
