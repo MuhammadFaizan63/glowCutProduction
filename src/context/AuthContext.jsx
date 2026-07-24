@@ -169,6 +169,17 @@ export function AuthProvider({ children }) {
     return res.user;
   }, []);
 
+  const markSalonSetupComplete = useCallback((salon) => {
+    if (salon?._id) {
+      window.localStorage.setItem('salonId', salon._id);
+    }
+    setProfile((prev) => ({
+      ...prev,
+      hasSalon: true,
+      salon: salon || prev?.salon || null,
+    }));
+  }, []);
+
   const deleteAccount = useCallback(async () => {
     const res = await authService.deleteAccount();
     setUser(null);
@@ -243,6 +254,7 @@ export function AuthProvider({ children }) {
     continueAsGuest,
     updateProfile,
     updateProfileImage,
+    markSalonSetupComplete,
     deleteAccount,
     logout,
     logoutAll,
