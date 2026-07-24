@@ -1,64 +1,47 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import toast from 'react-hot-toast';
-import { 
-  MdContentCut, 
-  MdAttachMoney, 
-  MdAccessTime, 
-  MdDeleteOutline, 
+import {
+  MdContentCut,
+  MdAttachMoney,
+  MdAccessTime,
+  MdDeleteOutline,
   MdEdit,
   MdAdd,
-  MdClose
+  MdClose,
 } from 'react-icons/md';
-
-const BASE_URL = 'https://glow-cut-product-complete-backend.vercel.app/api/services';
+import apiClient from '../../../services/apiClient';
+import EmptyState from '../../../components/ui/EmptyState';
+import AuthContext from '../../../context/AuthContext';
 
 export default function ServiceMenu() {
+  const { profile } = useContext(AuthContext);
+  const salonId = profile?.salon?._id || profile?.salon?.id || localStorage.getItem('salonId') || '';
+
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
-  
-  // Modal / Edit Mode State
+  const [submitting, setSubmitting] = useState(false);
+
   const [editingService, setEditingService] = useState(null);
 
-  // Form States (Both Create & Edit)
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
   const [duration, setDuration] = useState('');
   const [description, setDescription] = useState('');
+  const [category, setCategory] = useState('General');
 
-  // Local storage se salonId get karne ke liye helper (ya token decode)
-  const getSalonId = () => {
-    return localStorage.getItem('salonId') || ''; 
-  };
-
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem('accessToken');
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    };
-  };
-
-  // 1. Fetch Services (Using GET /api/services/salons/:id/services)
   const fetchSalonServices = async () => {
-    const salonId = getSalonId();
     if (!salonId) {
-      toast.error("Salon reference missing. Please log in again.");
+      toast.error('No salon linked to this account yet.');
       setLoading(false);
       return;
     }
-
     setLoading(true);
     try {
-      const res = await fetch(`${BASE_URL}/salons/${salonId}/services`);
-      const data = await res.json();
-      if (data.success) {
-        setServices(data.data || []);
-      } else {
-        toast.error(data.message || "Failed to fetch services.");
-      }
+      const { data } = await apiClient.get(`/services/salon/${salonId}`);
+      setServices(data.data || []);
     } catch (err) {
-      console.error(err);
-      toast.error("Network error while loading menu.");
+      toast.error(err.message || 'Failed to fetch services.');
+      setServices([]);
     } finally {
       setLoading(false);
     }
@@ -66,126 +49,102 @@ export default function ServiceMenu() {
 
   useEffect(() => {
     fetchSalonServices();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [salonId]);
 
-  // 2. Create Service (POST /api/services)
+  const resetForm = () => {
+    setName(''); setPrice(''); setDuration(''); setDescription(''); setCategory('General');
+  };
+
   const handleAddService = async (e) => {
     e.preventDefault();
-    const salonId = getSalonId();
-
+    if (!salonId) return toast.error('No salon linked to this account yet.');
     if (!name.trim() || !price || !duration) {
-      toast.error("Name, Price, and Duration are required.");
+      toast.error('Name, Price, and Duration are required.');
       return;
     }
 
+    setSubmitting(true);
     try {
-      const res = await fetch(`${BASE_URL}/api/services`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({
-          salon: salonId,
-          name: name.trim(),
-          price: Number(price),
-          duration: Number(duration),
-          description: description.trim() || undefined
-        })
+      const { data } = await apiClient.post('/services', {
+        salon: salonId,
+        name: name.trim(),
+        price: Number(price),
+        duration: Number(duration),
+        description: description.trim() || undefined,
+        category: category.trim() || 'General',
       });
-      const data = await res.json();
-
       if (data.success) {
-        toast.success("Service added successfully!");
-        setName('');
-        setPrice('');
-        setDuration('');
-        setDescription('');
+        toast.success('Service added successfully!');
+        resetForm();
         fetchSalonServices();
-      } else {
-        toast.error(data.message || "Failed to add service.");
       }
     } catch (err) {
-      toast.error("Error connecting to backend.");
+      toast.error(err.message || 'Failed to add service.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  // 3. Update Service (PUT /api/services/service/:id)
   const handleUpdateService = async (e) => {
     e.preventDefault();
     if (!editingService) return;
-
+    setSubmitting(true);
     try {
-      const res = await fetch(`${BASE_URL}/service/${editingService._id}`, {
-        method: 'PUT',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({
-          name: name.trim(),
-          price: Number(price),
-          duration: Number(duration),
-          description: description.trim() || ""
-        })
+      const { data } = await apiClient.patch(`/services/${editingService._id}`, {
+        name: name.trim(),
+        price: Number(price),
+        duration: Number(duration),
+        description: description.trim() || '',
+        category: category.trim() || 'General',
       });
-      const data = await res.json();
-
       if (data.success) {
-        toast.success("Service updated successfully!");
+        toast.success('Service updated successfully!');
         closeEditMode();
         fetchSalonServices();
-      } else {
-        toast.error(data.message || "Failed to update service.");
       }
     } catch (err) {
-      toast.error("Error updating configuration.");
+      toast.error(err.message || 'Failed to update service.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  // 4. Delete Service (DELETE /api/services/service/:id)
   const handleDeleteService = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this service permanently?")) return;
-
+    if (!window.confirm('Are you sure you want to delete this service permanently?')) return;
     try {
-      const res = await fetch(`${BASE_URL}/service/${id}`, {
-        method: 'DELETE',
-        headers: getAuthHeaders()
-      });
-      const data = await res.json();
-
+      const { data } = await apiClient.delete(`/services/${id}`);
       if (data.success) {
-        toast.success("Service deleted successfully.");
+        toast.success('Service deleted successfully.');
         fetchSalonServices();
-      } else {
-        toast.error(data.message || "Could not complete deletion.");
       }
     } catch (err) {
-      toast.error("Error communicating with server.");
+      toast.error(err.message || 'Could not complete deletion.');
     }
   };
 
-  // Helper to trigger edit form values
   const startEditMode = (service) => {
     setEditingService(service);
     setName(service.name);
     setPrice(service.price);
     setDuration(service.duration);
     setDescription(service.description || '');
+    setCategory(service.category || 'General');
   };
 
   const closeEditMode = () => {
     setEditingService(null);
-    setName('');
-    setPrice('');
-    setDuration('');
-    setDescription('');
+    resetForm();
   };
 
   return (
-    <div className="p-4 max-w-7xl mx-auto space-y-6 text-white ml-64">
-      {/* Header */}
+    <div className="p-4 max-w-7xl mx-auto space-y-6 text-white md:ml-64">
       <div>
         <h2 className="text-2xl font-bold tracking-wide">Service Catalog Management</h2>
-        <p className="text-xs text-slate-400 mt-1">Direct sync with Mongo Dynamic Service schemas for absolute mapping control.</p>
+        <p className="text-xs text-slate-400 mt-1">Live-synced with your salon's Service records — add, edit, or retire menu items.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Section: Contextual Form (Add / Edit state) */}
         <section className="lg:col-span-4">
           <div className="bg-slate-800/40 border border-white/5 rounded-xl p-5 space-y-4 sticky top-6">
             <div className="flex justify-between items-center">
@@ -198,29 +157,29 @@ export default function ServiceMenu() {
                 </button>
               )}
             </div>
-            
+
             <form onSubmit={editingService ? handleUpdateService : handleAddService} className="space-y-4 text-xs">
               <div className="space-y-1">
                 <label className="text-slate-400 block font-medium">Service Name *</label>
-                <input 
-                  type="text" 
-                  value={name} 
+                <input
+                  type="text"
+                  value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g., Skin Fade & Lineup" 
+                  placeholder="e.g., Skin Fade & Lineup"
                   className="w-full bg-white/5 border border-white/5 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-orange-500/50"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-slate-400 block font-medium">Price ($) *</label>
+                  <label className="text-slate-400 block font-medium">Price (PKR) *</label>
                   <div className="relative">
                     <span className="absolute left-2.5 top-2.5 text-slate-500"><MdAttachMoney /></span>
-                    <input 
-                      type="number" 
-                      value={price} 
+                    <input
+                      type="number"
+                      value={price}
                       onChange={(e) => setPrice(e.target.value)}
-                      placeholder="30" 
+                      placeholder="1500"
                       className="w-full bg-white/5 border border-white/5 rounded-lg pl-7 pr-3 py-2 text-white focus:outline-none focus:border-orange-500/50"
                     />
                   </div>
@@ -229,11 +188,11 @@ export default function ServiceMenu() {
                   <label className="text-slate-400 block font-medium">Duration (Mins) *</label>
                   <div className="relative">
                     <span className="absolute left-2.5 top-2.5 text-slate-500"><MdAccessTime /></span>
-                    <input 
-                      type="number" 
-                      value={duration} 
+                    <input
+                      type="number"
+                      value={duration}
                       onChange={(e) => setDuration(e.target.value)}
-                      placeholder="45" 
+                      placeholder="45"
                       className="w-full bg-white/5 border border-white/5 rounded-lg pl-7 pr-3 py-2 text-white focus:outline-none focus:border-orange-500/50"
                     />
                   </div>
@@ -241,38 +200,54 @@ export default function ServiceMenu() {
               </div>
 
               <div className="space-y-1">
+                <label className="text-slate-400 block font-medium">Category</label>
+                <input
+                  type="text"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  placeholder="Hair, Grooming, Color..."
+                  className="w-full bg-white/5 border border-white/5 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-orange-500/50"
+                />
+              </div>
+
+              <div className="space-y-1">
                 <label className="text-slate-400 block font-medium">Description (Optional)</label>
-                <textarea 
-                  value={description} 
+                <textarea
+                  value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows="4"
-                  placeholder="Outline the detailed parameters of the styling method..." 
+                  placeholder="Outline the detailed parameters of the styling method..."
                   className="w-full bg-white/5 border border-white/5 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-orange-500/50 resize-none"
                 />
               </div>
 
-              <button 
-                type="submit" 
-                className={`w-full font-bold py-2.5 rounded-lg transition-all active:scale-[0.98] ${
-                  editingService 
-                    ? 'bg-amber-500 hover:bg-amber-600 text-slate-950 shadow-[0_0_12px_rgba(245,158,11,0.2)]' 
+              <button
+                type="submit"
+                disabled={submitting}
+                className={`w-full font-bold py-2.5 rounded-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-60 ${
+                  editingService
+                    ? 'bg-amber-500 hover:bg-amber-600 text-slate-950 shadow-[0_0_12px_rgba(245,158,11,0.2)]'
                     : 'bg-orange-500 hover:bg-orange-600 text-white shadow-[0_0_12px_rgba(249,115,22,0.2)]'
                 }`}
               >
+                {submitting && <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />}
                 {editingService ? 'Update Configuration' : 'Save Service Configuration'}
               </button>
             </form>
           </div>
         </section>
 
-        {/* Right Section: Active Service Grid Layout (8 Columns) */}
         <section className="lg:col-span-8 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {loading ? (
               [1, 2, 3, 4].map(n => <div key={n} className="h-32 bg-white/5 animate-pulse rounded-xl border border-white/5" />)
             ) : services.length === 0 ? (
-              <div className="col-span-full py-16 text-center text-slate-500 bg-white/5 rounded-xl border border-white/5 text-xs">
-                No active service models found for this shop profile yet.
+              <div className="col-span-full">
+                <EmptyState
+                  icon={MdContentCut}
+                  title="No services on your menu yet"
+                  description="Add your first haircut, color, or grooming service to start accepting bookings."
+                />
               </div>
             ) : (
               services.map((service) => (
@@ -289,7 +264,7 @@ export default function ServiceMenu() {
                       )}
                     </div>
                     <p className="text-[11px] text-slate-400 mt-2 line-clamp-3 leading-relaxed">
-                      {service.description || 'No descriptive summary custom mapped to this entry.'}
+                      {service.description || 'No description added for this service yet.'}
                     </p>
                   </div>
 
@@ -302,19 +277,19 @@ export default function ServiceMenu() {
                         <MdAccessTime className="text-[14px]" /> {service.duration}m
                       </span>
                     </div>
-                    
+
                     <div className="flex gap-1.5">
-                      <button 
+                      <button
                         onClick={() => startEditMode(service)}
                         className="text-slate-400 hover:text-amber-400 p-1.5 hover:bg-white/5 rounded-lg transition-colors"
-                        title="Edit setup"
+                        title="Edit service"
                       >
                         <MdEdit className="text-base" />
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleDeleteService(service._id)}
                         className="text-slate-400 hover:text-rose-400 p-1.5 hover:bg-rose-500/10 rounded-lg transition-colors"
-                        title="Remove service model"
+                        title="Delete service"
                       >
                         <MdDeleteOutline className="text-base" />
                       </button>

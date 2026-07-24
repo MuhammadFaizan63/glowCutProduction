@@ -10,6 +10,7 @@ import {
   MdExpandMore,
 } from 'react-icons/md';
 import Loader from '../../../components/ui/Loader';
+import EmptyState from '../../../components/ui/EmptyState';
 import { useSalonList } from '../../../hooks/useSalon';
 
 const AVAILABILITY_OPTIONS = ['Next 2 hours', 'Today', 'Tomorrow'];
@@ -32,7 +33,7 @@ export default function NearbySalons() {
   const filteredSalons = useMemo(() => {
     if (minRating === 'Any Rating') return salons;
     const threshold = parseFloat(minRating);
-    return salons.filter((s) => s.rating >= threshold);
+    return salons.filter((s) => (s.averageRating ?? s.rating ?? 0) >= threshold);
   }, [salons, minRating]);
 
   return (
@@ -181,21 +182,34 @@ export default function NearbySalons() {
           <div className="flex justify-center py-xl">
             <Loader variant="spinner" className="text-primary-container w-8 h-8" />
           </div>
+        ) : filteredSalons.length === 0 ? (
+          <EmptyState
+            icon={MdLocationOn}
+            title="No salons found nearby"
+            description="Try widening your search area, clearing filters, or checking back later as more salons join GlowCut."
+          />
         ) : (
           <div className={view === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 gap-lg' : 'space-y-lg'}>
-            {filteredSalons.map((salon) => (
+            {filteredSalons.map((salon) => {
+              const id = salon._id || salon.id;
+              const areaLabel = salon.address
+                ? [salon.address.area, salon.address.city].filter(Boolean).join(', ')
+                : salon.area || 'Location unavailable';
+              const rating = salon.averageRating ?? salon.rating ?? 0;
+              const image = salon.coverImage || salon.logo || salon.image || 'https://via.placeholder.com/600x400?text=GlowCut';
+              return (
               <div
-                key={salon.id}
+                key={id}
                 className="glass-panel rounded-3xl overflow-hidden flex flex-col md:flex-row border-white/10 group hover:border-primary-container/50 transition-all duration-500"
               >
                 <div className="md:w-1/3 relative h-64 md:h-auto">
                   <img
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     alt={salon.name}
-                    src={salon.image}
+                    src={image}
                   />
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent to-surface/20" />
-                  {salon.isOpenNow && (
+                  {salon.isActive && (
                     <div className="absolute top-4 left-4 bg-secondary-container/90 backdrop-blur-md text-on-secondary-container px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
                       <span className="w-2 h-2 bg-white rounded-full animate-pulse" /> Open Now
                     </div>
@@ -210,12 +224,12 @@ export default function NearbySalons() {
                           {salon.name}
                         </h3>
                         <p className="flex items-center gap-xs text-on-surface-variant font-body-md">
-                          <MdLocationOn className="text-primary-container text-lg" /> {salon.area}
+                          <MdLocationOn className="text-primary-container text-lg" /> {areaLabel}
                         </p>
                       </div>
                       <div className="bg-secondary-container/20 border border-secondary-container p-2 rounded-xl text-center">
                         <div className="text-secondary font-bold text-headline-md leading-tight">
-                          {salon.rating}
+                          {rating.toFixed ? rating.toFixed(1) : rating}
                         </div>
                         <div className="text-[10px] text-secondary uppercase tracking-widest font-bold">
                           Rating
@@ -223,27 +237,27 @@ export default function NearbySalons() {
                       </div>
                     </div>
 
-                    {salon.stylists && (
+                    {Array.isArray(salon.barbers) && salon.barbers.length > 0 && (
                       <div className="mt-lg">
                         <h4 className="font-label-md text-label-md text-primary-container uppercase tracking-wider mb-md">
                           Top Stylists Available Today
                         </h4>
                         <div className="flex flex-wrap gap-md">
-                          {salon.stylists.map((stylist) => (
+                          {salon.barbers.slice(0, 4).map((stylist) => (
                             <div
-                              key={stylist.id}
+                              key={stylist._id}
                               className="flex items-center gap-sm bg-white/5 p-2 pr-4 rounded-full border border-white/5 hover:border-secondary transition-all cursor-pointer"
                             >
                               <div className="relative">
                                 <div className="w-10 h-10 rounded-full bg-surface-container-high border-2 border-secondary flex items-center justify-center text-xs font-bold text-secondary">
-                                  {stylist.name[0]}
+                                  {stylist.name?.[0] || '?'}
                                 </div>
                                 <div className="absolute bottom-0 right-0 w-3 h-3 bg-secondary rounded-full border-2 border-surface" />
                               </div>
                               <div>
                                 <p className="text-on-surface font-bold text-xs">{stylist.name}</p>
                                 <p className="text-secondary text-[10px] font-medium">
-                                  {stylist.nextSlot}
+                                  {stylist.status === 'active' ? 'Available' : stylist.status}
                                 </p>
                               </div>
                             </div>
@@ -257,21 +271,21 @@ export default function NearbySalons() {
                     <div className="flex gap-lg">
                       <div className="flex flex-col">
                         <span className="text-caption text-on-surface-variant">
-                          Haircut starts at
+                          Services listed
                         </span>
                         <span className="text-on-surface font-bold text-lg">
-                          PKR {salon.startingPrice || 1500}
+                          {salon.servicesCount ?? (salon.services?.length ?? 0)}
                         </span>
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-caption text-on-surface-variant">Distance</span>
+                        <span className="text-caption text-on-surface-variant">Barbers</span>
                         <span className="text-on-surface font-bold text-lg">
-                          {salon.distanceKm} km
+                          {salon.barbersCount ?? (salon.barbers?.length ?? 0)}
                         </span>
                       </div>
                     </div>
                     <button
-                      onClick={() => navigate(`/salons/${salon.id}`)}
+                      onClick={() => navigate(`/salons/${id}`)}
                       className="bg-secondary-container text-on-secondary-container font-headline-md text-label-md px-xl py-4 rounded-xl font-extrabold active:scale-95 transition-all shadow-neon-emerald uppercase tracking-tighter"
                     >
                       Book Slot
@@ -279,7 +293,7 @@ export default function NearbySalons() {
                   </div>
                 </div>
               </div>
-            ))}
+            );})}
           </div>
         )}
       </section>

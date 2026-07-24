@@ -1,60 +1,95 @@
-import apiClient, { simulateDelay } from './apiClient';
+import apiClient, { tokenStorage } from './apiClient';
 
-const MOCK_MODE = true; // Flip to false once the real auth API is live
+/**
+ * authService — thin wrapper around the Qitmeer backend's /api/auth routes.
+ * Every function returns the parsed backend payload (res.data) so callers
+ * can read `.success`, `.message`, `.user`, `.accessToken`, etc. directly.
+ * All errors bubble up as Error objects with a human readable `.message`
+ * (see apiClient's response interceptor).
+ */
 
-export async function signup({ name, email, phone, method = 'email' }) {
-  if (MOCK_MODE) {
-    await simulateDelay(1000);
-    return {
-      id: `user-${Date.now()}`,
-      name: name || 'New User',
-      email,
-      phone,
-      method,
-      role: 'customer',
-      isGuest: false,
-    };
-  }
-  const { data } = await apiClient.post('/auth/signup', { name, email, phone, method });
-  return data.user;
+export async function register(payload) {
+  // payload: { userName, name, email, password, PhoneNumber, phone, cities, role }
+  const { data } = await apiClient.post('/auth/register', payload);
+  return data;
 }
 
 export async function login({ email, password }) {
-  if (MOCK_MODE) {
-    await simulateDelay(900);
-    return {
-      id: `user-${Date.now()}`,
-      name: email?.split('@')[0] || 'User',
-      email,
-      role: 'customer',
-      isGuest: false,
-    };
-  }
   const { data } = await apiClient.post('/auth/login', { email, password });
-  return data.user;
-}
-
-export async function loginWithGoogle() {
-  if (MOCK_MODE) {
-    await simulateDelay(1200);
-    return {
-      id: `google-user-${Date.now()}`,
-      name: 'Google User',
-      email: 'google.user@gmail.com',
-      role: 'customer',
-      isGuest: false,
-      method: 'google',
-    };
-  }
-  const { data } = await apiClient.post('/auth/google');
-  return data.user;
+  if (data?.accessToken) tokenStorage.setAccessToken(data.accessToken);
+  return data;
 }
 
 export async function logout() {
-  if (MOCK_MODE) {
-    await simulateDelay(300);
-    return true;
+  try {
+    await apiClient.post('/auth/logout');
+  } finally {
+    tokenStorage.clear();
   }
-  await apiClient.post('/auth/logout');
   return true;
+}
+
+export async function logoutAll() {
+  try {
+    await apiClient.post('/auth/logoutAll');
+  } finally {
+    tokenStorage.clear();
+  }
+  return true;
+}
+
+export async function getMe() {
+  const { data } = await apiClient.get('/auth/me');
+  return data;
+}
+
+export async function updateProfile(payload) {
+  // payload: { name, userName, phone, PhoneNumber, cities }
+  const { data } = await apiClient.patch('/auth/profile', payload);
+  return data;
+}
+
+export async function updateProfileImage(file) {
+  const formData = new FormData();
+  formData.append('profileImage', file);
+  const { data } = await apiClient.patch('/auth/profile-image', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return data;
+}
+
+export async function changePassword({ oldPassword, newPassword }) {
+  const { data } = await apiClient.post('/auth/change-password', { oldPassword, newPassword });
+  return data;
+}
+
+export async function deleteAccount() {
+  const { data } = await apiClient.delete('/auth/account');
+  tokenStorage.clear();
+  return data;
+}
+
+export async function verifyEmail({ email, otp }) {
+  const { data } = await apiClient.post('/auth/verifyEmail', { email, otp });
+  return data;
+}
+
+export async function resendVerificationOtp({ email }) {
+  const { data } = await apiClient.post('/auth/resend-verification-otp', { email });
+  return data;
+}
+
+export async function forgotPassword({ email }) {
+  const { data } = await apiClient.post('/auth/forgot-password', { email });
+  return data;
+}
+
+export async function verifyPasswordResetOtp({ email, otp }) {
+  const { data } = await apiClient.post('/auth/verify-otp', { email, otp });
+  return data;
+}
+
+export async function resetPassword({ email, otp, newPassword }) {
+  const { data } = await apiClient.post('/auth/reset-password', { email, otp, newPassword });
+  return data;
 }

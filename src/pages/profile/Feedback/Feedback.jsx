@@ -1,15 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { MdStar, MdStore, MdVerified, MdPhotoCamera } from 'react-icons/md';
+import { useBooking } from '../../../hooks/useBooking';
+import apiClient from '../../../services/apiClient';
+import * as bookingService from '../../../services/bookingService';
 
+// The Review model only stores `rating` + `comment` (see review.model.js) —
+// there's no tags field on the backend, so selected tags are folded into
+// the comment text on submit rather than sent as a separate field.
 const TAGS = ['Professional', 'Clean Environment', 'Great Fade', 'On Time'];
 
 export default function Feedback() {
   const navigate = useNavigate();
+  const { booking } = useBooking();
+  const createdBooking = booking.createdBookings?.[0];
+  const barber = createdBooking?.barberId || booking.stylist;
+  const salon = createdBooking?.salonId || booking.salon;
+
   const [rating, setRating] = useState(4);
   const [hoverRating, setHoverRating] = useState(0);
-  const [selectedTags, setSelectedTags] = useState(['Professional', 'Great Fade']);
+  const [selectedTags, setSelectedTags] = useState([]);
   const [reviewText, setReviewText] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -24,11 +35,41 @@ export default function Feedback() {
       toast.error('Please select a star rating');
       return;
     }
+    if (!barber?._id && !barber?.id) {
+      toast.error('No completed booking found to review.');
+      return;
+    }
+    if (!createdBooking?._id) {
+      toast.error('This page only supports reviewing a booking you just completed.');
+      return;
+    }
+
     setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 1200));
-    setSubmitting(false);
-    toast.success('Thanks for your feedback!');
-    navigate('/');
+    try {
+      // Backend only allows reviewing bookings with status === 'completed',
+      // so verify the live status first for a clear error instead of a
+      // confusing 403 from the API.
+      const liveBooking = await bookingService.getBookingStatus(createdBooking._id);
+      if (liveBooking.status !== 'completed') {
+        toast.error('This booking is not marked completed by the salon yet.');
+        setSubmitting(false);
+        return;
+      }
+
+      const comment = [selectedTags.join(', '), reviewText].filter(Boolean).join(' — ');
+      await apiClient.post('/reviews', {
+        barber: barber._id || barber.id,
+        booking: createdBooking._id,
+        rating,
+        comment,
+      });
+      toast.success('Thanks for your feedback!');
+      navigate('/');
+    } catch (err) {
+      toast.error(err.message || 'Could not submit your review.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleSkip = () => {
@@ -53,31 +94,21 @@ export default function Feedback() {
       <div className="glass-card w-full p-md rounded-xl flex items-center gap-md mb-lg">
         <div className="relative">
           <img
-            alt="Usman"
-            className="w-16 h-16 rounded-full object-cover border-2 border-secondary"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuB1OLQUMYSOv404MU-rzgTXSSkcpcAgWNTVTW4Bsip4z62rPDXLY9zj_hYyMHdKJuPpq1gWe4PRwcPOTfXmEMewUTtt5EUofIMK8FVi8sIZWtiF6Ul-mYqVnuYwCsTp89kMDsVeD0vuf5Lw982q2KBDq7CWau61ld5dHgyf1DCq4_yxinq3MSL7vMr4vREH59dVltu73l4MrUb9NGYNFEOQx0bGHYZTqfDwyNP3OtVDyeLMCOrvjE7E3YIlpujYJApkGu2sSEz6Mog"
+            alt={barber?.name || 'Stylist'}
+            className="w-16 h-16 rounded-full object-cover border-2 border-secondary bg-surface-container"
+            src={barber?.profileImage || 'https://via.placeholder.com/150?text=?'}
           />
           <div className="absolute bottom-0 right-0 bg-secondary rounded-full p-0.5 border-2 border-background flex items-center justify-center">
             <MdVerified className="text-[12px] text-on-secondary" />
           </div>
         </div>
         <div className="flex-1">
-          <h2 className="font-headline-md text-headline-md text-on-surface">Usman</h2>
+          <h2 className="font-headline-md text-headline-md text-on-surface">{barber?.name || 'Your stylist'}</h2>
           <div className="flex items-center gap-xs">
             <MdStore className="text-secondary text-sm" />
             <p className="font-label-md text-label-md text-on-surface-variant">
-              Modern Cuts PECHS
+              {salon?.name || 'GlowCut Salon'}
             </p>
-          </div>
-        </div>
-        <div className="hidden sm:flex flex-col items-end">
-          <span className="font-caption text-caption text-on-surface-variant uppercase tracking-widest">
-            Verified Pro
-          </span>
-          <div className="flex gap-0.5 mt-1">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <MdStar key={i} className="text-primary text-xs" />
-            ))}
           </div>
         </div>
       </div>
@@ -104,7 +135,7 @@ export default function Feedback() {
         </div>
       </section>
 
-      {/* Tag Selection */}
+      {/* Tag Selection (folded into the comment on submit) */}
       <section className="w-full mb-lg">
         <p className="font-label-md text-label-md text-on-surface-variant mb-sm text-center">
           Tag Your Experience
@@ -141,7 +172,7 @@ export default function Feedback() {
         </div>
       </section>
 
-      {/* Selfie Upload */}
+      {/* Selfie Upload — no backend support for review photos yet */}
       <section className="w-full mb-xl">
         <button
           onClick={() => toast('Photo upload coming soon!')}

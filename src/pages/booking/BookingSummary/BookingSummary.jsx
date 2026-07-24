@@ -1,14 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MdPerson, MdStorefront, MdCalendarToday, MdAccountCircle, MdTimer, MdCheck } from 'react-icons/md';
 import { useBooking } from '../../../hooks/useBooking';
+import AuthContext from '../../../context/AuthContext';
 
-const PROCESS_STEPS = [
-  { title: 'Check-In', subtitle: 'Completed at 3:15 PM', status: 'done' },
-  { title: 'Consultation', subtitle: 'Style profile updated', status: 'done' },
-  { title: 'Haircut', subtitle: 'In Progress...', status: 'active' },
-  { title: 'Styling', subtitle: 'Awaiting previous step', status: 'upcoming' },
-];
+// The backend only tracks four booking statuses (pending, confirmed,
+// completed, cancelled) — there is no granular "check-in / consultation /
+// haircut / styling" sub-stage tracking. We derive a coarser, honest
+// timeline from the real `status` on the created booking(s) instead of
+// faking intermediate steps that don't exist server-side.
+function buildProcessSteps(status) {
+  const steps = [
+    { title: 'Booking Confirmed', subtitle: 'Slot reserved with your salon' },
+    { title: 'Awaiting Check-In', subtitle: 'Arrive at the salon for your slot' },
+    { title: 'Service In Progress', subtitle: 'Your stylist is working on you' },
+    { title: 'Completed', subtitle: 'Session finished' },
+  ];
+  const statusIndex = { pending: 0, confirmed: 1, completed: 3, cancelled: -1 }[status] ?? 0;
+  return steps.map((step, i) => ({
+    ...step,
+    status: i < statusIndex ? 'done' : i === statusIndex ? 'active' : 'upcoming',
+  }));
+}
 
 function formatCountdown(totalSeconds) {
   const m = Math.floor(totalSeconds / 60);
@@ -19,6 +32,7 @@ function formatCountdown(totalSeconds) {
 export default function BookingSummary() {
   const navigate = useNavigate();
   const { booking } = useBooking();
+  const { profile } = useContext(AuthContext);
   const [secondsLeft, setSecondsLeft] = useState(29 * 60 + 3);
 
   useEffect(() => {
@@ -28,11 +42,13 @@ export default function BookingSummary() {
     return () => clearInterval(interval);
   }, []);
 
-  const clientName = 'Faizan';
-  const salonName = booking.salon?.name || 'Modern Cuts PECHS';
+  const createdBooking = booking.createdBookings?.[0];
+  const clientName = profile?.name || profile?.userName || 'Guest';
+  const salonName = booking.salon?.name || createdBooking?.salonId?.name || 'your salon';
   const slotLabel = booking.timeSlot
-    ? `${booking.date || 'Today'}, ${booking.timeSlot}`
-    : 'Today, 3:30 PM - 4:30 PM';
+    ? `${booking.dateLabel || booking.date || 'Today'}, ${booking.timeSlot}`
+    : 'Awaiting slot confirmation';
+  const processSteps = buildProcessSteps(createdBooking?.status || booking.status);
 
   return (
     <main className="pt-20">
@@ -125,7 +141,7 @@ export default function BookingSummary() {
             <h2 className="font-headline-lg text-headline-lg text-on-surface mb-xl">Process</h2>
             <div className="flex flex-col gap-xl relative">
               <div className="absolute left-4 top-4 bottom-4 w-0.5 bg-white/10" />
-              {PROCESS_STEPS.map((step, i) => (
+              {processSteps.map((step, i) => (
                 <div className="flex items-center gap-lg relative z-10" key={i}>
                   {step.status === 'done' && (
                     <div className="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center shadow-neon-emerald flex-shrink-0">

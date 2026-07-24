@@ -1,6 +1,11 @@
-import apiClient, { simulateDelay } from './apiClient';
+import apiClient from './apiClient';
 
+// NOTE: The provided backend does not expose any /rewards endpoints yet
+// (no rewards routes/controllers/models exist in the Qitmeer backend).
+// This service stays mocked until that API is built; everything else in
+// the app (auth, salons, bookings) is wired to the live backend.
 const MOCK_MODE = true;
+const simulateDelay = (ms = 500) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const MOCK_REWARDS = [
   { id: 'rwd-1', title: 'Free Beard Trim', pointsCost: 500, icon: 'content_cut' },

@@ -11,7 +11,14 @@ import Button from '../../ui/Button';
  */
 export default function SalonCard({ salon }) {
   const navigate = useNavigate();
-  const { id, name, image, location, rating, priceTier = '$$' } = salon;
+  const id = salon._id || salon.id;
+  const name = salon.name;
+  const image = salon.coverImage || salon.logo || salon.image || 'https://via.placeholder.com/600x400?text=GlowCut';
+  const location = salon.address
+    ? [salon.address.area, salon.address.city].filter(Boolean).join(', ')
+    : salon.location || 'Location unavailable';
+  const rating = salon.averageRating ?? salon.rating ?? 0;
+  const priceTier = salon.priceTier || '$$';
 
   return (
     <Card hoverable className="group overflow-hidden">
@@ -23,7 +30,7 @@ export default function SalonCard({ salon }) {
         />
         <div className="absolute top-4 right-4 bg-background/80 backdrop-blur-md px-sm py-xs rounded-full flex items-center gap-xs border border-secondary/50">
           <MdStar className="text-secondary text-sm" />
-          <span className="text-white font-label-md text-label-md">{rating}</span>
+          <span className="text-white font-label-md text-label-md">{rating.toFixed ? rating.toFixed(1) : rating}</span>
         </div>
       </div>
       <div className="p-md">

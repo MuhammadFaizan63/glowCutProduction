@@ -5,12 +5,11 @@ import { MdEmail, MdLock, MdArrowForward } from 'react-icons/md';
 import toast from 'react-hot-toast';
 import Input from '../../../components/ui/Input';
 import Button from '../../../components/ui/Button';
-import { useAuth } from '../../../hooks/useAuth'; // Context hook ko sahi use karne ke liye
+import { useAuth } from '../../../hooks/useAuth';
+import apiClient from '../../../services/apiClient';
 
 export default function Login() {
   const navigate = useNavigate();
-
-  // 1️⃣ Apne useAuth hook se actual state/login functions nikalein
   const auth = useAuth();
 
   const [form, setForm] = useState({ identifier: '', password: '' });
@@ -30,115 +29,66 @@ export default function Login() {
   };
 
   const handleLogin = async (ev) => {
-  ev.preventDefault();
-  if (!validate()) return;
-  setSubmitting(true);
+    ev.preventDefault();
+    if (!validate()) return;
+    setSubmitting(true);
 
-  try {
-    const response = await fetch('https://glow-cut-product-complete-backend.vercel.app/api/auth/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    try {
+      const res = await auth.login({
         email: form.identifier.trim(),
         password: form.password,
-      }),
-    });
+      });
 
-    const data = await response.json();
+      toast.success(res.message || 'Welcome back!');
 
-    if (response.ok && data.success) {
-      // 1️⃣ Token ko save karna
-      const tokenToSave = data.accessToken || data.token;
-      if (tokenToSave) {
-        localStorage.setItem('token', tokenToSave);
-        localStorage.setItem('accessToken', tokenToSave);
-      }
+      const userRole = res.user?.role;
 
-      // 2️⃣ Global Auth State Update karna
-      if (auth && typeof auth.setToken === 'function') {
-        auth.setToken(tokenToSave);
-      } else if (auth && typeof auth.login === 'function') {
-        auth.login(data.user, tokenToSave);
-      }
-
-      toast.success(data.message || 'Welcome back!');
-
-      const userRole = data.user?.role;
-
-      // 3️⃣ Role wise verification and redirection
       if (userRole === 'admin') {
+        navigate('/admin/global');
+      } else if (userRole === 'owner') {
         try {
-          // Backend ke 'getMySalon' controller ko call karke active salon check kar rahe hain
-          const salonResponse = await fetch('https://glow-cut-product-complete-backend.vercel.app/api/salons/salons/my', {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${tokenToSave}`
-            }
-          });
-
-          const salonData = await salonResponse.json();
-
-          // Agar backend se salon successfully mil jata hai (Data existing hai)
-          if (salonResponse.ok && salonData.success && salonData.data) {
-            // Live board ke liye salonId ko local storage mein save karlety hain
-            localStorage.setItem('salonId', salonData.data._id);
+          const { data: salonData } = await apiClient.get('/salons/my');
+          if (salonData?.success && salonData?.data) {
             navigate('/admin/shop');
           } else {
-            // Agar active salon nahi milta ya status 404 hai, toh form setup par bhejein
             navigate('/setup-salon');
           }
         } catch (salonErr) {
-          console.error('Error fetching salon status:', salonErr);
-          // Network issue ya kisi fault par safer side ke liye setup form par redirect
           navigate('/setup-salon');
         }
-      } else if (userRole === 'user') {
-        // Normal customer direct home page par jaye
+      } else if (userRole === 'user' || userRole === 'customer') {
         navigate('/');
       } else {
-        // Agar role missing ya undefined ha
         navigate('/role-selection');
       }
-
-    } else {
-      // Unverified User Handling
-      if (response.status === 401 || data.message?.toLowerCase().includes('not verified')) {
+    } catch (error) {
+      const message = error?.message || 'Invalid credentials';
+      if (message.toLowerCase().includes('not verified')) {
         toast.error('Email not verified. Redirecting to verification page...');
         setTimeout(() => {
           navigate('/auth/verify-otp', { state: { email: form.identifier.trim() } });
         }, 1500);
       } else {
-        toast.error(data.message || 'Invalid credentials');
+        toast.error(message);
       }
+    } finally {
+      setSubmitting(false);
     }
-  } catch (error) {
-    console.error('Login Error:', error);
-    toast.error('Something went wrong. Please check your connection.');
-  } finally {
-    setSubmitting(false);
-  }
-};
+  };
 
   const handleGuest = () => {
-    if (auth && typeof auth.loginAsGuest === 'function') {
-      auth.loginAsGuest();
-    }
+    auth.loginAsGuest();
     toast('Browsing as guest — booking is disabled', { icon: '👀' });
     navigate('/');
   };
 
   return (
     <div className="relative min-h-screen w-full flex flex-col items-center justify-center overflow-hidden">
-      {/* Ambient glows */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-primary/10 rounded-full blur-[140px]" />
         <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-secondary/10 rounded-full blur-[120px]" />
       </div>
 
-      {/* Brand mark */}
       <div className="mb-xl text-center relative z-10">
         <div className="flex items-center justify-center gap-base mb-sm">
           <div className="relative w-12 h-12 flex items-center justify-center">
@@ -154,7 +104,6 @@ export default function Login() {
         </p>
       </div>
 
-      {/* Login card */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -194,6 +143,7 @@ export default function Login() {
               variant="primary"
               size="full"
               loading={submitting}
+              disabled={submitting}
               icon={MdArrowForward}
               iconPosition="right"
             >

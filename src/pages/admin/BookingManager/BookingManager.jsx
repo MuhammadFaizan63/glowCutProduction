@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import toast from 'react-hot-toast';
 import { 
   MdEventAvailable, 
@@ -11,47 +11,37 @@ import {
   MdAccessTime,
   MdRefresh
 } from 'react-icons/md';
-
-const BASE_URL = 'https://glow-cut-product-complete-backend.vercel.app';
+import apiClient from '../../../services/apiClient';
+import EmptyState from '../../../components/ui/EmptyState';
+import AuthContext from '../../../context/AuthContext';
 
 export default function BookingManager() {
+  const { profile } = useContext(AuthContext);
+  const salonId = profile?.salon?._id || profile?.salon?.id || localStorage.getItem('salonId') || '';
+
   const [bookings, setBookings] = useState([]);
   const [stats, setStats] = useState({ totalBookings: 0, totalRevenue: 0, pending: 0, completed: 0 });
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('all');
 
-  const getSalonId = () => localStorage.getItem('salonId') || '';
-
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem('accessToken');
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    };
-  };
-
   // 1. Fetch Salon Specific Bookings
   const fetchBookings = async () => {
-    const salonId = getSalonId();
     if (!salonId) {
-      toast.error("Salon branch reference missing.");
+      toast.error('No salon linked to this account yet.');
+      setLoading(false);
       return;
     }
     setLoading(true);
     try {
-      const url = filterStatus === 'all' 
-        ? `${BASE_URL}/api/bookings/salon/${salonId}`
-        : `${BASE_URL}/api/bookings/filter?salonId=${salonId}&status=${filterStatus}`;
+      const url = filterStatus === 'all'
+        ? `/bookings/salon/${salonId}`
+        : `/bookings/filter?salonId=${salonId}&status=${filterStatus}`;
 
-      const res = await fetch(url, { headers: getAuthHeaders() });
-      const data = await res.json();
-      if (data.success) {
-        setBookings(data.data.bookings || []);
-      } else {
-        toast.error(data.message || "Failed to fetch bookings.");
-      }
+      const { data } = await apiClient.get(url);
+      setBookings(data.data?.bookings || []);
     } catch (err) {
-      toast.error("Database communication failure.");
+      toast.error(err.message || 'Failed to fetch bookings.');
+      setBookings([]);
     } finally {
       setLoading(false);
     }
@@ -60,40 +50,37 @@ export default function BookingManager() {
   // 2. Fetch Dashboard Metrics / Stats
   const fetchStats = async () => {
     try {
-      const res = await fetch(`${BASE_URL}/api/bookings/statistics`, { headers: getAuthHeaders() });
-      const data = await res.json();
+      const { data } = await apiClient.get('/bookings/statistics');
       if (data.success && data.data) {
         setStats(data.data);
       }
     } catch (err) {
-      console.error("Stats fetch error:", err);
+      // Non-fatal — stats are supplementary to the booking list.
     }
   };
 
   useEffect(() => {
     fetchBookings();
     fetchStats();
-  }, [filterStatus]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterStatus, salonId]);
 
   // 3. Status State Modifications (PATCH endpoints)
   const handleStatusChange = async (id, action) => {
     try {
-      const res = await fetch(`${BASE_URL}/api/bookings/${id}/${action}`, {
-        method: 'PATCH',
-        headers: getAuthHeaders(),
-        body: action === 'reject' ? JSON.stringify({ cancelReason: "Rejected by salon manager" }) : null
-      });
-      const data = await res.json();
-
+      const { data } = await apiClient.patch(
+        `/bookings/${id}/${action}`,
+        action === 'reject' ? { cancelReason: 'Rejected by salon manager' } : undefined
+      );
       if (data.success) {
         toast.success(`Booking status updated to ${action}!`);
         fetchBookings();
         fetchStats();
       } else {
-        toast.error(data.message || "Operation rejected.");
+        toast.error(data.message || 'Operation rejected.');
       }
     } catch (err) {
-      toast.error("Network synchronization mismatch.");
+      toast.error(err.message || 'Failed to update booking status.');
     }
   };
 
@@ -109,7 +96,7 @@ export default function BookingManager() {
   };
 
   return (
-    <div className="p-4 max-w-7xl mx-auto space-y-6 text-white ml-64">
+    <div className="p-4 max-w-7xl mx-auto space-y-6 text-white md:ml-64">
       {/* Header section */}
       <div className="flex justify-between items-center">
         <div>
@@ -174,9 +161,11 @@ export default function BookingManager() {
         {loading ? (
           [1, 2, 3].map(n => <div key={n} className="h-24 bg-white/5 animate-pulse rounded-xl" />)
         ) : bookings.length === 0 ? (
-          <div className="py-16 text-center text-slate-500 bg-white/5 rounded-xl border border-white/5 text-xs">
-            No session allocations matches the active status filter.
-          </div>
+          <EmptyState
+            icon={MdEventAvailable}
+            title="No bookings match this filter"
+            description="Try a different status tab, or check back once customers start booking appointments."
+          />
         ) : (
           bookings.map((item) => (
             <div key={item._id} className="p-4 bg-slate-800/20 border border-white/5 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-white/10 transition-colors">

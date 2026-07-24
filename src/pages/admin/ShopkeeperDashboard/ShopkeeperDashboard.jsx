@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
+import apiClient from '../../../services/apiClient';
+import EmptyState from '../../../components/ui/EmptyState';
 import {
   MdTrendingUp,
   MdEventNote,
@@ -9,8 +11,9 @@ import {
   MdSend
 } from 'react-icons/md';
 
-const BASE_URL = 'https://glow-cut-product-complete-backend.vercel.app';
-
+// NOTE: the backend has no live-chat/messaging endpoints or sockets wired
+// for this feature yet (src/config/socket.js exists but isn't used by any
+// route in this codebase), so this panel stays a local, in-memory demo.
 const INITIAL_CHAT_MESSAGES = [
   { id: 1, from: 'Faizan', initials: 'FM', side: 'left', text: "I'm 5 mins away, parking was a bit tight!" },
   { id: 2, system: true, text: 'Usman joined the chat' },
@@ -27,50 +30,31 @@ export default function ShopkeeperDashboard() {
   const [newMessage, setNewMessage] = useState('');
   const chatEndRef = useRef(null);
 
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem('accessToken');
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    };
-  };
-
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages]);
 
   const fetchData = async () => {
+    // Statistics
+    setLoadingStats(true);
     try {
-      const headers = getAuthHeaders();
-
-      // Fetch Statistics
-      setLoadingStats(true);
-      const statsRes = await fetch(`${BASE_URL}/api/bookings/statistics`, { headers });
-      const statsData = await statsRes.json();
-      if (statsData.success) {
-        setStats(statsData.data);
-      }
-      setLoadingStats(false);
-
-      // Fetch Today's Bookings
-      setLoadingSchedule(true);
-      const scheduleRes = await fetch(`${BASE_URL}/api/bookings/today`, { headers });
-      const scheduleData = await scheduleRes.json();
-
-      if (scheduleData.success && scheduleData.data) {
-        // Backend returns: { bookings: [...], pagination: {...} } inside data
-        const bookingsList = scheduleData.data.bookings || (Array.isArray(scheduleData.data) ? scheduleData.data : []);
-        setSchedule(bookingsList);
-      } else {
-        setSchedule([]);
-      }
-      setLoadingSchedule(false);
-
+      const { data } = await apiClient.get('/bookings/statistics');
+      if (data.success) setStats(data.data);
     } catch (err) {
-      console.error(err);
-      toast.error("Failed to load dashboard data.");
-      setSchedule([]);
+      toast.error(err.message || 'Failed to load statistics.');
+    } finally {
       setLoadingStats(false);
+    }
+
+    // Today's bookings
+    setLoadingSchedule(true);
+    try {
+      const { data } = await apiClient.get('/bookings/today');
+      setSchedule(data.data?.bookings || []);
+    } catch (err) {
+      toast.error(err.message || "Failed to load today's queue.");
+      setSchedule([]);
+    } finally {
       setLoadingSchedule(false);
     }
   };
@@ -81,45 +65,29 @@ export default function ShopkeeperDashboard() {
 
   const handleCheckIn = async (bookingId) => {
     try {
-      const res = await fetch(`${BASE_URL}/api/bookings/${bookingId}/confirm`, {
-        method: 'PATCH',
-        headers: getAuthHeaders(),
-      });
-      const data = await res.json();
-
-      if (res.status === 409) {
-        toast.error(data.message || "Barber unavailable or slot overlapped.");
-        return;
-      }
-
+      const { data } = await apiClient.patch(`/bookings/${bookingId}/confirm`);
       if (data.success) {
         toast.success('Client checked in successfully!');
         fetchData();
       } else {
-        toast.error(data.message || "Check-in failed.");
+        toast.error(data.message || 'Check-in failed.');
       }
     } catch (err) {
-      toast.error("API error during check-in.");
+      toast.error(err.message || 'Check-in failed.');
     }
   };
 
   const handleMarkAsDone = async (bookingId) => {
     try {
-      const res = await fetch(`${BASE_URL}/api/bookings/${bookingId}/complete`, {
-        method: 'PATCH',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ paymentStatus: 'paid' })
-      });
-      const data = await res.json();
-
+      const { data } = await apiClient.patch(`/bookings/${bookingId}/complete`, { paymentStatus: 'paid' });
       if (data.success) {
         toast.success('Booking marked as completed!');
         fetchData();
       } else {
-        toast.error(data.message || "Failed to complete booking.");
+        toast.error(data.message || 'Failed to complete booking.');
       }
     } catch (err) {
-      toast.error("API error while completing booking.");
+      toast.error(err.message || 'Failed to complete booking.');
     }
   };
 
@@ -138,7 +106,7 @@ export default function ShopkeeperDashboard() {
   };
 
   return (
-    <div className="p-4 max-w-7xl mx-auto space-y-6 text-white ml-64">
+    <div className="p-4 max-w-7xl mx-auto space-y-6 text-white md:ml-64">
       {/* Stats Grid */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="p-6 rounded-xl bg-slate-800/50 border border-white/5">
@@ -170,9 +138,10 @@ export default function ShopkeeperDashboard() {
             {loadingSchedule ? (
               <div className="h-24 bg-white/5 animate-pulse rounded-xl" />
             ) : !Array.isArray(schedule) || schedule.length === 0 ? (
-              <div className="p-8 text-center text-slate-500 bg-white/5 rounded-xl border border-white/5">
-                No active appointments for today.
-              </div>
+              <EmptyState
+                title="No appointments today"
+                description="Confirmed and pending bookings for today will show up here as customers book."
+              />
             ) : (
               schedule.map((apt) => (
                 <div key={apt._id} className="p-4 bg-white/5 border border-white/5 rounded-xl flex justify-between items-center">

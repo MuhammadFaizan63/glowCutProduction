@@ -1,79 +1,75 @@
-import React, { useState, useContext } from 'react';
-import { MdContentCut, MdFace, MdColorize, MdSpa } from 'react-icons/md';
+import React, { useState, useContext, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { MdContentCut, MdFace, MdColorize, MdSpa, MdSearch } from 'react-icons/md';
+import toast from 'react-hot-toast';
 import AuthContext from '../../../context/AuthContext';
 import GuestBlock from '../../../components/auth/GuestBlock';
-import toast from 'react-hot-toast';
+import EmptyState from '../../../components/ui/EmptyState';
+import * as salonService from '../../../services/salonService';
 
-const MENU = [
-  {
-    category: 'Haircuts',
-    icon: MdContentCut,
-    color: 'primary',
-    items: [
-      { id: 'svc-fade', name: 'Precision Fade', price: 'PKR 1,500', duration: '45 mins', desc: 'Digitally-precise fade tailored to your head shape. Includes wash and style.' },
-      { id: 'svc-undercut', name: 'Cyber Undercut', price: 'PKR 2,200', duration: '60 mins', desc: 'Edgy geometric patterns etched with razor precision for a high-tech street look.' },
-      { id: 'svc-classic', name: 'Classic Cut', price: 'PKR 800', duration: '30 mins', desc: 'Timeless scissor cut suitable for all hair types.' },
-    ],
-  },
-  {
-    category: 'Beard Grooming',
-    icon: MdFace,
-    color: 'secondary',
-    items: [
-      { id: 'svc-beard-trim', name: 'Beard Trim & Shape', price: 'PKR 500', duration: '20 mins', desc: 'Clean lines and precision edging for a sharp, defined beard.' },
-      { id: 'svc-beard-full', name: 'Full Beard Sculpting', price: 'PKR 1,200', duration: '40 mins', desc: 'Complete beard grooming with hot towel treatment and natural oil finish.' },
-    ],
-  },
-  {
-    category: 'Facial Treatments',
-    icon: MdSpa,
-    color: 'tertiary',
-    items: [
-      { id: 'svc-detox', name: 'Neon Glow Scalp Detox', price: 'PKR 3,500', duration: '30 mins', desc: 'Ultrasonic treatment with bio-available nutrients to refresh stressed scalps.' },
-      { id: 'svc-facial', name: 'Deep Pore Facial', price: 'PKR 2,800', duration: '50 mins', desc: 'Steam, extraction, and brightening mask for a fresh, polished complexion.' },
-    ],
-  },
-  {
-    category: 'Hair Coloring',
-    icon: MdColorize,
-    color: 'primary',
-    items: [
-      { id: 'svc-highlights', name: 'Neon Highlights', price: 'PKR 4,500', duration: '90 mins', desc: 'Bold, vivid accent streaks applied using low-damage nano-color technology.' },
-      { id: 'svc-global', name: 'Global Color', price: 'PKR 6,000', duration: '120 mins', desc: 'Full head color transformation with professional Schwarzkopf formulations.' },
-    ],
-  },
-];
-
+const CATEGORY_ICON = {
+  Haircuts: MdContentCut,
+  Grooming: MdFace,
+  Color: MdColorize,
+  Spa: MdSpa,
+};
+const CATEGORY_COLOR = ['primary', 'secondary', 'tertiary'];
 const COLOR_MAP = {
   primary: { bg: 'bg-primary/10', text: 'text-primary-container', border: 'border-primary-container/30' },
   secondary: { bg: 'bg-secondary/10', text: 'text-secondary', border: 'border-secondary/30' },
   tertiary: { bg: 'bg-tertiary/10', text: 'text-tertiary', border: 'border-tertiary/30' },
 };
 
+/**
+ * Services — platform-wide catalog browser (GET /api/services, a public
+ * route). This is intentionally separate from the per-salon service picker
+ * on SalonDetail: here we're browsing everything GlowCut partners offer, to
+ * help a customer decide *which salon* to book, not finalize a booking.
+ */
 export default function Services() {
+  const navigate = useNavigate();
   const { userType } = useContext(AuthContext);
   const isGuest = userType === 'guest';
   const [guestBlockOpen, setGuestBlockOpen] = useState(false);
-  const [cart, setCart] = useState([]);
 
-  const handleSelect = (item) => {
+  const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    setLoading(true);
+    salonService
+      .getServiceCatalog({ limit: 60 })
+      .then((list) => setServices(Array.isArray(list) ? list : []))
+      .catch(() => setServices([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const grouped = useMemo(() => {
+    const filtered = search
+      ? services.filter((s) => s.name?.toLowerCase().includes(search.toLowerCase()))
+      : services;
+    const map = {};
+    filtered.forEach((s) => {
+      const cat = s.category || 'General';
+      if (!map[cat]) map[cat] = [];
+      map[cat].push(s);
+    });
+    return Object.entries(map);
+  }, [services, search]);
+
+  const handleSelect = (service) => {
     if (isGuest) {
       setGuestBlockOpen(true);
       return;
     }
-    if (cart.find((c) => c.id === item.id)) {
-      setCart((prev) => prev.filter((c) => c.id !== item.id));
-      toast(`Removed ${item.name}`, { icon: '➖' });
-    } else {
-      setCart((prev) => [...prev, item]);
-      toast.success(`Added ${item.name}!`);
+    const salonId = service.salon?._id || service.salon;
+    if (!salonId) {
+      toast.error('This service is not linked to a salon yet.');
+      return;
     }
+    navigate(`/salons/${salonId}`);
   };
-
-  const totalPKR = cart.reduce((sum, item) => {
-    const num = parseInt(item.price.replace(/\D/g, ''), 10) || 0;
-    return sum + num;
-  }, 0);
 
   return (
     <main className="pt-24 pb-xl px-margin-mobile md:px-margin-desktop max-w-6xl mx-auto">
@@ -81,85 +77,82 @@ export default function Services() {
       <section className="mb-xl text-center pt-md">
         <h1 className="font-display-lg text-display-lg mb-xs">Services Menu</h1>
         <p className="text-on-surface-variant font-body-lg max-w-2xl mx-auto">
-          Premium grooming services crafted for the discerning gentleman. Select your desired
-          treatments and book your preferred stylist in one seamless flow.
+          Browse every service offered across GlowCut's partner salons — tap one to jump straight
+          to that salon and book.
         </p>
         {isGuest && (
           <div className="mt-md inline-flex items-center gap-sm px-md py-sm bg-yellow-500/10 border border-yellow-500/30 rounded-full text-yellow-400 font-label-md">
             <span>⚠</span> You're browsing as a guest — tap any service to login and book
           </div>
         )}
+
+        <div className="mt-lg max-w-md mx-auto relative">
+          <MdSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search services..."
+            className="w-full bg-white/5 border border-white/10 rounded-full pl-11 pr-4 py-3 text-white focus:outline-none focus:border-primary-container/50"
+          />
+        </div>
       </section>
 
-      {/* Category Sections */}
-      {MENU.map((section) => {
-        const Icon = section.icon;
-        const colors = COLOR_MAP[section.color] || COLOR_MAP.primary;
-        return (
-          <section key={section.category} className="mb-xl">
-            <div className={`flex items-center gap-sm mb-lg border-l-4 ${colors.border} pl-md`}>
-              <div className={`w-10 h-10 rounded-lg ${colors.bg} flex items-center justify-center`}>
-                <Icon className={`${colors.text} text-2xl`} />
+      {loading ? (
+        <div className="space-y-md">
+          {[1, 2, 3].map((n) => <div key={n} className="h-32 glass-panel rounded-xl animate-pulse" />)}
+        </div>
+      ) : grouped.length === 0 ? (
+        <EmptyState
+          icon={MdContentCut}
+          title="No services found"
+          description="No partner salon has published services matching your search yet."
+        />
+      ) : (
+        grouped.map(([category, items], i) => {
+          const color = CATEGORY_COLOR[i % CATEGORY_COLOR.length];
+          const Icon = CATEGORY_ICON[category] || MdContentCut;
+          const colors = COLOR_MAP[color];
+          return (
+            <section key={category} className="mb-xl">
+              <div className={`flex items-center gap-sm mb-lg border-l-4 ${colors.border} pl-md`}>
+                <div className={`w-10 h-10 rounded-lg ${colors.bg} flex items-center justify-center`}>
+                  <Icon className={`${colors.text} text-2xl`} />
+                </div>
+                <h2 className={`font-headline-lg text-headline-lg ${colors.text}`}>{category}</h2>
               </div>
-              <h2 className={`font-headline-lg text-headline-lg ${colors.text}`}>
-                {section.category}
-              </h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
-              {section.items.map((item) => {
-                const inCart = cart.find((c) => c.id === item.id);
-                return (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+                {items.map((item) => (
                   <div
-                    key={item.id}
-                    className={`glass-panel p-md rounded-xl flex justify-between items-start gap-md transition-all ${
-                      inCart ? `border-${section.color === 'primary' ? 'primary-container' : section.color} shadow-${section.color === 'secondary' ? 'neon-emerald' : 'neon-orange'}` : ''
-                    }`}
+                    key={item._id}
+                    className="glass-panel p-md rounded-xl flex justify-between items-start gap-md transition-all hover:border-primary-container/40"
                   >
                     <div className="flex-1">
                       <div className="flex justify-between items-start mb-xs">
                         <h3 className="font-headline-md text-on-surface">{item.name}</h3>
                         <span className={`font-bold ${colors.text} ml-sm whitespace-nowrap`}>
-                          {item.price}
+                          PKR {(item.price ?? 0).toLocaleString()}
                         </span>
                       </div>
                       <p className="text-on-surface-variant font-body-md text-sm mb-sm">
-                        {item.desc}
+                        {item.description || 'No description provided.'}
                       </p>
                       <span className="text-caption text-on-surface-variant/60">
-                        ⏱ {item.duration}
+                        ⏱ {item.duration ?? 0} mins
+                        {item.salon?.name ? ` · ${item.salon.name}` : ''}
                       </span>
                     </div>
                     <button
                       onClick={() => handleSelect(item)}
-                      className={`flex-shrink-0 px-md py-sm rounded-lg font-label-md font-bold transition-all active:scale-95 ${
-                        inCart
-                          ? 'bg-secondary/20 text-secondary border border-secondary'
-                          : 'bg-primary-container text-on-primary shadow-neon-orange-sm hover:brightness-110'
-                      }`}
+                      className="flex-shrink-0 px-md py-sm rounded-lg font-label-md font-bold transition-all active:scale-95 bg-primary-container text-on-primary shadow-neon-orange-sm hover:brightness-110"
                     >
-                      {inCart ? '✓ Added' : 'Select'}
+                      View Salon
                     </button>
                   </div>
-                );
-              })}
-            </div>
-          </section>
-        );
-      })}
-
-      {/* Floating cart bar */}
-      {cart.length > 0 && !isGuest && (
-        <div className="fixed bottom-20 md:bottom-8 left-1/2 -translate-x-1/2 z-40 glass-panel px-xl py-md rounded-full border border-secondary/30 shadow-neon-emerald flex items-center gap-lg">
-          <span className="text-secondary font-bold">
-            {cart.length} service{cart.length > 1 ? 's' : ''} — PKR {totalPKR.toLocaleString()}
-          </span>
-          <button
-            onClick={() => toast('Redirecting to Book...')}
-            className="bg-secondary text-on-secondary px-lg py-sm rounded-full font-label-md font-bold active:scale-95"
-          >
-            Book Now
-          </button>
-        </div>
+                ))}
+              </div>
+            </section>
+          );
+        })
       )}
 
       <GuestBlock isOpen={guestBlockOpen} onClose={() => setGuestBlockOpen(false)} />
