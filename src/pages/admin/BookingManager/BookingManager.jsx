@@ -23,6 +23,7 @@ export default function BookingManager() {
   const [stats, setStats] = useState({ totalBookings: 0, totalRevenue: 0, pending: 0, completed: 0 });
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('all');
+  const [actioningId, setActioningId] = useState(null);
 
   // 1. Fetch Salon Specific Bookings
   const fetchBookings = async () => {
@@ -67,6 +68,8 @@ export default function BookingManager() {
 
   // 3. Status State Modifications (PATCH endpoints)
   const handleStatusChange = async (id, action) => {
+    if (actioningId) return; // one in-flight status change at a time
+    setActioningId(id);
     try {
       const { data } = await apiClient.patch(
         `/bookings/${id}/${action}`,
@@ -81,6 +84,8 @@ export default function BookingManager() {
       }
     } catch (err) {
       toast.error(err.message || 'Failed to update booking status.');
+    } finally {
+      setActioningId(null);
     }
   };
 
@@ -207,17 +212,32 @@ export default function BookingManager() {
                 <div className="flex gap-1.5">
                   {item.status === 'pending' && (
                     <>
-                      <button onClick={() => handleStatusChange(item._id, 'confirm')} className="p-2 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-white border border-emerald-500/20 rounded-lg transition-all" title="Confirm Booking">
+                      <button
+                        onClick={() => handleStatusChange(item._id, 'confirm')}
+                        disabled={actioningId === item._id}
+                        className="p-2 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-white border border-emerald-500/20 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                        title="Confirm Booking"
+                      >
                         <MdCheckCircleOutline className="text-base" />
                       </button>
-                      <button onClick={() => handleStatusChange(item._id, 'reject')} className="p-2 bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white border border-rose-500/20 rounded-lg transition-all" title="Reject Booking">
+                      <button
+                        onClick={() => handleStatusChange(item._id, 'reject')}
+                        disabled={actioningId === item._id}
+                        className="p-2 bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white border border-rose-500/20 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                        title="Reject Booking"
+                      >
                         <MdHighlightOff className="text-base" />
                       </button>
                     </>
                   )}
 
                   {item.status === 'confirmed' && (
-                    <button onClick={() => handleStatusChange(item._id, 'complete')} className="px-3 py-2 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-white border border-emerald-500/20 rounded-lg transition-all text-xs font-bold flex items-center gap-1" title="Mark Completed">
+                    <button
+                      onClick={() => handleStatusChange(item._id, 'complete')}
+                      disabled={actioningId === item._id}
+                      className="px-3 py-2 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-white border border-emerald-500/20 rounded-lg transition-all text-xs font-bold flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed"
+                      title="Mark Completed"
+                    >
                       <MdDoneAll className="text-sm" /> Complete
                     </button>
                   )}

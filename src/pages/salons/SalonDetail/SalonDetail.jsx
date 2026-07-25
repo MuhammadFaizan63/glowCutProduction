@@ -93,12 +93,18 @@ export default function SalonDetail() {
     if (!id) return;
     setSlotsLoading(true);
     const barberId = booking.stylist?._id || booking.stylist?.id;
-    bookingService.getAvailableTimeSlots(id, barberId, dates[selectedDate].iso).then((data) => {
-      setSlots(data);
-      const firstAvailable = data.find((s) => s.status === 'available');
-      setSelectedSlot(firstAvailable?.time || null);
-      setSlotsLoading(false);
-    });
+    bookingService.getAvailableTimeSlots(id, barberId, dates[selectedDate].iso)
+      .then((data) => {
+        setSlots(data);
+        const firstAvailable = data.find((s) => s.status === 'available');
+        setSelectedSlot(firstAvailable?.time || null);
+      })
+      .catch(() => {
+        setSlots([]);
+        setSelectedSlot(null);
+        toast.error('Could not load available time slots.');
+      })
+      .finally(() => setSlotsLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, selectedDate, booking.stylist]);
 
@@ -234,6 +240,7 @@ export default function SalonDetail() {
                 {barbers.map((barber) => {
                   const barberId = barber._id || barber.id;
                   const isSelected = (booking.stylist?._id || booking.stylist?.id) === barberId;
+                  const isAvailable = barber.isAvailable && barber.status === 'active';
                   return (
                     <div key={barberId} className={isSelected ? 'ring-2 ring-secondary rounded-xl' : ''}>
                       <BarberCard
@@ -243,10 +250,16 @@ export default function SalonDetail() {
                           rating: barber.rating ?? 0,
                           reviewCount: barber.reviewCount ?? 0,
                           image: barber.profileImage || 'https://via.placeholder.com/150?text=?',
-                          available: barber.isAvailable && barber.status === 'active',
+                          available: isAvailable,
                           nextSlot: barber.startTime,
                         }}
-                        onClick={() => setStylist(barber)}
+                        onClick={() => {
+                          if (!isAvailable) {
+                            toast.error('Barber is not available');
+                            return;
+                          }
+                          setStylist(barber);
+                        }}
                       />
                     </div>
                   );

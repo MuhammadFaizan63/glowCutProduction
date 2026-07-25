@@ -63,7 +63,11 @@ export default function ShopkeeperDashboard() {
     fetchData();
   }, []);
 
+  const [actioningId, setActioningId] = useState(null);
+
   const handleCheckIn = async (bookingId) => {
+    if (actioningId) return;
+    setActioningId(bookingId);
     try {
       const { data } = await apiClient.patch(`/bookings/${bookingId}/confirm`);
       if (data.success) {
@@ -74,10 +78,14 @@ export default function ShopkeeperDashboard() {
       }
     } catch (err) {
       toast.error(err.message || 'Check-in failed.');
+    } finally {
+      setActioningId(null);
     }
   };
 
   const handleMarkAsDone = async (bookingId) => {
+    if (actioningId) return;
+    setActioningId(bookingId);
     try {
       const { data } = await apiClient.patch(`/bookings/${bookingId}/complete`, { paymentStatus: 'paid' });
       if (data.success) {
@@ -88,6 +96,8 @@ export default function ShopkeeperDashboard() {
       }
     } catch (err) {
       toast.error(err.message || 'Failed to complete booking.');
+    } finally {
+      setActioningId(null);
     }
   };
 
@@ -155,12 +165,12 @@ export default function ShopkeeperDashboard() {
                   </div>
                   <div className="flex gap-2">
                     {apt.status === 'pending' && (
-                      <button onClick={() => handleCheckIn(apt._id)} className="bg-orange-500 text-xs px-4 py-2 rounded-full font-bold">
+                      <button onClick={() => handleCheckIn(apt._id)} disabled={actioningId === apt._id} className="bg-orange-500 text-xs px-4 py-2 rounded-full font-bold disabled:opacity-50 disabled:cursor-not-allowed">
                         Confirm Check-In
                       </button>
                     )}
                     {apt.status === 'confirmed' && (
-                      <button onClick={() => handleMarkAsDone(apt._id)} className="border border-orange-500 text-orange-400 text-xs px-4 py-2 rounded-full font-bold">
+                      <button onClick={() => handleMarkAsDone(apt._id)} disabled={actioningId === apt._id} className="border border-orange-500 text-orange-400 text-xs px-4 py-2 rounded-full font-bold disabled:opacity-50 disabled:cursor-not-allowed">
                         Mark Completed
                       </button>
                     )}

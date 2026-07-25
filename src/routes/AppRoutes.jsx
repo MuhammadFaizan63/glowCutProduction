@@ -78,11 +78,17 @@ export default function AppRoutes() {
         <Route path="/auth/verify-otp" element={<VerifyOtp />} />
         <Route path="/role-selection" element={<RoleSelection />} />
 
-        {/* 🔒 Smart Gate: Agar admin pehle se salon register kar chuka hai toh form par access block */}
+        {/* 🔒 Smart Gate: block non-owner/admin roles outright (backend's
+            ownerOrAdminOnly middleware would 403 them anyway), and skip the
+            form entirely if this owner already has an active salon. */}
         <Route
           path="/setup-salon"
           element={
-            isAuthenticated && profile?.role === 'owner' && profile?.hasSalon ? (
+            !isAuthenticated ? (
+              <Navigate to="/auth/login" replace />
+            ) : profile?.role !== 'owner' && profile?.role !== 'admin' ? (
+              <Navigate to="/" replace />
+            ) : profile?.role === 'owner' && profile?.hasSalon ? (
               <Navigate to="/admin/shop" replace />
             ) : (
               <SalonSetup />

@@ -2,55 +2,46 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MdPerson, MdStorefront } from 'react-icons/md';
 import toast from 'react-hot-toast';
+import { useAuth } from '../../hooks/useAuth';
 
+/**
+ * RoleSelection
+ *
+ * IMPORTANT BACKEND CONSTRAINT: there is no `/auth/update-role` (or any
+ * other) endpoint in the backend — `role` is set once at registration
+ * (see register() in user.controller.js) and is never mutated afterwards.
+ * An earlier version of this page called a non-existent endpoint on a dead
+ * ngrok tunnel using the wrong localStorage key for the access token, which
+ * always sent `Authorization: Bearer null` and surfaced as an
+ * "Invalid authorization format" error — that call has been removed
+ * entirely rather than patched, since the backend genuinely can't fulfill
+ * a role change after signup.
+ *
+ * This page is only reached from Login's fallback branch (an account with
+ * an unrecognized/legacy role value). It no longer pretends to change the
+ * role via the API: "Customer" simply continues into the app with whatever
+ * role the account already has, and "Salon Owner" explains that a new
+ * account must be created with the Salon Owner option at signup.
+ */
 export default function RoleSelection() {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [loading, setLoading] = useState(false);
 
-  const handleRoleSelect = async (clientChoice) => {
+  const handleContinueAsCustomer = () => {
+    navigate('/');
+  };
+
+  const handleWantsSalonOwner = async () => {
     if (loading) return;
-
-    // 1️⃣ Backend Model Enum ke sath sync kiya: 
-    // 'customer' ko 'user' banaya aur 'shopkeeper' ko 'admin' taake backend models reject na karein.
-    const backendValidRole = clientChoice === 'customer' ? 'user' : 'admin';
-
     setLoading(true);
     try {
-      const token = localStorage.getItem('accessToken');
-      
-      // 2️⃣ URL ko aapke router mapping ke mutabiq set kiya hai.
-      // (Agar server.js/app.js mein main prefix '/api/users' hai to yahan users kar dein, warna auth)
-      const res = await fetch(`https://herself-pusher-marathon.ngrok-free.dev/api/auth/update-role`, {
-        method: 'PUT', 
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ role: backendValidRole })
-      });
-
-      const data = await res.json();
-
-      if (res.ok && data.success) {
-        toast.success(`Role synchronized to ${backendValidRole} successfully!`);
-        
-        // 3️⃣ Token update logic jo aapke controller se generate ho kar aa raha hai
-        if (data.accessToken) {
-          localStorage.setItem('accessToken', data.accessToken);
-        }
-
-        // Frontend routing based on successful authorization
-        if (backendValidRole === 'user') {
-          navigate('/');
-        } else if (backendValidRole === 'admin') {
-          navigate('/setup-salon');
-        }
-      } else {
-        toast.error(data.message || "Failed to sync role with server matrix.");
-      }
-    } catch (err) {
-      console.error("Role Sync Error:", err);
-      toast.error("Network issue, please check database connection.");
+      toast(
+        'Salon Owner accounts are created at sign-up and can\u2019t be changed later. Please log out and register a new account as a Salon Owner.',
+        { duration: 6000 }
+      );
+      await logout();
+      navigate('/auth/signup');
     } finally {
       setLoading(false);
     }
@@ -67,16 +58,15 @@ export default function RoleSelection() {
           GLOWCUT
         </h1>
         <p className="text-outline text-sm uppercase tracking-widest">
-          {loading ? "Re-structuring Profile Grid..." : "Select Your Experience"}
+          {loading ? 'One moment...' : 'Select Your Experience'}
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl z-10">
-        
         {/* Customer Box */}
         <button
           disabled={loading}
-          onClick={() => handleRoleSelect('customer')}
+          onClick={handleContinueAsCustomer}
           className={`glass-card p-8 rounded-2xl border border-white/5 text-left transition-all duration-300 ${
             loading ? 'opacity-50 cursor-not-allowed' : 'hover:border-primary-container/30 group hover:-translate-y-1'
           }`}
@@ -95,7 +85,7 @@ export default function RoleSelection() {
         {/* Shopkeeper / Salon Owner Box */}
         <button
           disabled={loading}
-          onClick={() => handleRoleSelect('shopkeeper')}
+          onClick={handleWantsSalonOwner}
           className={`glass-card p-8 rounded-2xl border border-white/5 text-left transition-all duration-300 ${
             loading ? 'opacity-50 cursor-not-allowed' : 'hover:border-primary-container/30 group hover:-translate-y-1'
           }`}
@@ -110,7 +100,6 @@ export default function RoleSelection() {
             Register your shop, manage your dynamic staff schedule, set service prices, and track live earnings.
           </p>
         </button>
-
       </div>
     </div>
   );

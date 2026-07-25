@@ -17,6 +17,12 @@ import EmptyState from '../../../components/ui/EmptyState';
 
 const TECH_FEE = 50;
 
+const addMinutesToTime = (time, minutesToAdd) => {
+  const [hours, minutes] = time.split(':').map(Number);
+  const total = hours * 60 + minutes + minutesToAdd;
+  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+};
+
 export default function ConfirmBooking() {
   const navigate = useNavigate();
   const { booking, setTimeSlot, totalPrice, totalDuration, confirmBooking } = useBooking();
@@ -32,14 +38,19 @@ export default function ConfirmBooking() {
     const salonId = booking.salon?._id || booking.salon?.id;
     const barberId = booking.stylist?._id || booking.stylist?.id;
     const dateStr = booking.date || 'today';
-    bookingService.getAvailableTimeSlots(salonId, barberId, dateStr).then((data) => {
-      setSlots(data);
-      setLoadingSlots(false);
-      if (!selectedSlot) {
-        const firstAvailable = data.find((s) => s.status === 'available');
-        if (firstAvailable) setSelectedSlotState(firstAvailable.time);
-      }
-    });
+    bookingService.getAvailableTimeSlots(salonId, barberId, dateStr)
+      .then((data) => {
+        setSlots(data);
+        if (!selectedSlot) {
+          const firstAvailable = data.find((s) => s.status === 'available');
+          if (firstAvailable) setSelectedSlotState(firstAvailable.time);
+        }
+      })
+      .catch(() => {
+        setSlots([]);
+        toast.error('Could not load available time slots.');
+      })
+      .finally(() => setLoadingSlots(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -82,6 +93,10 @@ export default function ConfirmBooking() {
       toast.error('Please choose a stylist for this booking.');
       return;
     }
+    if (!booking.stylist?.isAvailable || booking.stylist?.status !== 'active') {
+      toast.error('Barber is not available');
+      return;
+    }
     if (!selectedSlot) {
       toast.error('Please pick an available time slot.');
       return;
@@ -94,17 +109,18 @@ export default function ConfirmBooking() {
       // call per selected service, all sharing the same slot/date/barber.
       const bookingDate = booking.date || new Date().toISOString().split('T')[0];
       const createdBookings = [];
+      let startTime = selectedSlot;
       for (const service of booking.services) {
         const created = await bookingService.createBooking({
           salonId,
           barberId,
           serviceId: service._id || service.id,
           bookingDate,
-          startTime: selectedSlot,
+          startTime,
           paymentMethod: booking.paymentMethod || 'cash',
-          bookingType: 'appointment',
         });
         createdBookings.push(created);
+        startTime = created.endTime || addMinutesToTime(startTime, service.duration || 0);
       }
       confirmBooking(createdBookings);
       navigate('/booking/summary');

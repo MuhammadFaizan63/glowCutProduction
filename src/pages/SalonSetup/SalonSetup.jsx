@@ -56,6 +56,47 @@ export default function SalonSetup() {
     });
   };
 
+  // "Use My Location" — real browser Geolocation API, with full defensive
+  // handling: unsupported browsers, denied permission, timeouts, and
+  // low-accuracy results are all surfaced as clear toasts instead of
+  // silently failing or leaving the form in a stuck "locating..." state.
+  const [locating, setLocating] = useState(false);
+
+  const handleUseMyLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error('Geolocation is not supported by this browser.');
+      return;
+    }
+    if (locating) return;
+    setLocating(true);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { longitude, latitude } = position.coords;
+        setSalonData((prev) => ({
+          ...prev,
+          location: {
+            ...prev.location,
+            longitude: longitude.toFixed(6),
+            latitude: latitude.toFixed(6),
+          },
+        }));
+        toast.success('Location captured successfully!');
+        setLocating(false);
+      },
+      (error) => {
+        const messages = {
+          1: 'Location permission denied. Please enter coordinates manually.',
+          2: 'Location unavailable right now. Please enter coordinates manually.',
+          3: 'Location request timed out. Please try again or enter manually.',
+        };
+        toast.error(messages[error.code] || 'Could not fetch your location.');
+        setLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
+
   // Submit Salon Data
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -315,7 +356,25 @@ export default function SalonSetup() {
           </div>
 
           {/* Geo-Location (2dsphere coordinates) Input Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-white/5 pt-4">
+          <div className="border-t border-white/5 pt-4">
+            <div className="flex items-center justify-between mb-3">
+              <label className="block text-xs font-bold text-outline uppercase tracking-wider">Salon Coordinates</label>
+              <button
+                type="button"
+                onClick={handleUseMyLocation}
+                disabled={locating}
+                className="flex items-center gap-1.5 text-xs font-bold text-primary-container bg-primary-container/10 border border-primary-container/30 px-3 py-1.5 rounded-lg hover:bg-primary-container/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {locating ? (
+                  <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <MdMyLocation className="text-sm" />
+                )}
+                {locating ? 'Locating...' : 'Use My Location'}
+              </button>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Longitude (-180 to 180)</label>
               <div className="relative">

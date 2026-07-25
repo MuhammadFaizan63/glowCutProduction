@@ -56,7 +56,7 @@ export default function GlowRewards() {
     getAvailableRewards()
       .then((data) => {
         setRewards(
-          data.map((r) => ({
+          (Array.isArray(data) ? data : []).map((r) => ({
             id: r.id,
             name: r.title,
             description: REWARD_DESCRIPTIONS[r.title] || 'Redeemable on any service.',
@@ -65,6 +65,7 @@ export default function GlowRewards() {
           }))
         );
       })
+      .catch(() => setRewards([]))
       .finally(() => setLoading(false));
   }, []);
 
