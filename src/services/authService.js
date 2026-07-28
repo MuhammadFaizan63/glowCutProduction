@@ -9,9 +9,16 @@ import apiClient, { tokenStorage } from './apiClient';
  */
 
 export async function register(payload) {
-  // payload: { userName, name, email, password, PhoneNumber, phone, cities, role }
-  const { data } = await apiClient.post('/auth/register', payload);
-  return data;
+  try {
+    console.log("ACTUAL PAYLOAD BEING SENT:", payload);
+    const { data } = await apiClient.post('/auth/register', payload);
+    return data;
+  } catch (error) {
+    if (error.response && error.response.data && error.response.data.message) {
+      throw error; // Let the component handle it exactly as instructed
+    }
+    throw error;
+  }
 }
 
 export async function login({ email, password }) {

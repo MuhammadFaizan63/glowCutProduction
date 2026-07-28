@@ -1,11 +1,12 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { MdLanguage, MdShare } from 'react-icons/md';
 
 const FOOTER_LINKS = [
-  { label: 'Privacy Policy', to: '#' },
-  { label: 'Terms of Service', to: '#' },
-  { label: 'Contact Us', to: '#' },
-  { label: 'Careers', to: '#' },
+  { label: 'Privacy Policy', to: '/privacy-policy' },
+  { label: 'Terms of Service', to: '/terms-of-service' },
+  { label: 'Contact Us', to: '/contact-us' },
+  { label: 'Careers', to: '/careers' },
 ];
 
 /**
@@ -33,13 +34,13 @@ export default function Footer() {
 
       <div className="flex flex-wrap justify-center gap-xl">
         {FOOTER_LINKS.map((link) => (
-          <a
+          <Link
             key={link.label}
-            href={link.to}
+            to={link.to}
             className="text-on-surface-variant hover:text-secondary transition-colors font-body-md text-body-md"
           >
             {link.label}
-          </a>
+          </Link>
         ))}
       </div>
 

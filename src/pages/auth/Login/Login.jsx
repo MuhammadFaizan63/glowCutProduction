@@ -38,19 +38,23 @@ export default function Login() {
         email: form.identifier.trim(),
         password: form.password,
       });
-
+      console.log(res, "res")
       toast.success(res.message || 'Welcome back!');
 
       const userRole = res.user?.role;
 
-      if (userRole === 'admin') {
-        navigate('/admin/global');
-      } else if (userRole === 'owner') {
+      // Updated Role Navigation Logic
+      if (userRole === 'admin' || userRole === 'owner') {
         try {
           const { data: salonData } = await apiClient.get('/salons/my');
-          if (salonData?.success && salonData?.data) {
-            navigate('/admin/shop');
+          console.log(salonData)
+          const hasSalon = Boolean(salonData?.success && salonData?.data);
+
+          if (hasSalon) {
+            // Salon exists: navigate to respective dashboard
+            navigate(userRole === 'admin' ? '/admin/shop' : '/admin/shop');
           } else {
+            // Salon not created: navigate to setup form
             navigate('/setup-salon');
           }
         } catch (salonErr) {

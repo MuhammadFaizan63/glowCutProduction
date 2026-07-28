@@ -29,21 +29,79 @@ export default function ConfirmBooking() {
 
   const [slots, setSlots] = useState([]);
   const [selectedSlot, setSelectedSlotState] = useState(booking.timeSlot);
+  const [activeDate, setActiveDate] = useState(booking.date || new Date().toISOString().split('T')[0]);
+  const [activeDateLabel, setActiveDateLabel] = useState(booking.dateLabel || 'Today');
   const [loadingSlots, setLoadingSlots] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [reviews, setReviews] = useState([]);
   const [loadingReviews, setLoadingReviews] = useState(true);
 
   useEffect(() => {
+    if (!booking.salon || !booking.stylist) {
+      toast.error('Booking state lost. Please restart your booking.');
+      navigate('/salons/nearby');
+    }
+  }, [booking.salon, booking.stylist, navigate]);
+
+  const barber = booking.stylist;
+  // If workingDays is completely empty/missing, the backend will block ALL bookings for this barber.
+  // We explicitly detect this to block the UI and prevent 400 Bad Request errors.
+  const hasWorkingDaysConfigured = barber?.workingDays && barber.workingDays.length > 0;
+  const workingDays = hasWorkingDaysConfigured ? barber.workingDays : []; 
+
+
+  // Generate next 7 days for the date picker
+  const generateUpcomingDays = () => {
+    const result = [];
+    const today = new Date();
+    const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      const isoDate = d.toISOString().split('T')[0];
+      const dayEnum = dayNames[d.getDay()];
+      let label = i === 0 ? "Today" : i === 1 ? "Tomorrow" : dayEnum;
+      result.push({ isoDate, label, dayEnum, dateText: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) });
+    }
+    return result;
+  };
+  const upcomingDays = generateUpcomingDays();
+
+  // If workingDays is missing, show a user-friendly alert when they try to pick a date
+  const handleSelectDate = (day) => {
+    if (!hasWorkingDaysConfigured) {
+      toast.error('This specialist has not set their working schedule yet.');
+      return;
+    }
+    if (workingDays.length > 0 && !workingDays.includes(day.dayEnum)) {
+      toast.error(`Barber is not available on ${day.dayEnum}s.`);
+      return;
+    }
+    setActiveDate(day.isoDate);
+    setActiveDateLabel(day.label);
+    setSelectedSlotState(null); // Reset slot when date changes
+  };
+
+  const fetchSlots = (dateStr) => {
+    if (!hasWorkingDaysConfigured) {
+      setSlots([]);
+      setLoadingSlots(false);
+      return;
+    }
     const salonId = booking.salon?._id || booking.salon?.id;
     const barberId = booking.stylist?._id || booking.stylist?.id;
-    const dateStr = booking.date || 'today';
+    setLoadingSlots(true);
     bookingService.getAvailableTimeSlots(salonId, barberId, dateStr)
       .then((data) => {
         setSlots(data);
-        if (!selectedSlot) {
+        if (!selectedSlot || dateStr !== booking.date) {
           const firstAvailable = data.find((s) => s.status === 'available');
-          if (firstAvailable) setSelectedSlotState(firstAvailable.time);
+          if (firstAvailable) {
+            setSelectedSlotState(firstAvailable.time);
+            setTimeSlot(dateStr, firstAvailable.time, activeDateLabel);
+          } else {
+            setSelectedSlotState(null);
+          }
         }
       })
       .catch(() => {
@@ -51,8 +109,12 @@ export default function ConfirmBooking() {
         toast.error('Could not load available time slots.');
       })
       .finally(() => setLoadingSlots(false));
+  };
+
+  useEffect(() => {
+    fetchSlots(activeDate);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [activeDate]);
 
   useEffect(() => {
     const barberId = booking.stylist?._id || booking.stylist?.id;
@@ -69,9 +131,11 @@ export default function ConfirmBooking() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+
+
   const handleSelectSlot = (time) => {
     setSelectedSlotState(time);
-    setTimeSlot(booking.date, time, booking.dateLabel);
+    setTimeSlot(activeDate, time, activeDateLabel);
   };
 
   const grandTotal = totalPrice + TECH_FEE;
@@ -103,29 +167,33 @@ export default function ConfirmBooking() {
     }
 
     setSubmitting(true);
+    const toastId = toast.loading('Processing your booking...');
     try {
-      // The backend's Booking schema links one service + one barber per
-      // booking document, so a multi-service cart becomes one POST /bookings
-      // call per selected service, all sharing the same slot/date/barber.
-      const bookingDate = booking.date || new Date().toISOString().split('T')[0];
       const createdBookings = [];
-      let startTime = selectedSlot;
+      let currentStartTime = selectedSlot;
+      
       for (const service of booking.services) {
-        const created = await bookingService.createBooking({
+        const payload = {
           salonId,
           barberId,
           serviceId: service._id || service.id,
-          bookingDate,
-          startTime,
+          bookingDate: activeDate,
+          startTime: currentStartTime,
           paymentMethod: booking.paymentMethod || 'cash',
-        });
+        };
+        
+        const created = await bookingService.createBooking(payload);
         createdBookings.push(created);
-        startTime = created.endTime || addMinutesToTime(startTime, service.duration || 0);
+        currentStartTime = created.endTime || addMinutesToTime(currentStartTime, service.duration || 0);
       }
+      
       confirmBooking(createdBookings);
-      navigate('/booking/summary');
-    } catch (err) {
-      toast.error(err.message || 'Something went wrong confirming your booking');
+      toast.success('Booking confirmed successfully!', { id: toastId });
+      navigate('/booking/summary', { state: { bookingId: createdBookings[0]?._id || createdBookings[0]?.id } });
+    } catch (error) {
+      const backendMsg = error.response?.data?.message || error.response?.data?.error || error.message || "Booking Failed";
+      console.error("BOOKING PAYLOAD REJECTED:", error.response?.data);
+      toast.error(`Error: ${backendMsg}`, { id: toastId });
     } finally {
       setSubmitting(false);
     }
@@ -241,15 +309,42 @@ export default function ConfirmBooking() {
               )}
             </div>
 
-            {/* Timeslot Grid */}
+            {/* Date & Timeslot Picker */}
             <div>
               <div className="flex justify-between items-end mb-md">
                 <h2 className="font-headline-md text-headline-md flex items-center gap-2">
-                  <MdSchedule className="text-secondary" /> Today's Schedule
+                  <MdSchedule className="text-secondary" /> Select Date & Time
                 </h2>
                 <span className="text-on-surface-variant font-label-md">
-                  {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase()}
+                  {new Date(activeDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }).toUpperCase()}
                 </span>
+              </div>
+
+              {/* Date Selector */}
+              <div className="flex gap-3 overflow-x-auto pb-4 mb-4 scrollbar-hide">
+                {upcomingDays.map((day) => {
+                  const isAvailable = workingDays.length === 0 || workingDays.includes(day.dayEnum);
+                  const isSelected = activeDate === day.isoDate;
+                  
+                  return (
+                    <button
+                      key={day.isoDate}
+                      onClick={() => handleSelectDate(day)}
+                      className={`flex flex-col items-center justify-center min-w-[80px] p-3 rounded-xl transition-all ${
+                        !isAvailable 
+                          ? 'glass-panel text-on-surface-variant opacity-40 cursor-not-allowed'
+                          : isSelected
+                          ? 'bg-secondary border-2 border-secondary text-on-secondary shadow-neon-emerald'
+                          : 'glass-panel text-on-surface hover:border-secondary/40'
+                      }`}
+                    >
+                      <span className={`text-caption uppercase ${isSelected ? 'text-on-secondary' : 'text-on-surface-variant'}`}>
+                        {day.label === "Today" || day.label === "Tomorrow" ? day.label : day.dayEnum.slice(0, 3)}
+                      </span>
+                      <span className="font-headline-md mt-1">{day.dateText.split(' ')[1]}</span>
+                    </button>
+                  );
+                })}
               </div>
 
               {loadingSlots ? (
@@ -257,6 +352,10 @@ export default function ConfirmBooking() {
                   {Array.from({ length: 10 }).map((_, i) => (
                     <div key={i} className="h-12 rounded-lg glass-panel animate-pulse" />
                   ))}
+                </div>
+              ) : slots.length === 0 ? (
+                <div className="glass-panel p-lg rounded-xl text-center text-on-surface-variant">
+                  No available time slots on {activeDateLabel}. Try selecting another date.
                 </div>
               ) : (
                 <div className="grid grid-cols-3 md:grid-cols-5 gap-3">

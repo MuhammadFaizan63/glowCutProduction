@@ -6,7 +6,7 @@ import AuthContext from '../context/AuthContext';
  * Convenience hook that exposes everything from AuthContext in one import.
  * Components can destructure exactly what they need.
  */
-export function useAuth() {
+export const useAuth = () => {
   const ctx = useContext(AuthContext);
   if (!ctx) {
     throw new Error('useAuth must be used within an AuthProvider');

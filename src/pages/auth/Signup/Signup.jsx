@@ -79,19 +79,24 @@ export default function Signup() {
     
     try {
       const email = form.email.trim().toLowerCase();
+      // Backend mapping: Salon Owner -> admin, Customer -> user
+      const backendRole = form.role === 'owner' ? 'admin' : form.role;
+      
       const res = await register({
         userName: form.userName.trim(),
-        PhoneNumber: form.PhoneNumber.trim(),
+        phone: form.PhoneNumber.trim(), // Fix: Backend controller specifically expects 'phone', not 'PhoneNumber'
         email,
         password: form.password,
         cities: form.cities,
-        role: form.role,
+        role: backendRole,
       });
 
       toast.success(res.message || 'User registered successfully. OTP sent!');
       navigate('/auth/verify-otp', { state: { email } });
     } catch (error) {
-      toast.error(error?.message || 'Registration failed.');
+      const backendError = error.response?.data?.message || error.response?.data?.error || error.message || "Unknown Error";
+      console.error("BACKEND REJECTION DETAILS:", error.response?.data);
+      toast.error(`Validation Failed: ${backendError}`);
     } finally {
       setSubmitting(false);
     }

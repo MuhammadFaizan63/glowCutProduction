@@ -32,6 +32,10 @@ export default function StaffManager() {
   const [salary, setSalary] = useState('');
   const [commission, setCommission] = useState('');
   const [description, setDescription] = useState('');
+  const [workingDays, setWorkingDays] = useState(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]);
+  
+  // Image Upload State
+  const [profileImageFile, setProfileImageFile] = useState(null);
 
   const fetchBarbers = async () => {
     if (!salonId) {
@@ -60,6 +64,8 @@ export default function StaffManager() {
     setName(''); setEmail(''); setPhone(''); setGender('Male');
     setExperience(''); setStartTime('09:00'); setEndTime('21:00');
     setSalary(''); setCommission(''); setDescription('');
+    setWorkingDays(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]);
+    setProfileImageFile(null);
   };
 
   const handleAddBarber = async (e) => {
@@ -67,6 +73,10 @@ export default function StaffManager() {
     if (!salonId) return toast.error('No salon linked to this account yet.');
     if (!name || !email || !phone || !startTime || !endTime) {
       toast.error('Please fill all required mandatory fields.');
+      return;
+    }
+    if (workingDays.length === 0) {
+      toast.error('Please select at least one working day for the barber schedule.');
       return;
     }
 
@@ -81,11 +91,21 @@ export default function StaffManager() {
         experience: Number(experience) || 0,
         startTime,
         endTime,
+        workingDays,
         salary: Number(salary) || 0,
         commission: Number(commission) || 0,
         description: description || undefined,
       });
       if (data.success) {
+        // Upload image if provided
+        if (profileImageFile) {
+          const barberId = data.data._id || data.data.id;
+          const formData = new FormData();
+          formData.append('profileImage', profileImageFile);
+          await apiClient.patch(`/barbers/${barberId}/profile-image`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          });
+        }
         toast.success('Barber registered successfully!');
         resetForm();
         fetchBarbers();
@@ -100,6 +120,10 @@ export default function StaffManager() {
   const handleUpdateBarber = async (e) => {
     e.preventDefault();
     if (!editingBarber) return;
+    if (workingDays.length === 0) {
+      toast.error('Please select at least one working day for the barber schedule.');
+      return;
+    }
     setSubmitting(true);
     try {
       const { data } = await apiClient.patch(`/barbers/${editingBarber._id}`, {
@@ -110,11 +134,20 @@ export default function StaffManager() {
         experience: Number(experience) || 0,
         startTime,
         endTime,
+        workingDays,
         salary: Number(salary) || 0,
         commission: Number(commission) || 0,
         description,
       });
       if (data.success) {
+        // Upload image if provided
+        if (profileImageFile) {
+          const formData = new FormData();
+          formData.append('profileImage', profileImageFile);
+          await apiClient.patch(`/barbers/${editingBarber._id}/profile-image`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          });
+        }
         toast.success('Barber records updated!');
         closeEditMode();
         fetchBarbers();
@@ -173,9 +206,11 @@ export default function StaffManager() {
     setExperience(barber.experience);
     setStartTime(barber.startTime);
     setEndTime(barber.endTime);
+    setWorkingDays(barber.workingDays && barber.workingDays.length > 0 ? barber.workingDays : ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]);
     setSalary(barber.salary);
     setCommission(barber.commission);
     setDescription(barber.description || '');
+    setProfileImageFile(null); // Reset file picker state when opening edit mode
   };
 
   const closeEditMode = () => {
@@ -204,6 +239,22 @@ export default function StaffManager() {
             </div>
 
             <form onSubmit={editingBarber ? handleUpdateBarber : handleAddBarber} className="space-y-3.5 text-xs">
+              
+              <div>
+                <label className="text-slate-400 block mb-1 font-medium">Profile Image</label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="file"
+                    accept="image/png, image/jpeg"
+                    onChange={(e) => setProfileImageFile(e.target.files[0])}
+                    className="w-full bg-white/5 border border-white/5 rounded-lg px-3 py-1.5 text-white focus:outline-none file:mr-4 file:py-1.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-orange-500/10 file:text-orange-400 hover:file:bg-orange-500/20 cursor-pointer"
+                  />
+                  {editingBarber && editingBarber.profileImage && !profileImageFile && (
+                    <img src={editingBarber.profileImage} alt="Current" className="w-8 h-8 rounded-full object-cover border border-white/10" />
+                  )}
+                </div>
+              </div>
+
               <div>
                 <label className="text-slate-400 block mb-1 font-medium">Barber Full Name *</label>
                 <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="John Doe" className="w-full bg-white/5 border border-white/5 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-orange-500/50" />
@@ -243,6 +294,29 @@ export default function StaffManager() {
                 <div>
                   <label className="text-slate-400 block mb-1 font-medium">End Time *</label>
                   <input type="text" value={endTime} onChange={e => setEndTime(e.target.value)} placeholder="21:00" className="w-full bg-white/5 border border-white/5 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-orange-500/50" />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-slate-400 block mb-1 font-medium">Working Days *</label>
+                <div className="flex flex-wrap gap-2">
+                  {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => (
+                    <label key={day} className="flex items-center gap-1.5 bg-white/5 px-2 py-1.5 rounded border border-white/5 cursor-pointer hover:bg-white/10 transition-colors">
+                      <input 
+                        type="checkbox"
+                        className="accent-orange-500"
+                        checked={workingDays.includes(day)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setWorkingDays([...workingDays, day]);
+                          } else {
+                            setWorkingDays(workingDays.filter(d => d !== day));
+                          }
+                        }}
+                      />
+                      <span className="text-[10px]">{day.slice(0,3)}</span>
+                    </label>
+                  ))}
                 </div>
               </div>
 

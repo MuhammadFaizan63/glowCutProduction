@@ -56,6 +56,12 @@ import ProfileSettings from '../pages/profile/ProfileSettings';
 import Feedback from '../pages/profile/Feedback';
 import PrivacyCenter from '../pages/profile/PrivacyCenter';
 
+// Public info
+import PrivacyPolicy from '../pages/public/PrivacyPolicy/PrivacyPolicy';
+import TermsOfService from '../pages/public/TermsOfService/TermsOfService';
+import ContactUs from '../pages/public/ContactUs/ContactUs';
+import Careers from '../pages/public/Careers/Careers';
+
 // Admin
 import ShopkeeperDashboard from '../pages/admin/ShopkeeperDashboard';
 import GlobalDashboard from '../pages/admin/GlobalDashboard';
@@ -86,9 +92,9 @@ export default function AppRoutes() {
           element={
             !isAuthenticated ? (
               <Navigate to="/auth/login" replace />
-            ) : profile?.role !== 'owner' && profile?.role !== 'admin' ? (
+            ) : profile?.role !== 'admin' ? (
               <Navigate to="/" replace />
-            ) : profile?.role === 'owner' && profile?.hasSalon ? (
+            ) : profile?.role === 'admin' && profile?.hasSalon ? (
               <Navigate to="/admin/shop" replace />
             ) : (
               <SalonSetup />
@@ -149,7 +155,11 @@ export default function AppRoutes() {
         {/* Profile */}
         <Route path="/profile" element={<ProfileSettings />} />
         <Route path="/profile/feedback" element={<Feedback />} />
-        <Route path="/profile/privacy" element={<PrivacyCenter />} />
+        {/* Public Info */}
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms-of-service" element={<TermsOfService />} />
+        <Route path="/contact-us" element={<ContactUs />} />
+        <Route path="/careers" element={<Careers />} />
       </Route>
 
       {/* ── Admin ── */}
@@ -162,23 +172,23 @@ export default function AppRoutes() {
       >
         <Route
           path="/admin/shop"
-          element={<RoleGuard allow={['owner', 'admin']}><ShopkeeperDashboard /></RoleGuard>}
+          element={<RoleGuard allow={['admin']}><ShopkeeperDashboard /></RoleGuard>}
         />
         <Route
           path="/admin/global"
-          element={<RoleGuard allow={['owner', 'admin']}><GlobalDashboard /></RoleGuard>}
+          element={<RoleGuard allow={['superadmin']}><GlobalDashboard /></RoleGuard>}
         />
         <Route
           path="/admin/services"
-          element={<RoleGuard allow={['owner', 'admin']}><ServiceMenu /></RoleGuard>}
+          element={<RoleGuard allow={['admin']}><ServiceMenu /></RoleGuard>}
         />
         <Route
           path="/admin/barbers"
-          element={<RoleGuard allow={['owner', 'admin']}><StaffManager /></RoleGuard>}
+          element={<RoleGuard allow={['admin']}><StaffManager /></RoleGuard>}
         />
         <Route
           path="/admin/booking"
-          element={<RoleGuard allow={['owner', 'admin']}><BookingManager /></RoleGuard>}
+          element={<RoleGuard allow={['admin']}><BookingManager /></RoleGuard>}
         />
       </Route>
 

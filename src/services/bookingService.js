@@ -7,7 +7,7 @@ import apiClient from './apiClient';
  */
 
 export async function createBooking({ salonId, barberId, serviceId, bookingDate, startTime, discount, bookingType, paymentMethod, notes }) {
-  const { data } = await apiClient.post('/bookings', {
+  const payloadToSent = {
     salonId,
     barberId,
     serviceId,
@@ -17,7 +17,10 @@ export async function createBooking({ salonId, barberId, serviceId, bookingDate,
     bookingType,
     paymentMethod,
     notes,
-  });
+  };
+  console.log("ACTUAL BOOKING PAYLOAD BEING SENT:", payloadToSent);
+  
+  const { data } = await apiClient.post('/bookings', payloadToSent);
   // POST /bookings responds with { booking, queueNumber, estimatedWaitingMinutes }
   // nested under `data.data` (see createBooking in booking.controller.js) —
   // unwrap it so callers get the actual booking document (with _id, status,

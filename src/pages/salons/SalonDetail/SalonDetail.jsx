@@ -134,7 +134,7 @@ export default function SalonDetail() {
     ? [salon.address.area, salon.address.city].filter(Boolean).join(', ')
     : salon.area || 'Location unavailable';
   const heroImage = salon.coverImage || salon.logo || salon.image || 'https://via.placeholder.com/1200x600?text=GlowCut';
-
+  
   const techFee = 0;
   const grandTotal = totalPrice + techFee;
 
