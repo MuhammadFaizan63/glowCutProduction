@@ -2,9 +2,11 @@ import React, { useState, useContext } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { MdSearch, MdMenu, MdClose, MdChat, MdNotifications, MdPerson } from 'react-icons/md';
 import toast from 'react-hot-toast';
+import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../../ui/Button';
 import Avatar from '../../ui/Avatar';
 import AuthContext from '../../../context/AuthContext';
+import glowcutLogo from '../../../assets/logos/glowcut-logo.jpg';
 
 const AUTH_NAV = [
   { label: 'Home', to: '/' },
@@ -25,16 +27,11 @@ export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
   const { userType, profile, logout } = useContext(AuthContext);
-  console.log("CURRENT PROFILE DATA:", profile); 
-console.log("USER ROLE:", profile?.role);
 
   const isAuthenticated = userType === 'authenticated';
   const isGuest = userType === 'guest';
-  
-  // 💡 Strictly check if the role is 'admin' (ignoring case delays)
   const isAdmin = profile?.role?.toLowerCase() === 'admin';
 
-  // 💡 Dynamically inject "Manage Salon" ONLY if user is authenticated and an Admin
   let navLinks = isAuthenticated ? [...AUTH_NAV] : [...GUEST_NAV];
   if (isAuthenticated && isAdmin) {
     navLinks.push({ label: 'Manage Salon', to: '/admin/shop' });
@@ -45,35 +42,32 @@ console.log("USER ROLE:", profile?.role);
   };
 
   const handleLoginSignup = () => {
-    logout(); 
+    logout();
     navigate('/auth/login');
   };
 
   return (
-    <nav className="fixed top-0 w-full z-50 flex justify-between items-center px-margin-mobile md:px-margin-desktop h-20 bg-surface/60 backdrop-blur-xl border-b border-white/10 shadow-[0_0_15px_rgba(255,95,31,0.1)]">
-      {/* Brand */}
-      <Link to="/" className="flex items-center gap-base flex-shrink-0">
-        <div className="relative w-10 h-10 flex items-center justify-center">
-          <div className="absolute inset-0 border-2 border-primary-container rounded-full" />
-          <div className="w-2 h-2 bg-secondary rounded-full shadow-neon-emerald" />
-        </div>
-        <span className="font-headline-lg text-headline-lg font-bold text-primary-container tracking-tighter">
+    <nav className="fixed top-0 w-full z-50 flex justify-between items-center px-margin-mobile md:px-margin-desktop h-20 bg-surface/70 backdrop-blur-2xl border-b border-primary/10">
+      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-transparent pointer-events-none" />
+
+      <Link to="/" className="flex items-center gap-base flex-shrink-0 relative z-10">
+        <img src={glowcutLogo} alt="GlowCut" className="w-10 h-10 rounded-full" />
+        <span className="font-headline-lg text-headline-lg font-bold text-primary tracking-tight">
           GlowCut
         </span>
       </Link>
 
-      {/* Desktop nav */}
-      <div className="hidden md:flex gap-lg">
+      <div className="hidden md:flex gap-1 relative z-10">
         {navLinks.map((link) => (
           <NavLink
             key={link.label}
             to={link.to}
             className={({ isActive }) =>
-              `font-label-md text-label-md px-2 py-1 rounded transition-colors ${
+              `font-label-md text-label-md px-3 py-2 rounded-lg transition-all duration-200 ${
                 isActive
-                  ? 'text-primary-container border-b-2 border-primary-container'
+                  ? 'text-primary bg-primary/10'
                   : link.label === 'Manage Salon'
-                  ? 'text-primary hover:text-primary-container font-bold shadow-neon-orange-sm bg-primary/5 rounded'
+                  ? 'text-primary font-bold bg-primary/5 border border-primary/20'
                   : 'text-on-surface-variant hover:text-primary hover:bg-white/5'
               } ${link.guestWarning && isGuest ? 'opacity-60' : ''}`
             }
@@ -86,11 +80,10 @@ console.log("USER ROLE:", profile?.role);
         ))}
       </div>
 
-      {/* Right actions */}
-      <div className="flex items-center gap-sm flex-shrink-0">
+      <div className="flex items-center gap-sm flex-shrink-0 relative z-10">
         <button
           aria-label="Search"
-          className="text-on-surface-variant hover:text-primary-container active:scale-95 transition-all"
+          className="text-on-surface-variant hover:text-primary active:scale-95 transition-all"
         >
           <MdSearch className="text-2xl" />
         </button>
@@ -106,7 +99,7 @@ console.log("USER ROLE:", profile?.role);
               alt={profile?.name || 'Profile'}
               size="sm"
               ring
-              className="group-hover:shadow-neon-orange transition-all"
+              className="group-hover:shadow-warm transition-all"
             />
           </button>
         ) : isGuest ? (
@@ -121,7 +114,7 @@ console.log("USER ROLE:", profile?.role);
             </Button>
             <button
               onClick={handleGuestIconClick}
-              className="w-8 h-8 rounded-full bg-surface-container border border-white/10 flex items-center justify-center text-on-surface-variant hover:border-white/30 transition-colors"
+              className="w-8 h-8 rounded-full bg-surface-container border border-white/10 flex items-center justify-center text-on-surface-variant hover:border-primary/30 transition-colors"
               aria-label="Guest profile"
             >
               <MdPerson className="text-lg" />
@@ -133,7 +126,6 @@ console.log("USER ROLE:", profile?.role);
           </Button>
         )}
 
-        {/* Mobile hamburger */}
         <button
           aria-label="Toggle menu"
           className="md:hidden text-on-surface-variant ml-xs"
@@ -143,37 +135,44 @@ console.log("USER ROLE:", profile?.role);
         </button>
       </div>
 
-      {/* Mobile menu */}
-      {mobileOpen && (
-        <div className="absolute top-20 left-0 right-0 bg-surface/95 backdrop-blur-xl border-b border-white/10 flex flex-col p-md gap-sm md:hidden z-50">
-          {navLinks.map((link) => (
-            <NavLink
-              key={link.label}
-              to={link.to}
-              onClick={() => setMobileOpen(false)}
-              className={({ isActive }) =>
-                `font-label-md text-label-md px-2 py-3 rounded block ${
-                  isActive
-                    ? 'text-primary-container bg-white/5 font-bold'
-                    : link.label === 'Manage Salon'
-                    ? 'text-primary font-bold bg-primary/5'
-                    : 'text-on-surface-variant hover:text-primary hover:bg-white/5'
-                }`
-              }
-            >
-              {link.label}
-            </NavLink>
-          ))}
-          {isGuest && (
-            <button
-              onClick={() => { setMobileOpen(false); handleLoginSignup(); }}
-              className="mt-sm w-full py-sm bg-primary-container text-on-primary rounded-lg font-label-md font-bold"
-            >
-              Login / Signup
-            </button>
-          )}
-        </div>
-      )}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="absolute top-20 left-0 right-0 bg-surface/95 backdrop-blur-2xl border-b border-primary/10 flex flex-col p-md gap-sm md:hidden z-50"
+          >
+            {navLinks.map((link) => (
+              <NavLink
+                key={link.label}
+                to={link.to}
+                onClick={() => setMobileOpen(false)}
+                className={({ isActive }) =>
+                  `font-label-md text-label-md px-3 py-3 rounded-lg block transition-all ${
+                    isActive
+                      ? 'text-primary bg-primary/10 font-bold'
+                      : link.label === 'Manage Salon'
+                      ? 'text-primary font-bold bg-primary/5'
+                      : 'text-on-surface-variant hover:text-primary hover:bg-white/5'
+                  }`
+                }
+              >
+                {link.label}
+              </NavLink>
+            ))}
+            {isGuest && (
+              <button
+                onClick={() => { setMobileOpen(false); handleLoginSignup(); }}
+                className="mt-sm w-full py-sm bg-primary text-on-primary rounded-xl font-label-md font-bold"
+              >
+                Login / Signup
+              </button>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   );
 }
@@ -182,7 +181,6 @@ export function AdminHeader({ title = 'Dashboard', avatarSrc, unreadChat = false
   const navigate = useNavigate();
   const { profile } = useContext(AuthContext);
 
-  // Fallback profile image: agar avatarSrc na ho toh AuthContext ki image use ho
   const imageSource =
     avatarSrc ||
     profile?.avatar ||
@@ -190,33 +188,33 @@ export function AdminHeader({ title = 'Dashboard', avatarSrc, unreadChat = false
     'https://via.placeholder.com/150';
 
   return (
-    <header className="flex justify-between items-center w-full px-container-margin py-base bg-background/60 backdrop-blur-2xl border-b border-white/5 sticky top-0 z-50">
-      <div>
-        <h2 className="font-headline-md text-headline-md text-primary tracking-tighter">
+    <header className="flex justify-between items-center w-full px-container-margin py-base bg-background/70 backdrop-blur-2xl border-b border-primary/10 sticky top-0 z-50">
+      <div className="flex items-center gap-3">
+        <img src={glowcutLogo} alt="GlowCut" className="w-8 h-8 rounded-full" />
+        <h2 className="font-headline-md text-headline-md text-primary tracking-tight">
           {title}
         </h2>
       </div>
       <div className="flex items-center gap-gutter">
         <div className="relative hidden lg:block">
           <input
-            className="bg-surface-container-lowest border-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 text-sm py-2 px-4 w-64 transition-all duration-300 text-white"
+            className="bg-surface-container-lowest border-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 text-sm py-2 px-4 w-64 transition-all duration-300 text-on-surface placeholder-on-surface-variant/50"
             placeholder="Search data..."
             type="text"
           />
           <MdSearch className="absolute right-2 top-2 text-outline text-sm" />
         </div>
         <div className="flex items-center gap-4">
-          <button className="text-on-surface hover:text-primary-container transition-colors relative">
+          <button className="text-on-surface hover:text-primary transition-colors relative">
             <MdChat className="text-xl" />
             {unreadChat && (
               <span className="absolute top-0 right-0 w-2 h-2 bg-primary rounded-full" />
             )}
           </button>
-          <button className="text-on-surface hover:text-primary-container transition-colors">
+          <button className="text-on-surface hover:text-primary transition-colors">
             <MdNotifications className="text-xl" />
           </button>
 
-          {/* 🚀 Clickable Admin Avatar Button */}
           <button
             onClick={() => navigate('/profile')}
             aria-label="Admin Profile Settings"
@@ -228,7 +226,7 @@ export function AdminHeader({ title = 'Dashboard', avatarSrc, unreadChat = false
               size="sm"
               alt={profile?.name || 'Admin Avatar'}
               ring
-              className="group-hover:scale-105 group-hover:shadow-neon-orange transition-all cursor-pointer"
+              className="group-hover:scale-105 group-hover:shadow-warm transition-all cursor-pointer"
             />
           </button>
         </div>

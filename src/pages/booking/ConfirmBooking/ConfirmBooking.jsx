@@ -9,11 +9,13 @@ import {
   MdHourglassEmpty,
   MdStar,
 } from 'react-icons/md';
+import { motion } from 'framer-motion';
 import { useBooking } from '../../../hooks/useBooking';
 import * as bookingService from '../../../services/bookingService';
 import * as salonService from '../../../services/salonService';
 import ReviewCard from '../../../components/salon/ReviewCard';
 import EmptyState from '../../../components/ui/EmptyState';
+import Card from '../../../components/ui/Card';
 
 const TECH_FEE = 50;
 
@@ -44,13 +46,9 @@ export default function ConfirmBooking() {
   }, [booking.salon, booking.stylist, navigate]);
 
   const barber = booking.stylist;
-  // If workingDays is completely empty/missing, the backend will block ALL bookings for this barber.
-  // We explicitly detect this to block the UI and prevent 400 Bad Request errors.
   const hasWorkingDaysConfigured = barber?.workingDays && barber.workingDays.length > 0;
   const workingDays = hasWorkingDaysConfigured ? barber.workingDays : []; 
 
-
-  // Generate next 7 days for the date picker
   const generateUpcomingDays = () => {
     const result = [];
     const today = new Date();
@@ -67,7 +65,6 @@ export default function ConfirmBooking() {
   };
   const upcomingDays = generateUpcomingDays();
 
-  // If workingDays is missing, show a user-friendly alert when they try to pick a date
   const handleSelectDate = (day) => {
     if (!hasWorkingDaysConfigured) {
       toast.error('This specialist has not set their working schedule yet.');
@@ -79,7 +76,7 @@ export default function ConfirmBooking() {
     }
     setActiveDate(day.isoDate);
     setActiveDateLabel(day.label);
-    setSelectedSlotState(null); // Reset slot when date changes
+    setSelectedSlotState(null);
   };
 
   const fetchSlots = (dateStr) => {
@@ -113,7 +110,6 @@ export default function ConfirmBooking() {
 
   useEffect(() => {
     fetchSlots(activeDate);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeDate]);
 
   useEffect(() => {
@@ -128,10 +124,7 @@ export default function ConfirmBooking() {
       .then((list) => setReviews(Array.isArray(list) ? list : []))
       .catch(() => setReviews([]))
       .finally(() => setLoadingReviews(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-
 
   const handleSelectSlot = (time) => {
     setSelectedSlotState(time);
@@ -192,7 +185,6 @@ export default function ConfirmBooking() {
       navigate('/booking/summary', { state: { bookingId: createdBookings[0]?._id || createdBookings[0]?.id } });
     } catch (error) {
       const backendMsg = error.response?.data?.message || error.response?.data?.error || error.message || "Booking Failed";
-      console.error("BOOKING PAYLOAD REJECTED:", error.response?.data);
       toast.error(`Error: ${backendMsg}`, { id: toastId });
     } finally {
       setSubmitting(false);
@@ -200,9 +192,13 @@ export default function ConfirmBooking() {
   };
 
   return (
-    <div className="bg-background text-on-surface font-body-md min-h-screen">
-      {/* Focused Header */}
-      <nav className="fixed top-0 w-full z-50 flex justify-between items-center px-6 md:px-margin-desktop h-20 bg-surface/30 backdrop-blur-xl border-b border-white/5">
+    <motion.div
+      className="bg-background text-on-surface font-body-md min-h-screen"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+    >
+      <nav className="fixed top-0 w-full z-50 flex justify-between items-center px-margin-mobile md:px-margin-desktop h-20 bg-surface/70 backdrop-blur-2xl border-b border-primary/10">
         <button
           onClick={() => navigate(-1)}
           className="flex items-center gap-2 group text-on-surface-variant hover:text-primary transition-colors"
@@ -215,15 +211,14 @@ export default function ConfirmBooking() {
             <p className="font-label-md text-label-md text-primary">
               {booking.services.length > 0 ? 'CONFIRMING BOOKING' : 'NO SERVICES YET'}
             </p>
-            <p className="text-[10px] text-on-surface-variant">ELITE MEMBER</p>
+            <p className="text-[10px] text-on-surface-variant">PREMIUM MEMBER</p>
           </div>
         </div>
       </nav>
 
       <main className="pt-24 pb-32 px-margin-mobile md:px-margin-desktop max-w-7xl mx-auto">
-        {/* Hero Gallery */}
         <section className="mb-lg">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter h-[400px]">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter h-auto md:h-[400px]">
             <div className="md:col-span-2 relative rounded-xl overflow-hidden group">
               <img
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
@@ -232,10 +227,10 @@ export default function ConfirmBooking() {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
               <div className="absolute bottom-6 left-6">
-                <h1 className="font-display-lg text-display-lg text-white">
+                <h1 className="font-display-lg text-display-lg text-on-surface">
                   {booking.salon?.name || 'Modern Cuts PECHS'}
                 </h1>
-                <p className="text-secondary font-label-md tracking-widest uppercase">
+                <p className="text-primary font-label-md tracking-widest uppercase">
                   Premium Grooming Hub
                 </p>
               </div>
@@ -260,15 +255,13 @@ export default function ConfirmBooking() {
         </section>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-lg">
-          {/* Left Column */}
           <div className="lg:col-span-8 space-y-lg">
-            {/* Selected Services */}
-            <div>
-              <h2 className="font-headline-md text-headline-md mb-md flex items-center gap-2">
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+              <h2 className="font-headline-md text-headline-md mb-md flex items-center gap-2 text-on-surface">
                 <MdContentCut className="text-primary" /> Selected Services
               </h2>
               {booking.services.length === 0 ? (
-                <div className="glass-panel p-lg rounded-xl text-center text-on-surface-variant">
+                <div className="bg-surface-container p-lg rounded-xl text-center text-on-surface-variant">
                   No services selected.{' '}
                   <button
                     onClick={() => navigate('/salons/nearby')}
@@ -283,12 +276,12 @@ export default function ConfirmBooking() {
                   {booking.services.map((service, i) => (
                     <div
                       key={service._id || service.id}
-                      className={`glass-panel p-md rounded-xl flex justify-between items-center group ${
-                        i % 2 === 1 ? 'border-l-4 border-secondary' : ''
+                      className={`bg-surface-container p-md rounded-xl flex justify-between items-center group border border-white/5 ${
+                        i % 2 === 1 ? 'border-l-4 border-primary' : ''
                       }`}
                     >
                       <div>
-                        <h3 className="font-headline-md text-body-lg text-white">
+                        <h3 className="font-headline-md text-body-lg text-on-surface">
                           {service.name}
                         </h3>
                         <p className="text-on-surface-variant text-caption uppercase tracking-wider">
@@ -296,7 +289,7 @@ export default function ConfirmBooking() {
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className={`font-bold ${i % 2 === 1 ? 'text-secondary' : 'text-primary'}`}>
+                        <p className={`font-bold ${i % 2 === 1 ? 'text-primary' : 'text-primary'}`}>
                           {service.duration} min
                         </p>
                         <p className="text-on-surface text-label-md">
@@ -307,20 +300,18 @@ export default function ConfirmBooking() {
                   ))}
                 </div>
               )}
-            </div>
+            </motion.div>
 
-            {/* Date & Timeslot Picker */}
-            <div>
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
               <div className="flex justify-between items-end mb-md">
-                <h2 className="font-headline-md text-headline-md flex items-center gap-2">
-                  <MdSchedule className="text-secondary" /> Select Date & Time
+                <h2 className="font-headline-md text-headline-md flex items-center gap-2 text-on-surface">
+                  <MdSchedule className="text-primary" /> Select Date & Time
                 </h2>
                 <span className="text-on-surface-variant font-label-md">
                   {new Date(activeDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }).toUpperCase()}
                 </span>
               </div>
 
-              {/* Date Selector */}
               <div className="flex gap-3 overflow-x-auto pb-4 mb-4 scrollbar-hide">
                 {upcomingDays.map((day) => {
                   const isAvailable = workingDays.length === 0 || workingDays.includes(day.dayEnum);
@@ -332,13 +323,13 @@ export default function ConfirmBooking() {
                       onClick={() => handleSelectDate(day)}
                       className={`flex flex-col items-center justify-center min-w-[80px] p-3 rounded-xl transition-all ${
                         !isAvailable 
-                          ? 'glass-panel text-on-surface-variant opacity-40 cursor-not-allowed'
+                          ? 'bg-surface-container text-on-surface-variant opacity-40 cursor-not-allowed'
                           : isSelected
-                          ? 'bg-secondary border-2 border-secondary text-on-secondary shadow-neon-emerald'
-                          : 'glass-panel text-on-surface hover:border-secondary/40'
+                          ? 'bg-primary border-2 border-primary text-on-primary shadow-warm'
+                          : 'bg-surface-container text-on-surface hover:border-primary/40 border border-white/10'
                       }`}
                     >
-                      <span className={`text-caption uppercase ${isSelected ? 'text-on-secondary' : 'text-on-surface-variant'}`}>
+                      <span className={`text-caption uppercase ${isSelected ? 'text-on-primary' : 'text-on-surface-variant'}`}>
                         {day.label === "Today" || day.label === "Tomorrow" ? day.label : day.dayEnum.slice(0, 3)}
                       </span>
                       <span className="font-headline-md mt-1">{day.dateText.split(' ')[1]}</span>
@@ -350,11 +341,11 @@ export default function ConfirmBooking() {
               {loadingSlots ? (
                 <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
                   {Array.from({ length: 10 }).map((_, i) => (
-                    <div key={i} className="h-12 rounded-lg glass-panel animate-pulse" />
+                    <div key={i} className="h-12 rounded-xl bg-surface-container animate-pulse" />
                   ))}
                 </div>
               ) : slots.length === 0 ? (
-                <div className="glass-panel p-lg rounded-xl text-center text-on-surface-variant">
+                <div className="bg-surface-container p-lg rounded-xl text-center text-on-surface-variant">
                   No available time slots on {activeDateLabel}. Try selecting another date.
                 </div>
               ) : (
@@ -364,12 +355,12 @@ export default function ConfirmBooking() {
                       key={slot.time}
                       disabled={slot.status === 'unavailable'}
                       onClick={() => handleSelectSlot(slot.time)}
-                      className={`py-3 text-center rounded-lg font-bold transition-all ${
+                      className={`py-3 text-center rounded-xl font-bold transition-all ${
                         slot.status === 'unavailable'
-                          ? 'glass-panel text-on-surface-variant opacity-40 cursor-not-allowed'
+                          ? 'bg-surface-container text-on-surface-variant opacity-40 cursor-not-allowed'
                           : selectedSlot === slot.time
-                          ? 'bg-secondary-container/20 border-2 border-secondary text-secondary shadow-neon-emerald'
-                          : 'glass-panel text-on-surface hover:border-secondary/40'
+                          ? 'bg-primary/20 border-2 border-primary text-primary shadow-warm-sm'
+                          : 'bg-surface-container text-on-surface hover:border-primary/40 border border-white/10'
                       }`}
                     >
                       {slot.time}
@@ -377,17 +368,16 @@ export default function ConfirmBooking() {
                   ))}
                 </div>
               )}
-              <p className="mt-4 text-secondary text-caption flex items-center gap-1">
-                <MdInfo className="text-sm" /> Your selected slot is highlighted in emerald green.
+              <p className="mt-4 text-primary text-caption flex items-center gap-1">
+                <MdInfo className="text-sm" /> Your selected slot is highlighted in olive.
               </p>
-            </div>
+            </motion.div>
 
-            {/* Community Feedback */}
-            <div>
-              <h2 className="font-headline-md text-headline-md mb-md">Community Feedback</h2>
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+              <h2 className="font-headline-md text-headline-md mb-md text-on-surface">Community Feedback</h2>
               {loadingReviews ? (
                 <div className="space-y-gutter">
-                  {[1, 2].map((n) => <div key={n} className="h-20 glass-panel rounded-xl animate-pulse" />)}
+                  {[1, 2].map((n) => <div key={n} className="h-20 bg-surface-container rounded-xl animate-pulse" />)}
                 </div>
               ) : reviews.length === 0 ? (
                 <EmptyState
@@ -409,32 +399,29 @@ export default function ConfirmBooking() {
                   ))}
                 </div>
               )}
-            </div>
+            </motion.div>
           </div>
 
-          {/* Right Column */}
           <div className="lg:col-span-4">
             <div className="sticky top-28 space-y-md">
-              {/* Slot Graphic */}
-              <div className="glass-panel rounded-2xl overflow-hidden relative border-t-2 border-secondary/30">
-                <div className="p-lg text-center relative z-10">
-                  <div className="w-20 h-20 mx-auto mb-4 rounded-full border-4 border-dashed border-secondary flex items-center justify-center animate-spin [animation-duration:8s]">
-                    <MdHourglassEmpty className="text-[40px] text-secondary" />
+              <Card variant="elevated" className="p-lg border-t-2 border-primary/30">
+                <div className="text-center relative z-10">
+                  <div className="w-20 h-20 mx-auto mb-4 rounded-full border-4 border-dashed border-primary flex items-center justify-center animate-spin [animation-duration:8s]">
+                    <MdHourglassEmpty className="text-[40px] text-primary" />
                   </div>
-                  <h4 className="font-headline-md text-white">
+                  <h4 className="font-headline-md text-on-surface">
                     {totalDuration > 0 ? `${totalDuration} Min Slot` : 'Select Services'}
                   </h4>
                   <p className="text-on-surface-variant text-caption">
                     Total Duration: {totalDuration} Minutes
                   </p>
                 </div>
-                <div className="absolute bottom-0 left-0 w-full h-1 bg-secondary/20 overflow-hidden">
-                  <div className="w-1/2 h-full bg-secondary shadow-neon-emerald" />
+                <div className="absolute bottom-0 left-0 w-full h-1 bg-primary/20 overflow-hidden rounded-b-xl">
+                  <div className="w-1/2 h-full bg-primary shadow-warm" />
                 </div>
-              </div>
+              </Card>
 
-              {/* Barber Profile */}
-              <div className="glass-panel p-md rounded-2xl">
+              <Card variant="glass" className="p-md">
                 <div className="flex items-center gap-4">
                   <div className="relative">
                     <img
@@ -442,13 +429,13 @@ export default function ConfirmBooking() {
                       alt={booking.stylist?.name || 'No stylist selected'}
                       src={booking.stylist?.profileImage || 'https://via.placeholder.com/150?text=?'}
                     />
-                    <div className="absolute bottom-0 right-0 w-4 h-4 bg-secondary rounded-full border-2 border-background" />
+                    <div className="absolute bottom-0 right-0 w-4 h-4 bg-primary rounded-full border-2 border-background" />
                   </div>
                   <div>
-                    <h3 className="font-label-md text-white">
+                    <h3 className="font-label-md text-on-surface">
                       {booking.stylist?.name || 'No stylist selected'}
                     </h3>
-                    <p className="text-caption text-primary uppercase font-bold tracking-tighter">
+                    <p className="text-caption text-primary uppercase font-bold tracking-tight">
                       GlowCut Specialist
                     </p>
                     <div className="flex items-center gap-1 mt-1">
@@ -459,10 +446,9 @@ export default function ConfirmBooking() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </Card>
 
-              {/* Total & CTA */}
-              <div className="glass-panel p-lg rounded-2xl border-t-4 border-primary-container">
+              <Card variant="elevated" className="p-lg border-t-4 border-primary">
                 <div className="space-y-2 mb-lg">
                   <div className="flex justify-between text-on-surface-variant">
                     <span>Service Total</span>
@@ -472,9 +458,9 @@ export default function ConfirmBooking() {
                     <span>Tech Fee</span>
                     <span>PKR {TECH_FEE}</span>
                   </div>
-                  <div className="h-px bg-gradient-to-r from-transparent via-primary-container to-transparent my-4" />
+                  <div className="h-px bg-gradient-to-r from-transparent via-primary to-transparent my-4" />
                   <div className="flex justify-between items-center">
-                    <span className="font-headline-md text-white">Total Amount</span>
+                    <span className="font-headline-md text-on-surface">Total Amount</span>
                     <span className="font-display-lg text-primary text-3xl">
                       PKR {grandTotal.toLocaleString()}
                     </span>
@@ -483,7 +469,7 @@ export default function ConfirmBooking() {
                 <button
                   onClick={handleProceed}
                   disabled={submitting || booking.services.length === 0}
-                  className="w-full py-4 rounded-xl bg-gradient-to-r from-secondary-container to-secondary text-on-secondary font-bold font-headline-md shadow-neon-emerald active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full py-4 rounded-xl bg-primary text-on-primary font-bold font-headline-md shadow-warm active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {submitting ? (
                     <span className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
@@ -494,34 +480,33 @@ export default function ConfirmBooking() {
                 <p className="text-center text-[10px] text-on-surface-variant mt-4 uppercase tracking-[0.2em]">
                   Secure Encryption Enabled
                 </p>
-              </div>
+              </Card>
             </div>
           </div>
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="w-full py-xl px-6 md:px-margin-desktop flex flex-col md:flex-row justify-between items-center gap-md border-t border-white/5 bg-surface-container-lowest">
+      <footer className="w-full py-xl px-6 md:px-margin-desktop flex flex-col md:flex-row justify-between items-center gap-md border-t border-primary/10 bg-surface-container-lowest/80">
         <div className="flex flex-col items-center md:items-start gap-2">
-          <span className="font-headline-md text-headline-md font-bold text-primary-container tracking-tighter">
+          <span className="font-headline-md text-headline-md font-bold text-primary tracking-tight">
             GlowCut
           </span>
           <p className="font-body-md text-body-md text-on-surface-variant">
-            © 2024 GlowCut Cyber-Chic Salons. All rights reserved.
+            © 2024 GlowCut Premium Salons. All rights reserved.
           </p>
         </div>
         <div className="flex gap-lg">
-          <a className="text-on-surface-variant hover:text-secondary transition-colors text-body-md" href="#">
+          <a className="text-on-surface-variant hover:text-primary transition-colors text-body-md" href="#">
             Privacy Policy
           </a>
-          <a className="text-on-surface-variant hover:text-secondary transition-colors text-body-md" href="#">
+          <a className="text-on-surface-variant hover:text-primary transition-colors text-body-md" href="#">
             Terms of Service
           </a>
-          <a className="text-on-surface-variant hover:text-secondary transition-colors text-body-md" href="#">
+          <a className="text-on-surface-variant hover:text-primary transition-colors text-body-md" href="#">
             Contact Us
           </a>
         </div>
       </footer>
-    </div>
+    </motion.div>
   );
 }

@@ -27,7 +27,7 @@ export default function Careers() {
   return (
     <main className="pt-24 pb-32 px-margin-mobile md:px-margin-desktop max-w-7xl mx-auto font-body-md text-on-surface">
       {/* Hero */}
-      <section className="relative h-[300px] md:h-[400px] w-full overflow-hidden rounded-2xl mb-xl">
+      <section className="relative h-[200px] md:h-[400px] w-full overflow-hidden rounded-2xl mb-xl">
         <img
           alt="Careers at Glow Cut"
           className="w-full h-full object-cover opacity-50"

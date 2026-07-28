@@ -1,11 +1,11 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { 
-  MdDashboard, 
-  MdContentCut, 
-  MdPeople, 
-  MdChat, 
-  MdLogout 
+import {
+  MdDashboard,
+  MdContentCut,
+  MdPeople,
+  MdChat,
+  MdLogout
 } from 'react-icons/md';
 import toast from 'react-hot-toast';
 
@@ -27,19 +27,22 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className="w-64 h-screen bg-slate-900 border-r border-white/5 flex flex-col justify-between p-4 fixed left-0 top-0">
+    <aside className="w-64 h-screen bg-surface border-r border-primary/10 flex flex-col justify-between p-4 fixed left-0 top-0">
       <div className="space-y-8">
-        {/* Logo / Brand */}
         <div className="flex items-center gap-2 px-2">
-          <span className="text-xl font-black tracking-wider text-white">
-            GLOW<span className="text-orange-500">CUT</span>
+          <div className="relative w-8 h-8 flex items-center justify-center">
+            <div className="absolute inset-0 bg-primary/20 rounded-full" />
+            <div className="absolute inset-0 border border-primary/40 rounded-full" />
+            <div className="w-1.5 h-1.5 bg-primary rounded-full" />
+          </div>
+          <span className="text-xl font-black tracking-wider text-on-surface">
+            GLOW<span className="text-primary">CUT</span>
           </span>
-          <span className="text-[9px] bg-orange-500/10 text-orange-400 border border-orange-500/20 px-2 py-0.5 rounded-full uppercase font-bold">
+          <span className="text-[9px] bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded-full uppercase font-bold">
             Admin
           </span>
         </div>
 
-        {/* Navigation Links */}
         <nav className="space-y-1">
           {navItems.map((item) => (
             <NavLink
@@ -48,8 +51,8 @@ export default function Sidebar() {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                   isActive
-                    ? 'bg-orange-500 text-white shadow-[0_0_12px_rgba(249,115,22,0.3)]'
-                    : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                    ? 'bg-primary text-on-primary shadow-warm'
+                    : 'text-on-surface-variant hover:bg-primary/5 hover:text-primary'
                 }`
               }
             >
@@ -60,10 +63,9 @@ export default function Sidebar() {
         </nav>
       </div>
 
-      {/* Logout Button */}
       <button
         onClick={handleLogout}
-        className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-sm font-medium text-rose-400 hover:bg-rose-500/10 transition-all active:scale-95"
+        className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-sm font-medium text-error hover:bg-error/10 transition-all active:scale-95"
       >
         <MdLogout className="text-lg" />
         Logout

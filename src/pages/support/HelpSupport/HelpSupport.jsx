@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import {
   MdSearch,
   MdCalendarToday,
@@ -13,27 +14,23 @@ import {
 const ISSUE_TILES = [
   {
     icon: MdCalendarToday,
-    color: 'primary',
     title: 'Booking Problems',
     description: 'Reschedule, cancel, or find your appointment details.',
   },
   {
     icon: MdCreditCard,
-    color: 'primary',
     title: 'Payment & Refunds',
     description: 'Billing inquiries, refund status, and secure payments.',
   },
   {
     icon: MdPhotoCamera,
-    color: 'secondary',
     title: 'AI Camera Issues',
     description: 'Troubleshoot the virtual try-on and style scanner.',
   },
   {
     icon: MdChat,
-    color: 'primary',
     title: 'App Feedback',
-    description: 'Help us evolve the Cyber-Chic experience.',
+    description: 'Help us evolve the experience.',
   },
 ];
 
@@ -41,7 +38,7 @@ const FAQS = [
   {
     question: 'How does the AI Style Consultant work?',
     answer:
-      "Our AI uses advanced facial recognition and hair texture analysis via your mobile camera to suggest the most flattering GlowCut styles. It cross-references your bone structure with current Cyber-Chic trends.",
+      "Our AI uses advanced facial recognition and hair texture analysis via your mobile camera to suggest the most flattering GlowCut styles. It cross-references your bone structure with current trends.",
   },
   {
     question: 'Can I change my stylist after booking?',
@@ -49,11 +46,16 @@ const FAQS = [
       "Yes, you can modify your stylist up to 12 hours before your appointment. Go to 'My Bookings' and select 'Change Stylist' to view other available professionals.",
   },
   {
-    question: "What is the 'Neon Tier' loyalty program?",
+    question: "What is the loyalty program?",
     answer:
-      'Neon Tier is our exclusive membership. Benefits include priority booking, 15% off all premium services, and early access to new AI style filters.',
+      'Membership benefits include priority booking, discounts on premium services, and early access to new AI style filters.',
   },
 ];
+
+const fadeUp = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+};
 
 export default function HelpSupport() {
   const navigate = useNavigate();
@@ -75,10 +77,19 @@ export default function HelpSupport() {
   }, [query]);
 
   return (
-    <main className="pt-32 pb-xl px-margin-mobile md:px-margin-desktop min-h-screen">
-      {/* Header & Search */}
-      <header className="max-w-3xl mx-auto text-center mb-xl">
-        <h1 className="font-display-lg text-display-lg font-sora mb-md text-on-surface">
+    <motion.main
+      className="py-xl px-margin-mobile md:px-margin-desktop min-h-screen"
+      initial="initial"
+      animate="animate"
+      variants={{
+        animate: { transition: { staggerChildren: 0.08 } },
+      }}
+    >
+      <motion.header
+        variants={fadeUp}
+        className="max-w-3xl mx-auto text-center mb-xl"
+      >
+        <h1 className="font-display-lg text-display-lg mb-md text-on-surface">
           Help &amp; Support
         </h1>
         <div className="relative group">
@@ -88,53 +99,49 @@ export default function HelpSupport() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full bg-surface-container border-none border-b-2 border-outline-variant focus:border-primary focus:ring-0 rounded-xl py-lg pl-xl pr-md text-body-lg font-body-lg transition-all duration-300 placeholder:text-on-surface-variant/50"
+            className="w-full bg-surface-container border border-white/10 focus:border-primary focus:ring-0 rounded-xl py-lg pl-xl pr-md text-body-lg font-body-lg transition-all duration-300 placeholder:text-on-surface-variant/50 text-on-surface"
             placeholder="How can we help you?"
             type="text"
           />
         </div>
-      </header>
+      </motion.header>
 
-      {/* Common Issues */}
-      <section className="mb-xl">
-        <h2 className="font-headline-md text-headline-md font-sora mb-lg text-primary">
+      <motion.section variants={fadeUp} className="mb-xl">
+        <h2 className="font-headline-md text-headline-md mb-lg text-primary">
           Common Issues
         </h2>
         {filteredTiles.length === 0 ? (
           <p className="text-on-surface-variant text-center">No matching topics found.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-md">
-            {filteredTiles.map((tile) => {
+            {filteredTiles.map((tile, i) => {
               const Icon = tile.icon;
-              const isSecondary = tile.color === 'secondary';
               return (
-                <div
+                <motion.div
                   key={tile.title}
-                  className="glass-panel p-lg rounded-xl hover:bg-white/5 transition-all duration-300 cursor-pointer group active:scale-95"
+                  className="glass-panel p-lg rounded-xl border border-white/5 hover:bg-white/5 transition-all duration-300 cursor-pointer group active:scale-95"
+                  whileHover={{ y: -4 }}
+                  transition={{ duration: 0.2 }}
                 >
-                  <div
-                    className={`w-12 h-12 rounded-lg flex items-center justify-center mb-md border transition-all ${
-                      isSecondary
-                        ? 'bg-secondary/10 border-secondary/20 group-hover:shadow-neon-emerald'
-                        : 'bg-primary/10 border-primary/20 group-hover:shadow-neon-orange'
-                    }`}
-                  >
-                    <Icon className={`text-3xl ${isSecondary ? 'text-secondary' : 'text-primary'}`} />
+                  <div className="w-12 h-12 rounded-lg bg-primary/15 flex items-center justify-center mb-md border border-primary/20">
+                    <Icon className="text-3xl text-primary" />
                   </div>
-                  <h3 className="font-headline-md text-[20px] font-sora mb-xs">{tile.title}</h3>
-                  <p className="text-on-surface-variant text-caption font-caption">
+                  <h3 className="font-headline-md text-headline-md mb-xs text-on-surface">{tile.title}</h3>
+                  <p className="text-on-surface-variant text-caption font-caption leading-relaxed">
                     {tile.description}
                   </p>
-                </div>
+                </motion.div>
               );
             })}
           </div>
         )}
-      </section>
+      </motion.section>
 
-      {/* FAQ Accordion */}
-      <section className="max-w-4xl mx-auto mb-xl">
-        <h2 className="font-headline-md text-headline-md font-sora mb-lg text-secondary text-center">
+      <motion.section
+        variants={fadeUp}
+        className="max-w-4xl mx-auto mb-xl"
+      >
+        <h2 className="font-headline-md text-headline-md mb-lg text-primary text-center">
           Frequently Asked Questions
         </h2>
         {filteredFaqs.length === 0 ? (
@@ -144,22 +151,22 @@ export default function HelpSupport() {
             {filteredFaqs.map((faq, i) => {
               const isOpen = openFaq === i;
               return (
-                <div key={faq.question} className="glass-panel rounded-xl overflow-hidden">
+                <div key={faq.question} className="glass-panel rounded-xl overflow-hidden border border-white/5">
                   <button
                     onClick={() => setOpenFaq(isOpen ? -1 : i)}
                     className="w-full flex justify-between items-center p-md cursor-pointer hover:bg-white/5 transition-colors text-left"
                   >
-                    <span className="font-sora font-semibold text-body-lg text-on-surface">
+                    <span className="font-semibold text-body-lg text-on-surface">
                       {faq.question}
                     </span>
                     <MdExpandMore
-                      className={`text-secondary transition-transform flex-shrink-0 ml-md ${
+                      className={`text-primary transition-transform flex-shrink-0 ml-md ${
                         isOpen ? 'rotate-180' : ''
                       }`}
                     />
                   </button>
                   {isOpen && (
-                    <div className="p-md pt-0 border-t border-white/5 text-on-surface-variant font-body-md">
+                    <div className="p-md pt-0 border-t border-white/5 text-on-surface-variant font-body-md leading-relaxed">
                       {faq.answer}
                     </div>
                   )}
@@ -168,18 +175,20 @@ export default function HelpSupport() {
             })}
           </div>
         )}
-      </section>
+      </motion.section>
 
-      {/* Live Support */}
-      <section className="flex flex-col items-center">
+      <motion.section
+        variants={fadeUp}
+        className="flex flex-col items-center"
+      >
         <button
           onClick={() => navigate('/support/chat')}
-          className="relative group bg-secondary text-on-secondary px-xl py-lg rounded-full font-sora font-bold text-headline-md flex items-center gap-sm active:scale-95 transition-all duration-300 shadow-neon-emerald"
+          className="relative bg-primary text-on-primary px-xl py-lg rounded-full font-bold text-headline-md flex items-center gap-sm active:scale-95 transition-all duration-300 shadow-warm"
         >
           <MdSupportAgent className="text-3xl" />
           Chat with Live Support
         </button>
-      </section>
-    </main>
+      </motion.section>
+    </motion.main>
   );
 }

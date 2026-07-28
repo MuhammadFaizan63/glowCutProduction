@@ -8,7 +8,6 @@ import Input from '../../../components/ui/Input';
 import Loader from '../../../components/ui/Loader';
 import { useAuth } from '../../../hooks/useAuth';
 
-// Backend ke Schema match karne ke liye cities array
 const CITIES = ["Karachi", "Lahore", "Islamabad", "Peshawar", "Quetta", "Multan", "Faisalabad", "Hyderabad", "Sialkot", "Gujranwala"];
 
 const SLIDES = [
@@ -30,10 +29,9 @@ export default function Signup() {
   const navigate = useNavigate();
   const { loginAsGuest, register } = useAuth();
 
-  const [mode, setMode] = useState('choice'); // 'choice' | 'email-form'
+  const [mode, setMode] = useState('choice');
   const [slide, setSlide] = useState(0);
   
-  // Role 'user' or 'admin' aligned with User model schema & controller requirements
   const [form, setForm] = useState({ 
     userName: '', 
     PhoneNumber: '', 
@@ -79,12 +77,11 @@ export default function Signup() {
     
     try {
       const email = form.email.trim().toLowerCase();
-      // Backend mapping: Salon Owner -> admin, Customer -> user
       const backendRole = form.role === 'owner' ? 'admin' : form.role;
       
       const res = await register({
         userName: form.userName.trim(),
-        phone: form.PhoneNumber.trim(), // Fix: Backend controller specifically expects 'phone', not 'PhoneNumber'
+        phone: form.PhoneNumber.trim(),
         email,
         password: form.password,
         cities: form.cities,
@@ -95,7 +92,6 @@ export default function Signup() {
       navigate('/auth/verify-otp', { state: { email } });
     } catch (error) {
       const backendError = error.response?.data?.message || error.response?.data?.error || error.message || "Unknown Error";
-      console.error("BACKEND REJECTION DETAILS:", error.response?.data);
       toast.error(`Validation Failed: ${backendError}`);
     } finally {
       setSubmitting(false);
@@ -103,8 +99,6 @@ export default function Signup() {
   };
 
   const handleGoogleSignup = async () => {
-    // The backend does not yet expose a Google OAuth endpoint — surface this
-    // clearly instead of faking a session, and fall back to email signup.
     toast.error('Google sign-in is coming soon. Please sign up with email for now.');
     setMode('email-form');
   };
@@ -118,19 +112,24 @@ export default function Signup() {
   const setField = (key) => (e) => setForm({ ...form, [key]: e.target.value });
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-xl w-full max-w-6xl items-center">
-      {/* Left: Hologram + Slider */}
-      <div className="flex flex-col items-center justify-center space-y-lg">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-xl w-full max-w-6xl items-start">
+      {/* Left: Visual + Slider */}
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex flex-col items-center justify-center space-y-lg sticky top-24"
+      >
         <div className="relative w-full aspect-square max-w-md flex items-center justify-center">
-          <div className="absolute inset-0 hologram-effect animate-pulse" />
+          <div className="absolute inset-0 bg-primary/5 rounded-full blur-3xl animate-pulse" />
           <div className="relative z-10 flex flex-col items-center">
             <span
-              className="material-symbols-outlined text-[120px] text-primary drop-shadow-[0_0_20px_rgba(255,181,156,0.8)]"
+              className="material-symbols-outlined text-[70px] md:text-[120px] text-primary drop-shadow-[0_0_6px_rgba(124,140,61,0.25)]"
               style={{ fontVariationSettings: "'FILL' 1" }}
             >
               chair
             </span>
-            <div className="absolute top-1/2 left-[-10%] w-[120%] h-[2px] bg-secondary shadow-[0_0_15px_#66dd8b] opacity-80" />
+            <div className="absolute top-1/2 left-[-10%] w-[120%] h-[2px] bg-primary shadow-warm opacity-60" />
             <Loader variant="scan" className="mt-md" />
           </div>
         </div>
@@ -144,7 +143,7 @@ export default function Signup() {
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.4 }}
               >
-                <h2 className="font-headline-lg text-headline-lg text-white mb-xs">
+                <h2 className="font-headline-lg text-headline-lg text-on-surface mb-xs">
                   {SLIDES[slide].title}
                 </h2>
                 <p className="font-body-md text-on-surface-variant max-w-sm mx-auto">
@@ -158,19 +157,24 @@ export default function Signup() {
               <div
                 key={i}
                 className={`h-1.5 rounded-full transition-all ${
-                  i === slide ? 'w-8 bg-primary shadow-[0_0_8px_#ffb59c]' : 'w-1.5 bg-white/20'
+                  i === slide ? 'w-8 bg-primary shadow-warm-sm' : 'w-1.5 bg-white/20'
                 }`}
               />
             ))}
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Right: Signup Card */}
-      <div className="flex items-center justify-center">
-        <div className="glass-panel w-full max-w-md p-lg rounded-xl shadow-2xl flex flex-col">
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex items-center justify-center"
+      >
+        <div className="w-full max-w-md p-lg rounded-2xl bg-surface-container/80 backdrop-blur-2xl border border-primary/20 shadow-soft">
           <div className="mb-lg">
-            <h3 className="font-headline-md text-headline-md text-white mb-xs">
+            <h3 className="font-headline-md text-headline-md text-on-surface mb-xs">
               Create Your Account
             </h3>
             <p className="font-body-md text-on-surface-variant">
@@ -205,7 +209,7 @@ export default function Signup() {
                   Continue with Google
                 </Button>
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="full"
                   icon={MdMail}
                   onClick={() => setMode('email-form')}
@@ -244,7 +248,6 @@ export default function Signup() {
                   error={errors.password} variant="filled"
                 />
                 
-                {/* City Dropdown */}
                 <div className="flex flex-col gap-xs">
                   <label className="font-label-md text-label-md text-on-surface-variant">
                     City <span className="text-error ml-1">*</span>
@@ -254,11 +257,11 @@ export default function Signup() {
                     <select
                       value={form.cities}
                       onChange={setField('cities')}
-                      className="w-full bg-surface border border-white/10 rounded-lg pl-10 pr-4 py-3 text-white font-body-md focus:outline-none focus:border-primary-container appearance-none"
+                      className="w-full bg-surface border border-white/10 rounded-xl pl-10 pr-4 py-3 text-on-surface font-body-md focus:outline-none focus:border-primary appearance-none"
                     >
                       <option value="" disabled className="bg-surface text-outline">Select your city</option>
                       {CITIES.map((c) => (
-                        <option key={c} value={c} className="bg-surface text-white">{c}</option>
+                        <option key={c} value={c} className="bg-surface text-on-surface">{c}</option>
                       ))}
                     </select>
                   </div>
@@ -267,7 +270,6 @@ export default function Signup() {
                   )}
                 </div>
 
-                {/* Role Dropdown */}
                 <div className="flex flex-col gap-xs">
                   <label className="font-label-md text-label-md text-on-surface-variant">
                     Account Type <span className="text-error ml-1">*</span>
@@ -277,10 +279,10 @@ export default function Signup() {
                     <select
                       value={form.role}
                       onChange={setField('role')}
-                      className="w-full bg-surface border border-white/10 rounded-lg pl-10 pr-4 py-3 text-white font-body-md focus:outline-none focus:border-primary-container appearance-none"
+                      className="w-full bg-surface border border-white/10 rounded-xl pl-10 pr-4 py-3 text-on-surface font-body-md focus:outline-none focus:border-primary appearance-none"
                     >
-                      <option value="user" className="bg-surface text-white">Customer</option>
-                      <option value="owner" className="bg-surface text-white">Salon Owner</option>
+                      <option value="user" className="bg-surface text-on-surface">Customer</option>
+                      <option value="owner" className="bg-surface text-on-surface">Salon Owner</option>
                     </select>
                   </div>
                   {errors.role && (
@@ -294,7 +296,7 @@ export default function Signup() {
                 <button
                   type="button"
                   onClick={() => setMode('choice')}
-                  className="text-on-surface-variant text-caption font-caption hover:text-white transition-colors w-full text-center"
+                  className="text-on-surface-variant text-caption font-caption hover:text-on-surface transition-colors w-full text-center"
                 >
                   ← Back to options
                 </button>
@@ -310,7 +312,7 @@ export default function Signup() {
             </div>
             <button
               onClick={handleGuest}
-              className="text-label-md font-label-md text-secondary hover:text-secondary-fixed transition-colors underline-offset-4 hover:underline decoration-secondary/30"
+              className="text-label-md font-label-md text-primary hover:text-primary-fixed transition-colors underline-offset-4 hover:underline decoration-primary/30"
             >
               Continue as Guest
             </button>
@@ -318,12 +320,12 @@ export default function Signup() {
 
           <p className="mt-md text-center text-body-md text-on-surface-variant">
             Already have an account?{' '}
-            <Link to="/auth/login" className="text-primary-container font-bold hover:text-primary transition-colors">
+            <Link to="/auth/login" className="text-primary font-bold hover:text-primary-fixed transition-colors">
               Login
             </Link>
           </p>
 
-          <p className="mt-md text-center text-caption font-caption text-on-tertiary-fixed-variant leading-relaxed">
+          <p className="mt-md text-center text-caption font-caption text-on-surface-variant leading-relaxed">
             By continuing, you agree to GlowCut's{' '}
             <a className="text-on-surface-variant hover:text-primary transition-colors" href="#">
               Terms
@@ -334,7 +336,7 @@ export default function Signup() {
             </a>
           </p>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

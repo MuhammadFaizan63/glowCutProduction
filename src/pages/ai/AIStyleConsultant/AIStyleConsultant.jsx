@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { motion } from 'framer-motion';
 import { MdCalendarToday, MdVisibility, MdSmartToy } from 'react-icons/md';
 import Loader from '../../../components/ui/Loader';
 
@@ -41,6 +42,11 @@ const AI_LINES = [
   'Recommendation set updated for Faizan.',
 ];
 
+const fadeUp = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+};
+
 export default function AIStyleConsultant() {
   const navigate = useNavigate();
   const [scanning, setScanning] = useState(true);
@@ -65,13 +71,22 @@ export default function AIStyleConsultant() {
   };
 
   return (
-    <main className="pt-24 pb-xl min-h-screen px-margin-mobile md:px-margin-desktop">
+    <motion.main
+      className="py-xl min-h-screen px-margin-mobile md:px-margin-desktop"
+      initial="initial"
+      animate="animate"
+      variants={{
+        animate: { transition: { staggerChildren: 0.1 } },
+      }}
+    >
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-xl">
-        {/* Left: Digital Mirror */}
-        <div className="lg:col-span-8 flex flex-col gap-md">
+        <motion.div
+          variants={fadeUp}
+          className="lg:col-span-8 flex flex-col gap-md"
+        >
           <div className="relative w-full aspect-[4/5] md:aspect-[16/10] bg-surface-container rounded-2xl overflow-hidden border border-white/10 group">
             {scanning && (
-              <div className="absolute inset-x-0 top-0 h-1 bg-secondary shadow-[0_0_15px_#66dd8b] animate-scan" />
+              <div className="absolute inset-x-0 top-0 h-1 bg-primary shadow-warm-sm animate-scan" />
             )}
             <img
               alt="User Portrait"
@@ -80,42 +95,40 @@ export default function AIStyleConsultant() {
             />
 
             <div className="absolute inset-0 pointer-events-none p-md">
-              <div className="w-full h-full border-2 border-secondary/20 rounded-xl relative">
-                <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-secondary" />
-                <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-secondary" />
-                <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-secondary" />
-                <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-secondary" />
+              <div className="w-full h-full border-2 border-primary/20 rounded-xl relative">
+                <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-primary" />
+                <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-primary" />
+                <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-primary" />
+                <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-primary" />
               </div>
             </div>
 
-            {/* Floating Biometric Cards */}
             <div className="absolute top-8 left-8 flex flex-col gap-sm">
               {BIOMETRICS.map((b) => (
                 <div
                   key={b.label}
-                  className={`backdrop-blur-xl bg-surface/40 border border-white/10 p-sm rounded-lg shadow-2xl transition-opacity duration-500 ${
+                  className={`backdrop-blur-xl bg-surface/60 border border-white/10 p-sm rounded-lg shadow-2xl transition-opacity duration-500 ${
                     scanning ? 'opacity-50' : 'opacity-100'
                   }`}
                 >
-                  <p className="font-mono text-secondary text-caption uppercase tracking-widest">
+                  <p className="font-mono text-primary text-caption uppercase tracking-widest">
                     {b.label}
                   </p>
-                  <p className="font-headline-md text-white">
+                  <p className="font-headline-md text-on-surface">
                     {scanning ? '···' : b.value}
                   </p>
                 </div>
               ))}
             </div>
 
-            {/* AI Feedback Overlay */}
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-[90%] backdrop-blur-2xl bg-black/60 border border-secondary/30 p-md rounded-xl flex items-center gap-md">
-              <div className="w-12 h-12 rounded-full border-2 border-secondary flex items-center justify-center shadow-neon-emerald flex-shrink-0">
-                <MdSmartToy className="text-secondary" />
+            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-[90%] backdrop-blur-2xl bg-black/60 border border-primary/30 p-md rounded-xl flex items-center gap-md">
+              <div className="w-12 h-12 rounded-full border-2 border-primary flex items-center justify-center shadow-warm flex-shrink-0">
+                <MdSmartToy className="text-primary" />
               </div>
               <div>
-                <p className="font-mono text-secondary text-[10px] uppercase">AI Stylist Active</p>
+                <p className="font-mono text-primary text-[10px] uppercase">AI Stylist Active</p>
                 <p className="text-on-surface text-body-md font-semibold italic">
-                  "{scanning ? AI_LINES[lineIndex] : 'Analysis complete. Here are your top matches.'}"
+                  &quot;{scanning ? AI_LINES[lineIndex] : 'Analysis complete. Here are your top matches.'}&quot;
                 </p>
               </div>
             </div>
@@ -124,7 +137,7 @@ export default function AIStyleConsultant() {
           <div className="flex flex-col gap-sm">
             <button
               onClick={() => navigate('/ai/ar-mirror')}
-              className="w-full bg-secondary text-on-secondary-container py-md rounded-xl font-sora font-bold text-headline-md shadow-neon-emerald flex items-center justify-center gap-md active:scale-[0.98] transition-all"
+              className="w-full bg-primary text-on-primary py-md rounded-xl font-bold text-headline-md shadow-warm flex items-center justify-center gap-md active:scale-[0.98] transition-all"
             >
               <MdCalendarToday />
               Book a Barber for this Style
@@ -133,13 +146,15 @@ export default function AIStyleConsultant() {
               Recommended based on your unique biometric analysis.
             </p>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Right: Recommended Styles */}
-        <div className="lg:col-span-4 flex flex-col gap-md h-full">
+        <motion.div
+          variants={fadeUp}
+          className="lg:col-span-4 flex flex-col gap-md h-full"
+        >
           <div className="flex items-center justify-between">
-            <h2 className="font-headline-md text-white">Recommended Styles</h2>
-            <span className="font-mono text-secondary text-caption bg-secondary/10 px-sm py-1 rounded-full">
+            <h2 className="font-headline-md text-headline-md text-on-surface">Recommended Styles</h2>
+            <span className="font-mono text-primary text-caption bg-primary/10 px-sm py-1 rounded-full">
               v2.4 AI Engine
             </span>
           </div>
@@ -151,9 +166,10 @@ export default function AIStyleConsultant() {
               </div>
             ) : (
               RECOMMENDED_STYLES.map((style) => (
-                <div
+                <motion.div
                   key={style.name}
-                  className="bg-surface-container-high rounded-xl p-sm border border-white/5 hover:border-secondary/50 transition-colors group"
+                  className="bg-surface-container-high rounded-xl p-sm border border-white/5 hover:border-primary/50 transition-colors group"
+                  whileHover={{ y: -2 }}
                 >
                   <div className="relative w-full aspect-square rounded-lg overflow-hidden mb-sm">
                     <img
@@ -161,29 +177,29 @@ export default function AIStyleConsultant() {
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       src={style.image}
                     />
-                    <div className="absolute top-2 right-2 bg-black/80 backdrop-blur-md px-sm py-1 rounded-md border border-secondary/40">
-                      <p className="text-secondary font-mono font-bold text-caption">
+                    <div className="absolute top-2 right-2 bg-black/80 backdrop-blur-md px-sm py-1 rounded-md border border-primary/40">
+                      <p className="text-primary font-mono font-bold text-caption">
                         {style.match}% MATCH
                       </p>
                     </div>
                   </div>
                   <div className="px-xs">
-                    <h3 className="font-headline-md text-white mb-1 text-base">{style.name}</h3>
-                    <p className="text-on-surface-variant text-caption mb-md">{style.description}</p>
+                    <h3 className="font-headline-md text-headline-md mb-1 text-on-surface">{style.name}</h3>
+                    <p className="text-on-surface-variant text-caption mb-md leading-relaxed">{style.description}</p>
                     <button
                       onClick={() => handleTryOn(style)}
-                      className="w-full py-sm rounded-lg border border-secondary/20 text-secondary font-label-md text-label-md flex items-center justify-center gap-sm hover:bg-secondary/10 transition-all"
+                      className="w-full py-sm rounded-lg border border-primary/30 text-primary font-label-md text-label-md flex items-center justify-center gap-sm hover:bg-primary/10 transition-all"
                     >
                       <MdVisibility className="text-[18px]" />
                       Virtual Try-On
                     </button>
                   </div>
-                </div>
+                </motion.div>
               ))
             )}
           </div>
-        </div>
+        </motion.div>
       </div>
-    </main>
+    </motion.main>
   );
 }

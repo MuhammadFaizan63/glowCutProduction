@@ -159,7 +159,7 @@ export default function SalonSetup() {
   return (
     <div className="min-h-screen py-12 px-4 relative overflow-hidden">
       {/* Decorative Cyber Blur */}
-      <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-primary-container/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-primary-container/5 rounded-full blur-[150px] pointer-events-none" />
 
       <div className="max-w-2xl mx-auto glass-card p-8 rounded-2xl border border-white/5 relative z-10">
         <div className="text-center mb-8">
@@ -412,7 +412,7 @@ export default function SalonSetup() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-primary-container text-on-primary-container py-3.5 rounded-xl font-bold tracking-wider hover:opacity-95 active:scale-98 transition-all shadow-neon-orange mt-8 disabled:opacity-50"
+            className="w-full bg-primary-container text-on-primary-container py-3.5 rounded-xl font-bold tracking-wider hover:opacity-95 active:scale-98 transition-all shadow-warm mt-8 disabled:opacity-50"
           >
             {loading ? "Deploying Station..." : "Deploy Shopkeeper Dashboard"}
           </button>

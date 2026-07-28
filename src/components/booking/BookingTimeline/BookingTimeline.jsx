@@ -27,7 +27,7 @@ export default function BookingTimeline({ steps = [] }) {
               </div>
             )}
             {status === 'active' && (
-              <div className="z-10 w-6 h-6 rounded-full bg-primary-container flex items-center justify-center shadow-neon-orange flex-shrink-0">
+              <div className="z-10 w-6 h-6 rounded-full bg-primary-container flex items-center justify-center shadow-warm-sm flex-shrink-0">
                 <div className="w-2 h-2 bg-white rounded-full" />
               </div>
             )}

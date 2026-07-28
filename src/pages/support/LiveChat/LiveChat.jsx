@@ -123,7 +123,7 @@ export default function LiveChat() {
   return (
     <div className="bg-background text-on-surface font-body-md min-h-screen flex flex-col">
       {/* Header */}
-      <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-mobile md:px-margin-desktop h-20 bg-surface/60 backdrop-blur-xl border-b border-white/10 shadow-[0_0_15px_rgba(255,181,156,0.3)]">
+      <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-mobile md:px-margin-desktop h-20 bg-surface/60 backdrop-blur-xl border-b border-white/10 shadow-[0_0_8px_rgba(255,181,156,0.15)]">
         <div className="flex items-center gap-md">
           <button onClick={() => navigate(-1)}>
             <MdArrowBackIosNew className="text-primary cursor-pointer active:scale-95 transition-transform" />
@@ -131,7 +131,7 @@ export default function LiveChat() {
           <div className="flex items-center gap-sm">
             <div className="relative">
               <img alt="Usman" className="w-12 h-12 rounded-full border border-white/10 object-cover" src={BARBER_AVATAR} />
-              <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-secondary border-2 border-surface rounded-full shadow-[0_0_8px_#66dd8b]" />
+              <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-secondary border-2 border-surface rounded-full shadow-[0_0_4px_rgba(102,221,139,0.4)]" />
             </div>
             <div>
               <h1 className="font-headline-md text-headline-md font-sora text-on-surface tracking-tight leading-none">
@@ -148,7 +148,7 @@ export default function LiveChat() {
         </div>
         <button
           onClick={() => navigate('/booking/confirm')}
-          className="bg-primary text-on-primary font-sora font-bold px-md py-sm rounded-lg shadow-neon-orange active:scale-95 transition-all"
+          className="bg-primary text-on-primary font-sora font-bold px-md py-sm rounded-lg shadow-warm-sm active:scale-95 transition-all"
         >
           Book Now
         </button>
@@ -228,7 +228,7 @@ export default function LiveChat() {
           </div>
           <button
             type="submit"
-            className="w-14 h-14 bg-secondary rounded-full flex items-center justify-center text-on-secondary shadow-neon-emerald active:scale-90 transition-all flex-shrink-0"
+            className="w-14 h-14 bg-secondary rounded-full flex items-center justify-center text-on-secondary shadow-warm-sm active:scale-90 transition-all flex-shrink-0"
           >
             <MdSend />
           </button>

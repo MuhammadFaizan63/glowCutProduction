@@ -7,7 +7,7 @@ const UPDATES = [
   {
     tag: 'Latest Release',
     tagColor: 'secondary',
-    dotColor: 'bg-primary shadow-neon-orange',
+    dotColor: 'bg-primary shadow-warm-sm',
     title: 'Version 2.1: New AR Hair Filters Added',
     timeAgo: '2 days ago',
     description:
@@ -19,7 +19,7 @@ const UPDATES = [
   {
     tag: 'City Expansion',
     tagColor: 'primary',
-    dotColor: 'bg-secondary shadow-neon-emerald',
+    dotColor: 'bg-secondary shadow-warm-sm',
     title: 'Version 2.0: Now live in North Nazimabad & Korangi',
     timeAgo: '1 week ago',
     description:
@@ -68,7 +68,7 @@ export default function Updates() {
         <div className="relative w-32 h-32 mb-md">
           <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full" />
           <div className="relative z-10 flex items-center justify-center h-full w-full">
-            <MdRocketLaunch className="text-[64px] text-primary drop-shadow-[0_0_20px_#ffb59c]" />
+            <MdRocketLaunch className="text-[40px] md:text-[64px] text-primary drop-shadow-[0_0_6px_rgba(255,181,156,0.3)]" />
           </div>
         </div>
         <h1 className="font-display-lg text-display-lg text-primary mb-xs">What's New</h1>
@@ -144,9 +144,9 @@ export default function Updates() {
                     onClick={() => handleCta(update.cta)}
                     className={`px-6 py-2 rounded-full font-label-md text-label-md font-bold active:scale-95 transition-transform ${
                       update.cta.variant === 'primary'
-                        ? 'bg-primary text-on-primary-container shadow-neon-orange'
+                        ? 'bg-primary text-on-primary-container shadow-warm'
                         : update.cta.variant === 'secondary'
-                        ? 'bg-secondary text-on-secondary-fixed shadow-neon-emerald'
+                        ? 'bg-secondary text-on-secondary-fixed shadow-warm'
                         : 'border border-secondary text-secondary hover:bg-secondary/10'
                     }`}
                   >

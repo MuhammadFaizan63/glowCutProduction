@@ -1,31 +1,26 @@
 import React from 'react';
 import { MdSchedule, MdCheckCircle } from 'react-icons/md';
 
-/**
- * ServiceCard
- * Matches the Services Menu items from Salon Detail: name, price, description,
- * duration. Supports a `selected` state for use in booking flows (Confirm Booking).
- */
 export default function ServiceCard({ service, selected = false, onSelect }) {
   const { name, price, description, duration } = service;
 
   return (
     <div
       onClick={onSelect}
-      className={`glass-panel p-md rounded-xl transition-colors cursor-pointer group relative ${
+      className={`p-md rounded-xl transition-all duration-200 cursor-pointer group relative ${
         selected
-          ? 'border-primary-container shadow-neon-orange'
-          : 'hover:border-primary-container/40'
+          ? 'bg-primary/15 border border-primary shadow-warm-sm'
+          : 'bg-surface-container border border-white/5 hover:border-primary/30 hover:bg-surface-container-high'
       }`}
     >
       {selected && (
-        <MdCheckCircle className="absolute top-3 right-3 text-primary-container text-xl" />
+        <MdCheckCircle className="absolute top-3 right-3 text-primary text-xl" />
       )}
       <div className="flex justify-between items-start mb-xs pr-6">
-        <h4 className="font-headline-md text-headline-md group-hover:text-primary transition-colors">
+        <h4 className="font-headline-md text-headline-md group-hover:text-primary transition-colors text-on-surface">
           {name}
         </h4>
-        <span className="font-bold text-primary-container font-headline-md whitespace-nowrap ml-sm">
+        <span className="font-bold text-primary font-headline-md whitespace-nowrap ml-sm">
           {price}
         </span>
       </div>

@@ -18,69 +18,261 @@
   }
 }
 
+/* ==========================================
+   THEME: Bright (default, no class needed)
+   ========================================== */
+:root {
+  /* Primary: vibrant fresh lime-olive green */
+  --color-primary: 99 176 50;
+  --color-on-primary: 50 58 38;
+  --color-primary-container: 213 236 178;
+  --color-on-primary-container: 34 58 16;
+  --color-primary-fixed: 226 245 200;
+  --color-primary-fixed-dim: 195 230 150;
+  --color-on-primary-fixed: 18 38 6;
+  --color-on-primary-fixed-variant: 52 96 26;
+  --color-inverse-primary: 175 220 120;
+
+  /* Secondary: soft warm cream */
+  --color-secondary: 245 240 220;
+  --color-on-secondary: 55 50 40;
+  --color-secondary-container: 235 228 200;
+  --color-on-secondary-container: 55 50 40;
+  --color-secondary-fixed: 250 246 232;
+  --color-secondary-fixed-dim: 245 240 220;
+  --color-on-secondary-fixed: 35 30 22;
+
+  /* Tertiary: soft sage */
+  --color-tertiary: 208 218 195;
+  --color-on-tertiary: 55 50 40;
+  --color-tertiary-container: 222 232 210;
+  --color-on-tertiary-container: 35 30 22;
+
+  /* Surfaces: light olive green MAJORITY */
+  --color-surface: 242 250 225;
+  --color-surface-dim: 234 244 212;
+  --color-surface-bright: 248 252 234;
+  --color-surface-container-lowest: 248 252 234;
+  --color-surface-container-low: 240 248 220;
+  --color-surface-container: 236 246 216;
+  --color-surface-container-high: 228 240 208;
+  --color-surface-container-highest: 222 236 200;
+  --color-on-surface: 55 65 42;
+  --color-on-surface-variant: 108 118 98;
+  --color-inverse-surface: 50 58 40;
+  --color-inverse-on-surface: 236 246 216;
+  --color-outline: 188 196 176;
+  --color-outline-variant: 218 222 210;
+  --color-background: 236 246 216;
+  --color-on-background: 55 65 42;
+  --color-surface-variant: 228 238 208;
+
+  /* Error: medium-bright red */
+  --color-error: 210 80 72;
+  --color-on-error: 255 255 255;
+  --color-error-container: 250 224 220;
+  --color-on-error-container: 110 30 24;
+
+  /* Utility-specific variables */
+  --glass-bg: 242, 250, 225;
+  --glass-border: 99, 176, 50;
+  --scrollbar-track: #E4EED4;
+  --scrollbar-thumb: #A8C88C;
+  --scrollbar-thumb-hover: #63B032;
+  /* Bright theme shadows - medium subtlety */
+  --shadow-soft: 0 4px 24px rgba(0, 0, 0, 0.08);
+  --shadow-soft-lg: 0 8px 48px rgba(0, 0, 0, 0.12);
+  /* Hero overlay - slightly darker grey */
+  --hero-overlay: 210 216 196;
+}
+
+/* ==========================================
+   THEME: Dark (applied with .dark class)
+   ========================================== */
+.dark {
+  --color-primary: 124 140 61;
+  --color-on-primary: 255 255 255;
+  --color-primary-container: 143 163 77;
+  --color-on-primary-container: 255 255 255;
+  --color-primary-fixed: 212 232 160;
+  --color-primary-fixed-dim: 184 204 122;
+  --color-on-primary-fixed: 42 51 16;
+  --color-on-primary-fixed-variant: 74 93 35;
+  --color-inverse-primary: 168 184 122;
+
+  --color-secondary: 237 224 212;
+  --color-on-secondary: 61 50 40;
+  --color-secondary-container: 212 197 169;
+  --color-on-secondary-container: 61 50 40;
+  --color-secondary-fixed: 255 240 224;
+  --color-secondary-fixed-dim: 237 224 212;
+  --color-on-secondary-fixed: 42 34 28;
+
+  --color-tertiary: 197 186 170;
+  --color-on-tertiary: 61 50 40;
+  --color-tertiary-container: 166 152 133;
+  --color-on-tertiary-container: 42 34 28;
+
+  --color-surface: 30 32 27;
+  --color-surface-dim: 26 28 23;
+  --color-surface-bright: 61 64 51;
+  --color-surface-container-lowest: 22 24 18;
+  --color-surface-container-low: 36 38 31;
+  --color-surface-container: 40 42 34;
+  --color-surface-container-high: 50 53 43;
+  --color-surface-container-highest: 61 64 51;
+  --color-on-surface: 237 224 212;
+  --color-on-surface-variant: 197 186 170;
+  --color-inverse-surface: 237 224 212;
+  --color-inverse-on-surface: 42 42 42;
+  --color-outline: 166 152 133;
+  --color-outline-variant: 92 82 70;
+  --color-background: 24 26 21;
+  --color-on-background: 237 224 212;
+  --color-surface-variant: 50 53 43;
+
+  --color-error: 212 134 111;
+  --color-on-error: 255 255 255;
+  --color-error-container: 176 96 74;
+  --color-on-error-container: 255 255 255;
+
+  /* Utility-specific variables for dark */
+  --glass-bg: 30, 32, 27;
+  --glass-border: 124, 140, 61;
+  --scrollbar-track: #181A15;
+  --scrollbar-thumb: #4A5D23;
+  --scrollbar-thumb-hover: #7C8C3D;
+  /* Dark mode shadows - more visible on dark bg */
+  --shadow-soft: 0 4px 24px rgba(0, 0, 0, 0.30);
+  --shadow-soft-lg: 0 8px 48px rgba(0, 0, 0, 0.40);
+  /* Hero overlay - matches dark background */
+  --hero-overlay: 24 26 21;
+}
+
 @layer utilities {
-  /* Glassmorphism panel - the core surface treatment across GlowCut */
   .glass-panel {
-    background: rgba(30, 30, 30, 0.6);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(var(--glass-bg), 0.78);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(var(--color-outline), 0.15);
   }
 
   .glass-card {
-    background: rgba(30, 30, 30, 0.6);
+    background: rgba(var(--glass-bg), 0.70);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(var(--color-outline), 0.12);
+  }
+
+  .glass-elevated {
+    background: rgba(var(--glass-bg), 0.90);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(var(--color-outline), 0.2);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
   }
 
-  /* Neon glow effects - simulate light-emitting elements */
-  .neon-glow-orange {
-    box-shadow: 0 0 15px rgba(255, 95, 31, 0.4);
+  .warm-overlay {
+    background: linear-gradient(180deg, rgba(var(--color-background), 0.4) 0%, rgba(var(--color-primary), 0.15) 100%);
   }
 
-  .neon-glow-emerald,
-  .neon-glow-green {
-    box-shadow: 0 0 15px rgba(102, 221, 139, 0.4);
+  .olive-glow {
+    box-shadow: 0 0 12px rgba(var(--color-primary), 0.08);
   }
 
-  .edge-light {
-    border-image: linear-gradient(to bottom right, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0)) 1;
+  .cream-glow {
+    box-shadow: 0 0 12px rgba(var(--color-secondary), 0.12);
   }
 
-  .emerald-overlay {
-    background: linear-gradient(180deg, rgba(15, 15, 15, 0.4) 0%, rgba(0, 57, 25, 0.7) 100%);
-  }
-
-  .hologram-effect {
-    background: radial-gradient(circle at center, rgba(102, 221, 139, 0.2) 0%, transparent 70%);
-  }
-
-  .map-gradient-overlay {
-    background: linear-gradient(to bottom, transparent 70%, #131313 100%);
-  }
-
-  .text-gradient-primary {
-    background: linear-gradient(135deg, #ffb59c 0%, #ff5f1f 100%);
+  .text-gradient-olive {
+    background: linear-gradient(135deg, rgb(var(--color-primary-fixed-dim)) 0%, rgb(var(--color-primary)) 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
   }
+
+  .text-gradient-warm {
+    background: linear-gradient(135deg, rgb(var(--color-on-primary-fixed-variant)) 0%, rgb(var(--color-primary)) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .card-hover {
+    @apply transition-all duration-300;
+    transform: translateY(0px);
+    box-shadow: 0 2px 12px rgba(var(--color-primary), 0.04);
+    border-color: rgba(var(--color-primary), 0.12);
+  }
+
+  .card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(var(--color-primary), 0.10);
+    border-color: rgba(var(--color-primary), 0.25);
+  }
+
+  .animate-stagger {
+    animation: fade-in-up 0.6s ease-out both;
+  }
+
+  .animate-stagger:nth-child(1) { animation-delay: 0.05s; }
+  .animate-stagger:nth-child(2) { animation-delay: 0.1s; }
+  .animate-stagger:nth-child(3) { animation-delay: 0.15s; }
+  .animate-stagger:nth-child(4) { animation-delay: 0.2s; }
+  .animate-stagger:nth-child(5) { animation-delay: 0.25s; }
+  .animate-stagger:nth-child(6) { animation-delay: 0.3s; }
+
+  .olive-border-gradient {
+    border-image: linear-gradient(to bottom right, rgba(var(--color-primary), 0.4), rgba(var(--color-primary), 0)) 1;
+  }
+
+  .shimmer-bg {
+    background: linear-gradient(90deg, transparent, rgba(var(--color-primary), 0.04), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 3s ease-in-out infinite;
+  }
+
+  .olive-dot-pattern {
+    background-image: radial-gradient(circle, rgba(var(--color-primary), 0.12) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  .cream-dot-pattern {
+    background-image: radial-gradient(circle, rgba(var(--color-secondary), 0.4) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  /* Hero overlay gradients - grey tint for light theme */
+  .hero-overlay-right {
+    background: linear-gradient(to right, rgb(var(--hero-overlay)), rgb(var(--hero-overlay) / 0.8), transparent);
+  }
+
+  .hero-overlay-up {
+    background: linear-gradient(to top, rgb(var(--hero-overlay)), transparent, rgb(var(--hero-overlay) / 0.3));
+  }
 }
 
-/* Custom scrollbar - matches the Cyber-Chic aesthetic */
+/* In bright theme, make invisible white borders visible using outline color */
+:root:not(.dark) [class*="border-white"] {
+  border-color: rgba(var(--color-outline), 0.2) !important;
+}
+
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #131313;
+  background: var(--scrollbar-track);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #353535;
+  background: var(--scrollbar-thumb);
   border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -88,10 +280,54 @@
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: #0e0e0e;
+  background: var(--scrollbar-track);
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #ff5f1f;
+  background: rgba(var(--color-primary), 1);
   border-radius: 10px;
+}
+
+/* Smooth transition when toggling themes */
+html, body {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Theme toggle button styles */
+.theme-toggle-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+  background: rgb(var(--color-primary));
+  color: rgb(var(--color-on-primary));
+}
+
+.theme-toggle-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 24px rgba(var(--color-primary), 0.4);
+}
+
+.theme-toggle-btn:active {
+  transform: scale(0.95);
+}
+
+.theme-toggle-btn svg {
+  width: 24px;
+  height: 24px;
+  transition: transform 0.3s ease;
+}
+
+.theme-toggle-btn:hover svg {
+  transform: rotate(30deg);
 }

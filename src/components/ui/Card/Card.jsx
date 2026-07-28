@@ -1,39 +1,35 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 
-/**
- * GlowCut Card
- * The "glass-panel" treatment used throughout: semi-transparent surface +
- * backdrop blur + subtle white border. This is the single most reused
- * visual primitive in the whole prototype.
- */
+const VARIANTS = {
+  elevated: 'glass-elevated',
+  outlined: 'bg-transparent border border-primary/20',
+  filled: 'bg-surface-container border-0',
+  glass: 'glass-panel',
+};
+
 export default function Card({
   children,
   className = '',
-  glow, // 'orange' | 'emerald' | undefined
+  variant = 'glass',
   hoverable = false,
-  edgeLight = false,
   as: Component = 'div',
   ...rest
 }) {
-  const glowClass =
-    glow === 'orange'
-      ? 'shadow-neon-orange'
-      : glow === 'emerald'
-      ? 'shadow-neon-emerald'
-      : '';
+  const Comp = hoverable ? motion.div : Component;
 
   return (
-    <Component
+    <Comp
       className={`
-        glass-panel rounded-xl
-        ${edgeLight ? 'edge-light border-t-white/20' : ''}
-        ${hoverable ? 'hover:border-primary-container/30 transition-all' : ''}
-        ${glowClass}
+        rounded-xl
+        ${VARIANTS[variant] || VARIANTS.glass}
+        ${hoverable ? 'card-hover cursor-pointer' : ''}
         ${className}
       `}
+      {...(hoverable ? { whileHover: { y: -2 }, transition: { duration: 0.2 } } : {})}
       {...rest}
     >
       {children}
-    </Component>
+    </Comp>
   );
 }

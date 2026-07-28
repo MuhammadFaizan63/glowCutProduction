@@ -1,12 +1,18 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MdEmail, MdLock, MdArrowForward } from 'react-icons/md';
+import { MdEmail, MdLock, MdArrowForward, MdContentCut, MdStar, MdSmartToy } from 'react-icons/md';
 import toast from 'react-hot-toast';
 import Input from '../../../components/ui/Input';
 import Button from '../../../components/ui/Button';
 import { useAuth } from '../../../hooks/useAuth';
 import apiClient from '../../../services/apiClient';
+
+const BENEFITS = [
+  { icon: MdContentCut, text: 'Access premium grooming services' },
+  { icon: MdStar, text: 'Earn & redeem GlowRewards points' },
+  { icon: MdSmartToy, text: 'AI-powered style consultations' },
+];
 
 export default function Login() {
   const navigate = useNavigate();
@@ -38,23 +44,17 @@ export default function Login() {
         email: form.identifier.trim(),
         password: form.password,
       });
-      console.log(res, "res")
       toast.success(res.message || 'Welcome back!');
 
       const userRole = res.user?.role;
 
-      // Updated Role Navigation Logic
       if (userRole === 'admin' || userRole === 'owner') {
         try {
           const { data: salonData } = await apiClient.get('/salons/my');
-          console.log(salonData)
           const hasSalon = Boolean(salonData?.success && salonData?.data);
-
           if (hasSalon) {
-            // Salon exists: navigate to respective dashboard
             navigate(userRole === 'admin' ? '/admin/shop' : '/admin/shop');
           } else {
-            // Salon not created: navigate to setup form
             navigate('/setup-salon');
           }
         } catch (salonErr) {
@@ -87,37 +87,56 @@ export default function Login() {
   };
 
   return (
-    <div className="relative min-h-screen w-full flex flex-col items-center justify-center overflow-hidden">
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-primary/10 rounded-full blur-[140px]" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-secondary/10 rounded-full blur-[120px]" />
-      </div>
-
-      <div className="mb-xl text-center relative z-10">
-        <div className="flex items-center justify-center gap-base mb-sm">
-          <div className="relative w-12 h-12 flex items-center justify-center">
-            <div className="absolute inset-0 border-2 border-primary-container rounded-full shadow-neon-orange" />
-            <div className="w-3 h-3 bg-secondary rounded-full shadow-neon-emerald" />
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-xl w-full max-w-6xl items-center">
+      {/* Left: Brand & Benefits */}
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex flex-col items-center md:items-start justify-center space-y-lg"
+      >
+        <div className="flex items-center gap-base mb-md">
+          <div className="relative w-16 h-16 flex items-center justify-center">
+            <div className="absolute inset-0 bg-primary/20 rounded-2xl" />
+            <div className="absolute inset-0 border-2 border-primary/40 rounded-2xl" />
+            <div className="w-4 h-4 bg-primary rounded-full shadow-warm" />
           </div>
-          <span className="font-display-lg text-headline-lg font-bold text-primary-container tracking-tighter">
+          <span className="font-display-lg text-headline-lg font-bold text-primary tracking-tight">
             GlowCut
           </span>
         </div>
-        <p className="text-on-surface-variant font-body-md">
-          Pakistan's premium grooming platform
+        <h2 className="font-headline-lg text-headline-lg text-white text-on-surface">
+          Welcome back to <span className="text-primary">premium</span> grooming
+        </h2>
+        <p className="font-body-md text-white text-on-surface-variant max-w-sm">
+          Sign in to continue your journey with Pakistan's premium grooming platform.
         </p>
-      </div>
+        <div className="space-y-md mt-md">
+          {BENEFITS.map((b) => {
+            const Icon = b.icon;
+            return (
+              <div key={b.text} className="flex items-center gap-sm">
+                <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
+                  <Icon className="text-white text-white text-lg" />
+                </div>
+                <span className= "text-white  text-on-surface-variant font-body-md">{b.text}</span>
+              </div>
+            );
+          })}
+        </div>
+      </motion.div>
 
+      {/* Right: Login Card */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="relative z-10 w-full max-w-md px-margin-mobile"
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex items-center justify-center"
       >
-        <div className="glass-panel rounded-2xl p-lg border-white/10 shadow-2xl">
-          <h2 className="font-headline-lg text-headline-lg text-white mb-xs">Welcome back</h2>
+        <div className="w-full max-w-md p-lg rounded-2xl bg-surface-container/80 backdrop-blur-2xl border border-primary/20 shadow-soft">
+          <h2 className="font-headline-lg text-headline-lg text-on-surface mb-xs">Sign in</h2>
           <p className="text-on-surface-variant font-body-md mb-xl">
-            Sign in to access your bookings and rewards.
+            Access your bookings and rewards.
           </p>
 
           <form onSubmit={handleLogin} className="space-y-md">
@@ -163,7 +182,7 @@ export default function Login() {
 
           <button
             onClick={handleGuest}
-            className="w-full py-sm text-center text-secondary font-label-md hover:underline decoration-secondary/30 underline-offset-4 transition-all"
+            className="w-full py-sm text-center text-primary font-label-md hover:underline decoration-primary/30 underline-offset-4 transition-all"
           >
             Continue as Guest →
           </button>
@@ -172,17 +191,13 @@ export default function Login() {
             Don't have an account?{' '}
             <Link
               to="/auth/signup"
-              className="text-primary-container font-bold hover:text-primary transition-colors"
+              className="text-primary font-bold hover:text-primary-fixed transition-colors"
             >
               Sign Up
             </Link>
           </p>
         </div>
       </motion.div>
-
-      <p className="relative z-10 mt-lg text-caption text-on-surface-variant/60 text-center px-margin-mobile">
-        © 2026 GlowCut Cyber-Chic Salons. All rights reserved.
-      </p>
     </div>
   );
 }

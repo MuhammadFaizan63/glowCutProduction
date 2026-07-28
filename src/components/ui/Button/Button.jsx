@@ -1,33 +1,26 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-/**
- * GlowCut Button
- * Variants map directly to the patterns observed across the Stitch prototype:
- * - primary   -> solid neon-orange fill, glowing shadow (main CTAs e.g. "Book Now")
- * - secondary -> solid emerald fill, glowing shadow (confirmation / "Try Now" actions)
- * - ghost     -> glass background, subtle border (secondary actions)
- * - outline   -> transparent bg, colored border, fills on hover (card-level CTAs)
- * - text      -> no background, just colored text (links / "View All")
- */
 const VARIANTS = {
   primary:
-    'bg-primary text-on-primary shadow-neon-orange hover:scale-[1.02] active:scale-95',
+    'bg-primary text-on-primary shadow-warm hover:shadow-warm-lg',
   secondary:
-    'bg-secondary text-on-secondary shadow-neon-emerald hover:scale-[1.02] active:scale-95',
+    'bg-secondary text-on-secondary hover:opacity-90',
   outline:
-    'bg-white/5 border border-primary-container text-primary-container hover:bg-primary-container hover:text-white active:scale-95',
+    'bg-transparent border-2 border-primary text-primary hover:bg-primary/10',
   ghost:
-    'bg-white/5 border border-white/10 text-white hover:bg-white/10 active:scale-95',
-  text: 'bg-transparent text-primary-container hover:gap-sm',
-  danger: 'bg-error text-on-error hover:scale-[1.02] active:scale-95',
+    'bg-white/5 border border-white/10 text-on-surface hover:bg-white/10',
+  text: 'bg-transparent text-primary hover:text-primary-fixed',
+  danger: 'bg-error text-on-error hover:opacity-90',
+  cream: 'bg-secondary-container text-on-secondary-container hover:opacity-90',
+  olive: 'bg-primary-container text-on-primary-container hover:opacity-90',
 };
 
 const SIZES = {
-  sm: 'px-sm py-xs text-xs rounded-full',
-  md: 'px-md py-sm text-label-md rounded-full',
+  sm: 'px-sm py-xs text-xs rounded-lg',
+  md: 'px-md py-sm text-label-md rounded-xl',
   lg: 'px-xl py-md text-headline-md rounded-xl',
-  full: 'w-full h-14 rounded-lg text-label-md',
+  full: 'w-full h-14 rounded-xl text-label-md',
 };
 
 export default function Button({
@@ -50,7 +43,8 @@ export default function Button({
       type={type}
       onClick={onClick}
       disabled={isDisabled}
-      whileTap={!isDisabled ? { scale: 0.95 } : {}}
+      whileTap={!isDisabled ? { scale: 0.97 } : {}}
+      whileHover={!isDisabled ? { scale: 1.02 } : {}}
       className={`
         font-sora font-bold inline-flex items-center justify-center gap-2
         transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed

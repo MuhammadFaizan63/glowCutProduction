@@ -16,7 +16,7 @@ export default function GuestBlock({ isOpen, onClose }) {
     <Modal isOpen={isOpen} onClose={onClose} size="sm" showClose>
       <div className="flex flex-col items-center text-center gap-md py-sm">
         {/* Lock icon */}
-        <div className="w-20 h-20 rounded-full bg-primary/10 border border-primary-container/30 flex items-center justify-center shadow-neon-orange">
+        <div className="w-20 h-20 rounded-full bg-primary/10 border border-primary-container/30 flex items-center justify-center shadow-warm-sm">
           <MdLock className="text-primary-container text-4xl" />
         </div>
 

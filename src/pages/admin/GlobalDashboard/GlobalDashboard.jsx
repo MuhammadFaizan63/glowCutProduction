@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
+import { motion } from 'framer-motion';
 import {
   MdStorefront,
   MdAccountBalanceWallet,
@@ -12,17 +13,13 @@ import {
 } from 'react-icons/md';
 import apiClient from '../../../services/apiClient';
 import EmptyState from '../../../components/ui/EmptyState';
+import glowcutLogo from '../../../assets/logos/glowcut-logo.jpg';
 
-/**
- * GlobalDashboard — Platform Control Center for `role: 'admin'`.
- * Every number here comes from a live backend call:
- *  - GET /bookings/statistics  (admin sees platform-wide totals)
- *  - GET /salons?limit=6       (recent salons onboarded)
- *  - GET /salons/top-rated     (top performing partners)
- *  - GET /bookings?limit=6     (recent platform-wide bookings)
- * The backend has no dedicated "total users" endpoint, so that metric is
- * intentionally left out rather than faked.
- */
+const fadeUp = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+};
+
 export default function GlobalDashboard() {
   const [stats, setStats] = useState(null);
   const [salons, setSalons] = useState([]);
@@ -65,55 +62,68 @@ export default function GlobalDashboard() {
 
   const METRICS = stats
     ? [
-        { label: 'Total Bookings', value: stats.totalBookings ?? 0, icon: MdEventAvailable, color: 'primary' },
-        { label: 'Gross Revenue', value: `Rs. ${(stats.totalRevenue ?? 0).toLocaleString()}`, icon: MdAccountBalanceWallet, color: 'secondary' },
-        { label: 'Pending Approvals', value: stats.pending ?? 0, icon: MdPending, color: 'primary' },
-        { label: 'Completed Sessions', value: stats.completed ?? 0, icon: MdCheckCircle, color: 'secondary' },
+        { label: 'Total Bookings', value: stats.totalBookings ?? 0, icon: MdEventAvailable },
+        { label: 'Gross Revenue', value: `Rs. ${(stats.totalRevenue ?? 0).toLocaleString()}`, icon: MdAccountBalanceWallet },
+        { label: 'Pending Approvals', value: stats.pending ?? 0, icon: MdPending },
+        { label: 'Completed Sessions', value: stats.completed ?? 0, icon: MdCheckCircle },
       ]
     : [];
 
   return (
-    <>
-      <div className="flex justify-between items-center mb-md">
-        <div>
-          <h2 className="font-headline-lg text-headline-lg text-on-surface">Platform Control Center</h2>
-          <p className="text-on-surface-variant font-body-md">Live overview across every GlowCut salon partner.</p>
+    <motion.div
+      className="px-margin-mobile md:px-lg max-w-full space-y-lg text-on-surface font-body-md"
+      initial="initial"
+      animate="animate"
+      variants={{
+        animate: { transition: { staggerChildren: 0.08 } },
+      }}
+    >
+      <motion.div
+        variants={fadeUp}
+        className="flex justify-between items-center mb-md"
+      >
+        <div className="flex items-center gap-4">
+          <img src={glowcutLogo} alt="GlowCut" className="w-10 h-10" />
+          <div>
+            <h2 className="font-headline-lg text-headline-lg text-on-surface">Platform Control Center</h2>
+            <p className="text-on-surface-variant font-body-md">Live overview across every GlowCut salon partner.</p>
+          </div>
         </div>
-        <button onClick={fetchAll} className="p-2 glass-panel rounded-lg text-on-surface-variant hover:text-white transition-colors">
+        <button onClick={fetchAll} className="p-2 glass-panel rounded-lg text-on-surface-variant hover:text-on-surface transition-colors border border-white/5">
           <MdRefresh className="text-lg" />
         </button>
-      </div>
+      </motion.div>
 
-      {/* Metric Cards */}
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-md">
+      <motion.section
+        variants={fadeUp}
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-md"
+      >
         {loading ? (
-          [1, 2, 3, 4].map((n) => <div key={n} className="glass-panel h-28 rounded-xl animate-pulse" />)
+          [1, 2, 3, 4].map((n) => <div key={n} className="glass-panel h-28 rounded-xl animate-pulse border border-white/5" />)
         ) : (
           METRICS.map((metric) => {
             const Icon = metric.icon;
-            const isSecondary = metric.color === 'secondary';
             return (
-              <div key={metric.label} className="glass-panel p-md rounded-xl space-y-md relative overflow-hidden">
-                <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl -mr-16 -mt-16 ${isSecondary ? 'bg-secondary/10' : 'bg-primary/10'}`} />
+              <div key={metric.label} className="glass-panel p-md rounded-xl space-y-md relative overflow-hidden border border-white/5">
+                <div className="absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl -mr-16 -mt-16 bg-primary/10" />
                 <div className="flex justify-between items-start">
                   <div>
                     <p className="text-caption text-on-surface-variant uppercase tracking-widest">{metric.label}</p>
-                    <h3 className={`font-display-lg text-headline-lg ${isSecondary ? 'text-secondary' : 'text-on-surface'}`}>
-                      {metric.value}
-                    </h3>
+                    <h3 className="font-display-lg text-headline-lg text-on-surface">{metric.value}</h3>
                   </div>
-                  <Icon className={`p-1 rounded-lg text-xl ${isSecondary ? 'text-secondary bg-secondary/10' : 'text-primary bg-primary/10'}`} />
+                  <Icon className="p-1 rounded-lg text-xl text-primary bg-primary/10" />
                 </div>
               </div>
             );
           })
         )}
-      </section>
+      </motion.section>
 
-      {/* Logs & Lists */}
-      <section className="grid grid-cols-1 lg:grid-cols-3 gap-md pb-xl mt-md">
-        {/* Recent Bookings — real platform activity */}
-        <div className="lg:col-span-2 glass-panel rounded-2xl p-md flex flex-col">
+      <motion.section
+        variants={fadeUp}
+        className="grid grid-cols-1 lg:grid-cols-3 gap-md pb-xl mt-md"
+      >
+        <div className="lg:col-span-2 glass-panel rounded-2xl p-md flex flex-col border border-white/5">
           <div className="flex justify-between items-center mb-md">
             <h3 className="font-headline-md text-headline-md text-on-surface">Recent Bookings</h3>
           </div>
@@ -149,8 +159,7 @@ export default function GlobalDashboard() {
           )}
         </div>
 
-        {/* Top Performers */}
-        <div className="glass-panel rounded-2xl p-md space-y-md">
+        <div className="glass-panel rounded-2xl p-md space-y-md border border-white/5">
           <h3 className="font-headline-md text-label-md uppercase tracking-widest text-on-surface-variant">
             Top Performing Salons
           </h3>
@@ -169,13 +178,13 @@ export default function GlobalDashboard() {
             <div className="space-y-md">
               {topSalons.map((partner) => (
                 <div className="flex items-center gap-sm" key={partner._id}>
-                  <div className="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center text-primary-container font-bold flex-shrink-0">
+                  <div className="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center text-primary font-bold flex-shrink-0">
                     {partner.name?.[0] || '?'}
                   </div>
                   <div className="flex-1">
                     <p className="font-label-md text-on-surface">{partner.name}</p>
                     <div className="flex items-center gap-xs">
-                      <MdStar className="text-[14px] text-secondary" />
+                      <MdStar className="text-[14px] text-primary" />
                       <span className="text-caption text-on-surface">
                         {(partner.averageRating ?? 0).toFixed?.(1) ?? partner.averageRating}
                       </span>
@@ -186,10 +195,12 @@ export default function GlobalDashboard() {
             </div>
           )}
         </div>
-      </section>
+      </motion.section>
 
-      {/* All Salons Table */}
-      <section className="glass-panel rounded-2xl p-md mb-xl">
+      <motion.section
+        variants={fadeUp}
+        className="glass-panel rounded-2xl p-md mb-xl border border-white/5"
+      >
         <h3 className="font-headline-md text-headline-md text-on-surface mb-md">Salon Directory</h3>
         {loading ? (
           <div className="space-y-sm">
@@ -216,13 +227,13 @@ export default function GlobalDashboard() {
                 {salons.map((s) => (
                   <tr key={s._id} className="border-b border-white/5">
                     <td className="py-3 pr-4 flex items-center gap-sm">
-                      <MdVerifiedUser className={s.isVerified ? 'text-secondary' : 'text-on-surface-variant'} />
+                      <MdVerifiedUser className={s.isVerified ? 'text-primary' : 'text-on-surface-variant'} />
                       {s.name}
                     </td>
                     <td className="py-3 pr-4 text-on-surface-variant">{s.address?.city || '—'}</td>
                     <td className="py-3 pr-4">{(s.averageRating ?? 0).toFixed?.(1) ?? s.averageRating}</td>
                     <td className="py-3 pr-4">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${s.isActive ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'}`}>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${s.isActive ? 'bg-primary/10 text-primary border-primary/20' : 'bg-error/10 text-error border-error/20'}`}>
                         {s.isActive ? 'Active' : 'Inactive'}
                       </span>
                     </td>
@@ -232,7 +243,7 @@ export default function GlobalDashboard() {
             </table>
           </div>
         )}
-      </section>
-    </>
+      </motion.section>
+    </motion.div>
   );
 }

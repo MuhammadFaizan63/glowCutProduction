@@ -126,7 +126,7 @@ export default function Feedback() {
               onMouseEnter={() => setHoverRating(star)}
               onMouseLeave={() => setHoverRating(0)}
               className={`transition-transform active:scale-90 ${
-                star <= displayRating ? 'text-primary shadow-neon-orange' : 'text-primary/30'
+                star <= displayRating ? 'text-primary shadow-warm-sm' : 'text-primary/30'
               }`}
             >
               <MdStar className="text-[48px]" />
@@ -195,7 +195,7 @@ export default function Feedback() {
         <button
           onClick={handleSubmit}
           disabled={submitting}
-          className="w-full bg-secondary-container text-on-secondary-container font-headline-md text-headline-md py-md rounded-xl shadow-neon-emerald active:scale-95 transition-transform disabled:opacity-50 flex items-center justify-center gap-2"
+          className="w-full bg-secondary-container text-on-secondary-container font-headline-md text-headline-md py-md rounded-xl shadow-warm-sm active:scale-95 transition-transform disabled:opacity-50 flex items-center justify-center gap-2"
         >
           {submitting ? (
             <span className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />

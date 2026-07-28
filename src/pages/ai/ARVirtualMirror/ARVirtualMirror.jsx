@@ -68,7 +68,7 @@ export default function ARVirtualMirror() {
           <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
             <div className="relative w-80 h-96">
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 flex flex-col items-center">
-                <div className="w-2 h-2 rounded-full bg-secondary shadow-neon-emerald mb-2" />
+                <div className="w-2 h-2 rounded-full bg-secondary shadow-warm-sm mb-2" />
                 <div className="h-16 w-[1px] bg-secondary opacity-50" />
                 <span className="font-label-md text-secondary text-xs uppercase tracking-widest mt-1">
                   Precision Alignment
@@ -81,7 +81,7 @@ export default function ARVirtualMirror() {
                   </span>
                   <div className="text-[10px] text-secondary opacity-70">X: 142.4 | Y: 88.1</div>
                 </div>
-                <div className="w-2 h-2 rounded-full bg-secondary shadow-neon-emerald" />
+                <div className="w-2 h-2 rounded-full bg-secondary shadow-warm-sm" />
                 <div className="w-12 h-[1px] bg-secondary opacity-30" />
               </div>
               <div className="absolute inset-0 border border-white/10 rounded-3xl" />
@@ -93,7 +93,7 @@ export default function ARVirtualMirror() {
       </div>
 
       {/* Top Nav */}
-      <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-mobile py-base md:px-margin-desktop backdrop-blur-xl bg-surface/30 shadow-[0px_0px_15px_rgba(255,181,156,0.3)]">
+      <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-mobile py-base md:px-margin-desktop backdrop-blur-xl bg-surface/30 shadow-[0px_0px_8px_rgba(255,181,156,0.15)]">
         <div className="font-display-lg text-display-lg font-bold text-primary tracking-tighter">
           NEON_GLANCE
         </div>
@@ -185,7 +185,7 @@ export default function ARVirtualMirror() {
                   <div
                     className={`w-20 h-20 rounded-xl overflow-hidden p-1 ${
                       isActive
-                        ? 'border-2 border-secondary shadow-neon-emerald'
+                        ? 'border-2 border-secondary shadow-warm-sm'
                         : 'border border-white/10'
                     }`}
                   >
@@ -208,7 +208,7 @@ export default function ARVirtualMirror() {
         <div className="flex justify-center mb-10">
           <button
             onClick={handleCapture}
-            className="bg-primary-container text-on-primary-container px-10 py-4 rounded-full font-headline-md shadow-neon-orange flex items-center gap-3 active:scale-95 transition-transform"
+            className="bg-primary-container text-on-primary-container px-10 py-4 rounded-full font-headline-md shadow-warm flex items-center gap-3 active:scale-95 transition-transform"
           >
             <MdCameraAlt style={{ fontVariationSettings: "'FILL' 1" }} />
             Capture &amp; Book
@@ -225,7 +225,7 @@ export default function ARVirtualMirror() {
                 onClick={() => item.to && navigate(item.to)}
                 className={`flex flex-col items-center justify-center transition-all duration-300 ease-out ${
                   item.active
-                    ? 'text-primary drop-shadow-[0_0_8px_rgba(255,181,156,0.8)]'
+                    ? 'text-primary drop-shadow-[0_0_4px_rgba(255,181,156,0.4)]'
                     : 'text-on-surface-variant opacity-70 hover:opacity-100 hover:text-primary'
                 }`}
               >

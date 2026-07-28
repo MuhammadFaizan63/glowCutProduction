@@ -83,7 +83,7 @@ export default function StyleGallery() {
             onClick={() => setActiveCategory(cat)}
             className={`flex-shrink-0 px-md py-sm rounded-full font-label-md text-label-md transition-all ${
               activeCategory === cat
-                ? 'bg-primary-container text-on-primary shadow-neon-orange'
+                ? 'bg-primary-container text-on-primary shadow-warm-sm'
                 : 'glass-card text-on-surface-variant hover:bg-white/5'
             }`}
           >
@@ -113,7 +113,7 @@ export default function StyleGallery() {
               </div>
               <button
                 onClick={() => handleRecreate(style)}
-                className="w-full py-sm bg-secondary-container text-on-secondary-container font-label-md text-label-md rounded-lg shadow-neon-emerald active:scale-95 transition-all"
+                className="w-full py-sm bg-secondary-container text-on-secondary-container font-label-md text-label-md rounded-lg shadow-warm-sm active:scale-95 transition-all"
               >
                 Recreate this Style
               </button>

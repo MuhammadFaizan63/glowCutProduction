@@ -28,7 +28,7 @@ export default function ContactUs() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-xl">
         {/* Contact Info */}
         <aside className="lg:col-span-5 space-y-md">
-          <div className="glass-panel p-lg rounded-2xl border-t-4 border-secondary hover:shadow-neon-emerald transition-all">
+          <div className="glass-panel p-lg rounded-2xl border-t-4 border-secondary hover:shadow-warm-sm transition-all">
             <h3 className="font-headline-md text-headline-md text-white mb-6">Get in Touch</h3>
             <div className="space-y-6">
               <div className="flex items-start gap-4">
@@ -115,7 +115,7 @@ export default function ContactUs() {
 
             <button 
               type="submit"
-              className="w-full bg-secondary text-on-secondary font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all shadow-neon-emerald"
+              className="w-full bg-secondary text-on-secondary font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all shadow-warm-sm"
             >
               <MdSend /> SEND MESSAGE
             </button>

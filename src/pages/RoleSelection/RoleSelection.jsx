@@ -50,11 +50,11 @@ export default function RoleSelection() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden">
       {/* Background Glow effects */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary-container/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-1/4 left-1/4 w-48 md:w-96 h-48 md:h-96 bg-primary-container/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-48 md:w-96 h-48 md:h-96 bg-secondary/10 rounded-full blur-[120px] pointer-events-none" />
 
       <div className="text-center mb-10 z-10">
-        <h1 className="text-4xl font-extrabold tracking-wider text-primary mb-2 shadow-neon-orange-sm">
+        <h1 className="text-4xl font-extrabold tracking-wider text-primary mb-2 shadow-warm-sm">
           GLOWCUT
         </h1>
         <p className="text-outline text-sm uppercase tracking-widest">

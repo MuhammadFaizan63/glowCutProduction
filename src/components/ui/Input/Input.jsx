@@ -1,11 +1,5 @@
 import React, { useState } from 'react';
 
-/**
- * GlowCut Input
- * "Ghost-style" inputs per DESIGN.md: bottom-border only or subtle dark container,
- * focus transitions border to Neon Orange.
- * Supports inline validation (error prop) and left/right icons.
- */
 export default function Input({
   label,
   type = 'text',
@@ -14,7 +8,7 @@ export default function Input({
   placeholder,
   error,
   icon: Icon,
-  variant = 'underline', // 'underline' | 'filled'
+  variant = 'underline',
   name,
   required = false,
   className = '',
@@ -23,7 +17,7 @@ export default function Input({
   const [focused, setFocused] = useState(false);
 
   const baseClasses =
-    'w-full bg-white/5 text-white placeholder-white/30 font-body-md text-body-md transition-all duration-300 focus:outline-none';
+    'w-full bg-white/5 text-on-surface placeholder-on-surface-variant/40 font-body-md text-body-md transition-all duration-300 focus:outline-none';
 
   const variantClasses =
     variant === 'underline'
@@ -31,14 +25,14 @@ export default function Input({
           error
             ? 'border-error'
             : focused
-            ? 'border-primary-container shadow-[0_4px_8px_-4px_rgba(255,95,31,0.4)]'
+            ? 'border-primary'
             : 'border-outline-variant'
         } px-2 py-3 bg-transparent`
-      : `border rounded-lg px-4 py-3 ${
+      : `border rounded-xl px-4 py-3 ${
           error
             ? 'border-error'
             : focused
-            ? 'border-primary-container'
+            ? 'border-primary shadow-warm-sm'
             : 'border-white/10'
         }`;
 

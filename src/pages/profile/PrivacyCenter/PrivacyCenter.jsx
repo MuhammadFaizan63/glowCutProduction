@@ -79,7 +79,7 @@ export default function PrivacyCenter() {
               >
                 <div>
                   <div className="mb-md">
-                    <Icon className="text-secondary text-4xl drop-shadow-[0_0_8px_rgba(102,221,139,0.5)]" />
+                    <Icon className="text-secondary text-4xl drop-shadow-[0_0_4px_rgba(102,221,139,0.25)]" />
                   </div>
                   <h2 className="font-headline-md text-headline-md mb-sm text-on-surface">
                     {section.title}

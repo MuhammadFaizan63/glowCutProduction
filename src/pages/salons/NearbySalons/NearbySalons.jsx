@@ -8,7 +8,9 @@ import {
   MdFormatListBulleted,
   MdLocationOn,
   MdExpandMore,
+  MdStar,
 } from 'react-icons/md';
+import { motion } from 'framer-motion';
 import Loader from '../../../components/ui/Loader';
 import EmptyState from '../../../components/ui/EmptyState';
 import { useSalonList } from '../../../hooks/useSalon';
@@ -16,13 +18,23 @@ import { useSalonList } from '../../../hooks/useSalon';
 const AVAILABILITY_OPTIONS = ['Next 2 hours', 'Today', 'Tomorrow'];
 const RATING_OPTIONS = ['Any Rating', '4.0+ Stars', '4.5+ Stars'];
 
+const containerVariants = {
+  hidden: { opacity: 0, y: 8 },
+  visible: { opacity: 1, y: 0, transition: { staggerChildren: 0.08 } },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 16 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+};
+
 export default function NearbySalons() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initialArea = searchParams.get('area') || '';
 
   const { salons, isLoading, search } = useSalonList();
-  const [view, setView] = useState('list'); // 'grid' | 'list'
+  const [view, setView] = useState('list');
   const [availability, setAvailability] = useState('Next 2 hours');
   const [minRating, setMinRating] = useState('4.0+ Stars');
 
@@ -37,9 +49,9 @@ export default function NearbySalons() {
   }, [salons, minRating]);
 
   return (
-    <>
-      {/* Interactive Map Section */}
-      <section className="relative h-[450px] w-full overflow-hidden">
+    <motion.div variants={containerVariants} initial="hidden" animate="visible">
+      {/* Map Section */}
+      <section className="relative h-[300px] md:h-[450px] w-full overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img
             className="w-full h-full object-cover grayscale opacity-60"
@@ -50,49 +62,49 @@ export default function NearbySalons() {
 
           <div className="absolute top-1/2 left-1/3 group cursor-pointer">
             <div className="flex flex-col items-center">
-              <div className="bg-primary-container text-white text-xs font-bold px-2 py-1 rounded-md mb-1 shadow-neon-orange">
+              <div className="bg-primary text-on-primary text-xs font-bold px-2 py-1 rounded-md mb-1 shadow-warm-sm">
                 4.8 ★
               </div>
-              <div className="w-4 h-4 bg-primary-container rounded-full border-2 border-white shadow-neon-orange animate-pulse" />
+              <div className="w-4 h-4 bg-primary rounded-full border-2 border-white shadow-warm-sm animate-pulse" />
             </div>
           </div>
           <div className="absolute top-1/4 right-1/4 group cursor-pointer">
             <div className="flex flex-col items-center">
-              <div className="bg-secondary-container text-white text-xs font-bold px-2 py-1 rounded-md mb-1 shadow-neon-emerald">
+              <div className="bg-primary-container text-on-primary-container text-xs font-bold px-2 py-1 rounded-md mb-1 shadow-warm-sm">
                 4.6 ★
               </div>
-              <div className="w-4 h-4 bg-secondary-container rounded-full border-2 border-white shadow-neon-emerald" />
+              <div className="w-4 h-4 bg-primary-container rounded-full border-2 border-white shadow-warm-sm" />
             </div>
           </div>
           <div className="absolute bottom-1/3 right-1/2 group cursor-pointer">
-            <div className="w-6 h-6 bg-blue-500 rounded-full border-4 border-white/20 shadow-lg animate-ping" />
-            <div className="absolute inset-0 w-6 h-6 bg-blue-600 rounded-full border-2 border-white" />
+            <div className="w-6 h-6 bg-primary/60 rounded-full border-4 border-white/20 shadow-lg animate-ping" />
+            <div className="absolute inset-0 w-6 h-6 bg-primary rounded-full border-2 border-white" />
           </div>
         </div>
 
-        <div className="absolute bottom-10 left-margin-mobile md:left-margin-desktop z-10 flex flex-col gap-sm">
-          <button className="w-12 h-12 glass-panel rounded-xl flex items-center justify-center text-primary-container hover:bg-white/10 transition-all">
+        <div className="absolute bottom-4 md:bottom-10 left-margin-mobile md:left-margin-desktop z-10 flex flex-row md:flex-col gap-sm">
+          <button className="w-12 h-12 bg-surface-container/80 backdrop-blur-xl rounded-xl flex items-center justify-center text-primary hover:bg-white/10 transition-all border border-primary/20">
             <MdMyLocation className="text-xl" />
           </button>
-          <button className="w-12 h-12 glass-panel rounded-xl flex items-center justify-center text-on-surface hover:bg-white/10 transition-all">
+          <button className="w-12 h-12 bg-surface-container/80 backdrop-blur-xl rounded-xl flex items-center justify-center text-on-surface hover:bg-white/10 transition-all border border-white/10">
             <MdAdd className="text-xl" />
           </button>
-          <button className="w-12 h-12 glass-panel rounded-xl flex items-center justify-center text-on-surface hover:bg-white/10 transition-all">
+          <button className="w-12 h-12 bg-surface-container/80 backdrop-blur-xl rounded-xl flex items-center justify-center text-on-surface hover:bg-white/10 transition-all border border-white/10">
             <MdRemove className="text-xl" />
           </button>
         </div>
       </section>
 
-      {/* Filters Section */}
-      <section className="px-margin-mobile md:px-margin-desktop -mt-16 relative z-20">
-        <div className="glass-panel p-md rounded-2xl flex flex-wrap items-center gap-md border-white/5 shadow-2xl">
+      {/* Filters */}
+      <motion.section variants={itemVariants} className="px-margin-mobile md:px-margin-desktop -mt-16 relative z-20">
+        <div className="bg-surface-container/80 backdrop-blur-2xl p-md rounded-2xl flex flex-wrap items-center gap-md border border-primary/10 shadow-soft">
           <div className="flex-1 min-w-[200px]">
             <p className="font-label-md text-label-md text-on-surface-variant mb-3">
               Price Range (PKR)
             </p>
             <div className="relative h-2 bg-white/10 rounded-full">
-              <div className="absolute h-full w-2/3 bg-primary-container rounded-full left-0 shadow-neon-orange" />
-              <div className="absolute top-1/2 -translate-y-1/2 left-2/3 w-4 h-4 bg-white rounded-full border-2 border-primary-container cursor-pointer shadow-md" />
+              <div className="absolute h-full w-2/3 bg-primary rounded-full left-0 shadow-warm-sm" />
+              <div className="absolute top-1/2 -translate-y-1/2 left-2/3 w-4 h-4 bg-white rounded-full border-2 border-primary cursor-pointer shadow-md" />
             </div>
             <div className="flex justify-between mt-2 text-caption text-on-surface-variant">
               <span>500</span>
@@ -108,7 +120,7 @@ export default function NearbySalons() {
               <select
                 value={minRating}
                 onChange={(e) => setMinRating(e.target.value)}
-                className="w-full bg-surface-container-high border-none text-on-surface rounded-lg py-2 px-3 font-body-md focus:ring-1 focus:ring-primary-container appearance-none"
+                className="w-full bg-surface-container-high border-none text-on-surface rounded-lg py-2 px-3 font-body-md focus:ring-1 focus:ring-primary appearance-none"
               >
                 {RATING_OPTIONS.map((opt) => (
                   <option key={opt} value={opt}>
@@ -131,8 +143,8 @@ export default function NearbySalons() {
                   onClick={() => setAvailability(opt)}
                   className={`px-4 py-1.5 rounded-full font-label-md text-label-md border transition-all ${
                     availability === opt
-                      ? 'bg-secondary-container text-on-secondary-container border-secondary-container shadow-neon-emerald'
-                      : 'bg-white/5 text-on-surface-variant border-white/10 hover:border-primary-container'
+                      ? 'bg-primary text-on-primary border-primary shadow-warm-sm'
+                      : 'bg-white/5 text-on-surface-variant border-white/10 hover:border-primary'
                   }`}
                 >
                   {opt}
@@ -141,13 +153,13 @@ export default function NearbySalons() {
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* Results Section */}
-      <section className="px-margin-mobile md:px-margin-desktop py-xl">
+      {/* Results */}
+      <motion.section variants={itemVariants} className="px-margin-mobile md:px-margin-desktop py-xl">
         <div className="flex justify-between items-end mb-lg">
           <div>
-            <h2 className="font-headline-md text-headline-md text-primary-container">
+            <h2 className="font-headline-md text-headline-md text-primary">
               Salons Near {initialArea || 'PECHS'}
             </h2>
             <p className="text-on-surface-variant font-body-md">
@@ -157,20 +169,20 @@ export default function NearbySalons() {
           <div className="flex gap-sm">
             <button
               onClick={() => setView('grid')}
-              className={`p-2 rounded-lg ${
+              className={`p-2 rounded-xl ${
                 view === 'grid'
-                  ? 'bg-primary-container text-on-primary-container'
-                  : 'glass-panel text-primary-container'
+                  ? 'bg-primary text-on-primary'
+                  : 'bg-surface-container border border-white/10 text-primary'
               }`}
             >
               <MdGridView className="text-xl" />
             </button>
             <button
               onClick={() => setView('list')}
-              className={`p-2 rounded-lg ${
+              className={`p-2 rounded-xl ${
                 view === 'list'
-                  ? 'bg-primary-container text-on-primary-container'
-                  : 'glass-panel text-primary-container'
+                  ? 'bg-primary text-on-primary'
+                  : 'bg-surface-container border border-white/10 text-primary'
               }`}
             >
               <MdFormatListBulleted className="text-xl" />
@@ -180,7 +192,7 @@ export default function NearbySalons() {
 
         {isLoading ? (
           <div className="flex justify-center py-xl">
-            <Loader variant="spinner" className="text-primary-container w-8 h-8" />
+            <Loader variant="spinner" className="text-primary w-8 h-8" />
           </div>
         ) : filteredSalons.length === 0 ? (
           <EmptyState
@@ -198,9 +210,11 @@ export default function NearbySalons() {
               const rating = salon.averageRating ?? salon.rating ?? 0;
               const image = salon.coverImage || salon.logo || salon.image || 'https://via.placeholder.com/600x400?text=GlowCut';
               return (
-              <div
+              <motion.div
                 key={id}
-                className="glass-panel rounded-3xl overflow-hidden flex flex-col md:flex-row border-white/10 group hover:border-primary-container/50 transition-all duration-500"
+                variants={itemVariants}
+                whileHover={{ y: -2 }}
+                className="bg-surface-container border border-white/5 rounded-3xl overflow-hidden flex flex-col md:flex-row group hover:border-primary/40 transition-all duration-500"
               >
                 <div className="md:w-1/3 relative h-64 md:h-auto">
                   <img
@@ -210,8 +224,8 @@ export default function NearbySalons() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent to-surface/20" />
                   {salon.isActive && (
-                    <div className="absolute top-4 left-4 bg-secondary-container/90 backdrop-blur-md text-on-secondary-container px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-                      <span className="w-2 h-2 bg-white rounded-full animate-pulse" /> Open Now
+                    <div className="absolute top-4 left-4 bg-primary/20 backdrop-blur-md text-on-surface px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 border border-primary/30">
+                      <span className="w-2 h-2 bg-primary rounded-full animate-pulse" /> Open Now
                     </div>
                   )}
                 </div>
@@ -224,14 +238,14 @@ export default function NearbySalons() {
                           {salon.name}
                         </h3>
                         <p className="flex items-center gap-xs text-on-surface-variant font-body-md">
-                          <MdLocationOn className="text-primary-container text-lg" /> {areaLabel}
+                          <MdLocationOn className="text-primary text-lg" /> {areaLabel}
                         </p>
                       </div>
-                      <div className="bg-secondary-container/20 border border-secondary-container p-2 rounded-xl text-center">
-                        <div className="text-secondary font-bold text-headline-md leading-tight">
+                      <div className="bg-primary/15 border border-primary/30 p-2 rounded-xl text-center">
+                        <div className="text-primary font-bold text-headline-md leading-tight">
                           {rating.toFixed ? rating.toFixed(1) : rating}
                         </div>
-                        <div className="text-[10px] text-secondary uppercase tracking-widest font-bold">
+                        <div className="text-[10px] text-primary uppercase tracking-widest font-bold">
                           Rating
                         </div>
                       </div>
@@ -239,24 +253,24 @@ export default function NearbySalons() {
 
                     {Array.isArray(salon.barbers) && salon.barbers.length > 0 && (
                       <div className="mt-lg">
-                        <h4 className="font-label-md text-label-md text-primary-container uppercase tracking-wider mb-md">
+                        <h4 className="font-label-md text-label-md text-primary uppercase tracking-wider mb-md">
                           Top Stylists Available Today
                         </h4>
                         <div className="flex flex-wrap gap-md">
                           {salon.barbers.slice(0, 4).map((stylist) => (
                             <div
                               key={stylist._id}
-                              className="flex items-center gap-sm bg-white/5 p-2 pr-4 rounded-full border border-white/5 hover:border-secondary transition-all cursor-pointer"
+                              className="flex items-center gap-sm bg-white/5 p-2 pr-4 rounded-full border border-white/5 hover:border-primary transition-all cursor-pointer"
                             >
                               <div className="relative">
-                                <div className="w-10 h-10 rounded-full bg-surface-container-high border-2 border-secondary flex items-center justify-center text-xs font-bold text-secondary">
+                                <div className="w-10 h-10 rounded-full bg-surface-container-high border-2 border-primary flex items-center justify-center text-xs font-bold text-primary">
                                   {stylist.name?.[0] || '?'}
                                 </div>
-                                <div className="absolute bottom-0 right-0 w-3 h-3 bg-secondary rounded-full border-2 border-surface" />
+                                <div className="absolute bottom-0 right-0 w-3 h-3 bg-primary rounded-full border-2 border-surface" />
                               </div>
                               <div>
                                 <p className="text-on-surface font-bold text-xs">{stylist.name}</p>
-                                <p className="text-secondary text-[10px] font-medium">
+                                <p className="text-primary text-[10px] font-medium">
                                   {stylist.status === 'active' ? 'Available' : stylist.status}
                                 </p>
                               </div>
@@ -286,17 +300,17 @@ export default function NearbySalons() {
                     </div>
                     <button
                       onClick={() => navigate(`/salons/${id}`)}
-                      className="bg-secondary-container text-on-secondary-container font-headline-md text-label-md px-xl py-4 rounded-xl font-extrabold active:scale-95 transition-all shadow-neon-emerald uppercase tracking-tighter"
+                      className="bg-primary text-on-primary font-headline-md text-label-md px-xl py-4 rounded-xl font-extrabold active:scale-95 transition-all shadow-warm uppercase tracking-tight"
                     >
                       Book Slot
                     </button>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             );})}
           </div>
         )}
-      </section>
-    </>
+      </motion.section>
+    </motion.div>
   );
 }
