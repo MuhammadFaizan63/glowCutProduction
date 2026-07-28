@@ -7,13 +7,17 @@ import Button from '../../../components/ui/Button';
 import Loader from '../../../components/ui/Loader';
 import { useAuth } from '../../../hooks/useAuth';
 
+const BENEFITS = [
+  'Secure 2-factor authentication',
+  'Instant account activation',
+  'Access to all premium features',
+];
+
 export default function VerifyOtp() {
   const navigate = useNavigate();
   const location = useLocation();
   const { verifyEmail, resendVerificationOtp } = useAuth();
 
-  // Email passed in from the Signup page (registration already triggered
-  // the first OTP email server-side, so we don't need to re-send on load).
   const email = location.state?.email || '';
 
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -96,34 +100,54 @@ export default function VerifyOtp() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-xl w-full max-w-6xl items-center">
-      <div className="flex flex-col items-center justify-center space-y-lg">
+      {/* Left: Visual + Benefits */}
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex flex-col items-center justify-center space-y-lg"
+      >
         <div className="relative w-full aspect-square max-w-md flex items-center justify-center">
-          <div className="absolute inset-0 hologram-effect animate-pulse" />
+          <div className="absolute inset-0 bg-primary/5 rounded-full blur-3xl animate-pulse" />
           <div className="relative z-10 flex flex-col items-center">
             <span
-              className="material-symbols-outlined text-[120px] text-primary drop-shadow-[0_0_20px_rgba(255,181,156,0.8)]"
+              className="material-symbols-outlined text-[120px] text-primary drop-shadow-[0_0_20px_rgba(124,140,61,0.6)]"
               style={{ fontVariationSettings: "'FILL' 1" }}
             >
               shield_person
             </span>
-            <div className="absolute top-1/2 left-[-10%] w-[120%] h-[2px] bg-secondary shadow-[0_0_15px_#66dd8b] opacity-80" />
+            <div className="absolute top-1/2 left-[-10%] w-[120%] h-[2px] bg-primary shadow-warm opacity-60" />
             <Loader variant="scan" className="mt-md" />
           </div>
         </div>
         <div className="text-center w-full">
-          <h2 className="font-headline-lg text-headline-lg text-white mb-xs">
+          <h2 className="font-headline-lg text-headline-lg text-on-surface mb-xs">
             Secure Verification
           </h2>
           <p className="font-body-md text-on-surface-variant max-w-sm mx-auto">
             We have sent a 6-digit verification code to your registered email address.
           </p>
+          <div className="mt-md space-y-sm">
+            {BENEFITS.map((b) => (
+              <div key={b} className="flex items-center gap-sm justify-center">
+                <div className="w-2 h-2 rounded-full bg-primary" />
+                <span className="text-on-surface-variant text-sm">{b}</span>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="flex items-center justify-center">
-        <div className="glass-panel w-full max-w-md p-lg rounded-xl shadow-2xl flex flex-col">
+      {/* Right: OTP Card */}
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex items-center justify-center"
+      >
+        <div className="w-full max-w-md p-lg rounded-2xl bg-surface-container/80 backdrop-blur-2xl border border-primary/20 shadow-soft">
           <div className="mb-lg">
-            <h3 className="font-headline-md text-headline-md text-white mb-xs">
+            <h3 className="font-headline-md text-headline-md text-on-surface mb-xs">
               Verify Your Email
             </h3>
             <p className="font-body-md text-on-surface-variant break-all">
@@ -142,7 +166,7 @@ export default function VerifyOtp() {
                   ref={(el) => (inputRefs.current[index] = el)}
                   onChange={(e) => handleChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
-                  className="w-12 h-14 bg-white/5 border border-white/10 rounded-lg text-center text-white text-xl font-bold font-sora focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary shadow-inner"
+                  className="w-12 h-14 bg-surface border border-white/10 rounded-xl text-center text-on-surface text-xl font-bold font-sora focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                 />
               ))}
             </div>
@@ -159,19 +183,19 @@ export default function VerifyOtp() {
                 type="button"
                 onClick={handleResendCode}
                 disabled={resending}
-                className="text-primary-container font-bold hover:text-primary transition-colors underline underline-offset-4 disabled:opacity-50"
+                className="text-primary font-bold hover:text-primary-fixed transition-colors underline underline-offset-4 disabled:opacity-50"
               >
                 {resending ? 'Sending...' : 'Resend Code'}
               </button>
             </p>
             <p className="mt-md">
-              <Link to="/auth/signup" className="text-caption font-caption text-outline hover:text-white transition-colors">
+              <Link to="/auth/signup" className="text-caption font-caption text-outline hover:text-on-surface transition-colors">
                 ← Back to Registration
               </Link>
             </p>
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

@@ -1,47 +1,45 @@
 import React from 'react';
-import { MdStar } from 'react-icons/md';
-import Badge from '../../ui/Badge';
+import { MdStar, MdAccessTime } from 'react-icons/md';
 
-/**
- * BarberCard
- * Matches "Master Stylists" cards: avatar with status ring, name, specialty,
- * rating, and an availability badge (AVAILABLE / NEXT: 2PM style).
- */
 export default function BarberCard({ barber, onClick }) {
   const { name, specialty, rating, reviewCount, image, available, nextSlot } = barber;
 
   return (
     <div
       onClick={onClick}
-      className="glass-panel p-md rounded-xl flex items-center gap-md relative overflow-hidden group cursor-pointer hover:border-primary-container/30 transition-colors"
+      className="bg-surface-container/60 backdrop-blur-2xl rounded-2xl p-xl border border-primary/10 shadow-soft hover:shadow-warm hover:border-primary/30 transition-all duration-300 cursor-pointer overflow-hidden w-full"
     >
-      <div className="absolute top-0 right-0 p-sm">
-        {available ? (
-          <Badge variant="success" dot className="text-[10px] tracking-widest">
-            AVAILABLE
-          </Badge>
-        ) : (
-          <Badge variant="neutral" className="text-[10px] tracking-widest">
-            NEXT: {nextSlot}
-          </Badge>
-        )}
-      </div>
-      <div
-        className={`w-24 h-24 rounded-full border-2 p-1 flex-shrink-0 ${
-          available ? 'border-secondary' : 'border-white/10'
-        }`}
-      >
-        <img src={image} alt={name} className="w-full h-full object-cover rounded-full" />
-      </div>
-      <div>
-        <h4 className="font-headline-md text-headline-md">{name}</h4>
-        <p className="text-secondary font-label-md text-label-md mb-xs">{specialty}</p>
-        <div className="flex items-center gap-xs text-primary-container mb-sm">
-          <MdStar className="text-lg" />
-          <span className="font-bold">{rating}</span>
-          <span className="text-on-surface-variant opacity-60 text-caption font-caption">
-            ({reviewCount} Reviews)
-          </span>
+      <div className="flex items-center gap-5">
+        <div
+          className={`w-20 h-20 rounded-2xl border-2 p-0.5 shrink-0 overflow-hidden ${
+            available ? 'border-primary' : 'border-white/10'
+          }`}
+        >
+          <img src={image} alt={name} className="w-full h-full object-cover rounded-2xl" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h4 className="font-headline-md text-headline-md text-on-surface truncate">{name}</h4>
+              <p className="text-primary font-headline-sm text-headline-sm mt-1 truncate">{specialty}</p>
+            </div>
+            <span
+              className={`text-xs font-bold px-3 py-1 rounded-full border shrink-0 ${
+                available
+                  ? 'bg-primary/10 text-primary border-primary/20'
+                  : 'bg-white/5 text-on-surface-variant border-white/10'
+              }`}
+            >
+              {available ? 'Available' : nextSlot}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 text-primary mt-3">
+            <MdStar className="text-lg" />
+            <span className="font-bold text-headline-sm">{rating}</span>
+            <span className="text-on-surface-variant opacity-60 text-sm">
+              ({reviewCount} Reviews)
+            </span>
+          </div>
         </div>
       </div>
     </div>

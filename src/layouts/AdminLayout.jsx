@@ -1,19 +1,14 @@
 import React from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import Sidebar from '../components/layout/Sidebar';
 import { AdminHeader } from '../components/layout/Header';
 
 const TITLES = {
-  '/admin/shop': 'Cyber-Salon Dashboard',
+  '/admin/shop': 'Command Center',
   '/admin/global': 'Platform Control Center',
 };
 
-/**
- * AdminLayout
- * Wraps Shopkeeper / Global dashboard pages with a fixed Sidebar and a
- * localized sticky AdminHeader. Determines which nav-set and title to show
- * based on the current route segment (/admin/shop/* vs /admin/global/*).
- */
 export default function AdminLayout() {
   const { pathname } = useLocation();
   const isGlobal = pathname.startsWith('/admin/global');
@@ -32,9 +27,14 @@ export default function AdminLayout() {
           title={title}
           avatarSrc="https://lh3.googleusercontent.com/aida-public/AB6AXuBNJaH3ty0k1DIfjl-VY4GvzwGr_vgAtyMLzIeZDNTb6eri4mpdrE3GSEe4yldLBIDruIrIIdkmSfhUPTtuVmhEQCg43SibgJixBbedYgRgNuJ0KOXRqIvm3nElmEqdkKhZ_s3vrFzu2upHF3inkzMx5fkoOQIqpRgwwmfoPHbRbAOnL2pFo2yHzD_hULivANKwoMFErEenyvS-c4CitLoCU7GLQNWmU83HVIh33EiIZntF1MLMj98hOyEW7s2e-vAsSALdZZFNRiw"
         />
-        <div className="p-container-margin space-y-section-gap">
+        <motion.div
+          className="p-container-margin space-y-section-gap"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, ease: 'easeOut' }}
+        >
           <Outlet />
-        </div>
+        </motion.div>
       </main>
     </div>
   );

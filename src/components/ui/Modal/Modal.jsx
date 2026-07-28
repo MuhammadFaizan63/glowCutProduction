@@ -3,17 +3,12 @@ import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { MdClose } from 'react-icons/md';
 
-/**
- * GlowCut Modal
- * Glass panel dialog, centered, with backdrop blur — used for booking
- * confirmations, filters (Nearby Salons), and admin action dialogs.
- */
 export default function Modal({
   isOpen,
   onClose,
   title,
   children,
-  size = 'md', // 'sm' | 'md' | 'lg' | 'full'
+  size = 'md',
   showClose = true,
 }) {
   useEffect(() => {
@@ -43,24 +38,22 @@ export default function Modal({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
         >
-          {/* Backdrop */}
           <motion.div
             className="absolute inset-0 bg-black/70 backdrop-blur-sm"
             onClick={onClose}
           />
 
-          {/* Panel */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 10 }}
-            transition={{ duration: 0.2 }}
-            className={`relative z-10 w-full ${sizeClasses[size]} glass-panel rounded-xl p-lg max-h-[85vh] overflow-y-auto custom-scrollbar`}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            className={`relative z-10 w-full ${sizeClasses[size]} glass-elevated rounded-2xl p-lg max-h-[85vh] overflow-y-auto custom-scrollbar`}
           >
             {(title || showClose) && (
               <div className="flex items-center justify-between mb-md">
                 {title && (
-                  <h3 className="font-headline-md text-headline-md text-white">
+                  <h3 className="font-headline-md text-headline-md text-on-surface">
                     {title}
                   </h3>
                 )}
@@ -68,7 +61,7 @@ export default function Modal({
                   <button
                     onClick={onClose}
                     aria-label="Close"
-                    className="text-on-surface-variant hover:text-primary-container transition-colors p-1 rounded-full hover:bg-white/5"
+                    className="text-on-surface-variant hover:text-primary transition-colors p-1 rounded-full hover:bg-white/5"
                   >
                     <MdClose className="text-xl" />
                   </button>

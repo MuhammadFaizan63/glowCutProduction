@@ -1,5 +1,6 @@
 import React, { useState, useContext, useEffect } from 'react';
 import toast from 'react-hot-toast';
+import { motion } from 'framer-motion';
 import {
   MdChat,
   MdPhotoCamera,
@@ -7,6 +8,7 @@ import {
   MdShare,
   MdInfo,
   MdCheckCircle,
+  MdContentCopy,
 } from 'react-icons/md';
 import { UserContext } from '../../../context/UserContext';
 import { getReferralStats } from '../../../services/rewardService';
@@ -19,8 +21,6 @@ const SHARE_CHANNELS = [
   { label: 'More', icon: MdShare },
 ];
 
-// Mocked, like the rest of rewardService's data — the backend has no
-// referrals/invites model or routes at all.
 const INVITE_HISTORY = [
   {
     name: 'Alex Rivera',
@@ -37,6 +37,11 @@ const INVITE_HISTORY = [
 ];
 
 const GOAL_INVITES = 5;
+
+const fadeUp = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+};
 
 export default function InviteAndEarn() {
   const userCtx = useContext(UserContext);
@@ -70,16 +75,21 @@ export default function InviteAndEarn() {
   };
 
   return (
-    <main className="pt-24 pb-32 px-margin-mobile max-w-lg mx-auto relative">
-      {/* Background Accents */}
+    <motion.main
+      className="px-margin-mobile md:px-margin-desktop max-w-lg mx-auto py-xl relative"
+      initial="initial"
+      animate="animate"
+      variants={{
+        animate: { transition: { staggerChildren: 0.08 } },
+      }}
+    >
       <div className="fixed top-0 left-0 w-full h-full pointer-events-none -z-10">
         <div className="absolute top-[10%] -left-1/4 w-[80%] h-[40%] bg-primary/10 blur-[120px] rounded-full" />
-        <div className="absolute bottom-[20%] -right-1/4 w-[80%] h-[40%] bg-secondary/10 blur-[120px] rounded-full" />
+        <div className="absolute bottom-[20%] -right-1/4 w-[80%] h-[40%] bg-primary/5 blur-[120px] rounded-full" />
       </div>
 
-      {/* Hero Illustration */}
-      <div className="flex justify-center mb-md">
-        <div className="relative w-full aspect-square max-w-[280px]">
+      <motion.div variants={fadeUp} className="flex justify-center mb-md">
+        <div className="relative w-full aspect-square max-w-[240px]">
           <img
             alt="Glowing Cyberpunk Gift Box"
             className="w-full h-full object-contain"
@@ -87,98 +97,98 @@ export default function InviteAndEarn() {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
         </div>
-      </div>
+      </motion.div>
 
-      {/* Headline */}
-      <div className="text-center mb-lg">
+      <motion.div variants={fadeUp} className="text-center mb-lg">
         <h1 className="font-display-lg text-display-lg text-on-surface mb-xs">
-          Spread the Glow,
-          <br />
+          Spread the Glow,<br />
           <span className="text-primary">Get a Free Cut!</span>
         </h1>
-        <p className="font-body-md text-on-surface-variant px-md">
+        <p className="font-body-md text-on-surface-variant">
           Invite your friends to the future of grooming and unlock exclusive rewards.
         </p>
-      </div>
+      </motion.div>
 
-      {/* Referral Card */}
-      <div className="glass-card rounded-xl p-md mb-lg border-t border-l border-white/20">
+      <motion.div
+        variants={fadeUp}
+        className="glass-panel rounded-xl p-md mb-lg border border-primary/20"
+      >
         <p className="font-label-md text-label-md text-on-surface-variant mb-sm uppercase tracking-widest">
           Your Referral Code
         </p>
-        <div className="flex items-center justify-between bg-black/40 rounded-lg p-sm border border-white/5">
+        <div className="flex items-center justify-between bg-surface/60 rounded-lg p-sm border border-white/5">
           <span className="font-headline-md text-headline-md text-primary tracking-wider">
             {stats.referralCode}
           </span>
           <button
             onClick={handleCopy}
-            className="bg-primary text-on-primary font-label-md text-label-md px-md py-sm rounded-lg active:scale-95 transition-transform shadow-neon-orange"
+            className="bg-primary text-on-primary font-label-md text-label-md px-md py-sm rounded-lg active:scale-95 transition-transform shadow-warm-sm flex items-center gap-1"
           >
-            Tap to Copy
+            <MdContentCopy /> Copy
           </button>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Share Section */}
-      <div className="flex justify-around items-center mb-xl gap-md">
+      <motion.div
+        variants={fadeUp}
+        className="flex justify-around items-center mb-xl gap-md"
+      >
         {SHARE_CHANNELS.map(({ label, icon: Icon }) => (
           <button
             key={label}
             onClick={() => handleShare(label)}
             className="flex flex-col items-center gap-xs"
           >
-            <div className="w-14 h-14 rounded-full glass-card flex items-center justify-center border border-white/10 hover:border-primary/50 transition-colors cursor-pointer group">
+            <div className="w-14 h-14 rounded-full glass-panel flex items-center justify-center border border-white/10 hover:border-primary/50 transition-colors cursor-pointer group">
               <Icon className="text-primary text-[28px] group-hover:scale-110 transition-transform" />
             </div>
             <span className="font-label-md text-label-md text-on-surface-variant">{label}</span>
           </button>
         ))}
-      </div>
+      </motion.div>
 
-      {/* Referral Progress */}
-      <section className="mb-xl">
+      <motion.section variants={fadeUp} className="mb-xl">
         <div className="flex justify-between items-end mb-sm">
-          <h3 className="font-headline-md text-headline-md">Referral Progress</h3>
-          <span className="font-label-md text-label-md text-secondary">
+          <h3 className="font-headline-md text-headline-md text-on-surface">Referral Progress</h3>
+          <span className="font-label-md text-label-md text-primary">
             {stats.invitesJoined}/{GOAL_INVITES} Friends Joined
           </span>
         </div>
-        <div className="glass-card rounded-full h-4 w-full p-[2px] mb-md overflow-hidden">
+        <div className="glass-panel rounded-full h-4 w-full p-[2px] mb-md overflow-hidden border border-white/5">
           <div
-            className="h-full bg-secondary rounded-full shadow-neon-emerald relative transition-all duration-700"
+            className="h-full bg-primary rounded-full relative transition-all duration-700 shadow-warm-sm"
             style={{ width: `${progressPercent}%` }}
           >
             <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/30" />
           </div>
         </div>
-        <div className="flex items-start gap-sm p-md glass-card rounded-xl border border-secondary/20">
-          <MdInfo className="text-secondary" style={{ fontVariationSettings: "'FILL' 1" }} />
+        <div className="flex items-start gap-sm p-md glass-panel rounded-xl border border-primary/20">
+          <MdInfo className="text-primary shrink-0 mt-0.5" />
           <p className="font-body-md text-body-md text-on-surface-variant">
             {remaining > 0 ? (
               <>
-                Invite <span className="text-secondary font-bold">{remaining} more friends</span>{' '}
+                Invite <span className="text-primary font-bold">{remaining} more friends</span>{' '}
                 to unlock your 50% discount voucher!
               </>
             ) : (
-              <span className="text-secondary font-bold">
+              <span className="text-primary font-bold">
                 You've unlocked your 50% discount voucher!
               </span>
             )}
           </p>
         </div>
-      </section>
+      </motion.section>
 
-      {/* Invite History */}
-      <section className="mb-lg">
-        <h3 className="font-headline-md text-headline-md mb-md">Invite History</h3>
+      <motion.section variants={fadeUp}>
+        <h3 className="font-headline-md text-headline-md text-on-surface mb-md">Invite History</h3>
         <div className="space-y-sm">
           {INVITE_HISTORY.map((invite) => (
             <div
               key={invite.name}
-              className="flex items-center justify-between p-sm glass-card rounded-xl border border-white/5"
+              className="flex items-center justify-between p-sm glass-panel rounded-xl border border-white/5"
             >
               <div className="flex items-center gap-md">
-                <div className="w-12 h-12 rounded-full border-2 border-secondary/50 p-[2px]">
+                <div className="w-12 h-12 rounded-full border-2 border-primary/30 p-[2px]">
                   <img
                     className="w-full h-full rounded-full bg-surface-container object-cover"
                     alt={invite.name}
@@ -187,17 +197,14 @@ export default function InviteAndEarn() {
                 </div>
                 <div>
                   <p className="font-label-md text-label-md text-on-surface">{invite.name}</p>
-                  <p className="font-caption text-caption text-secondary">{invite.status}</p>
+                  <p className="font-caption text-caption text-primary">{invite.status}</p>
                 </div>
               </div>
-              <MdCheckCircle
-                className="text-secondary"
-                style={{ fontVariationSettings: "'FILL' 1" }}
-              />
+              <MdCheckCircle className="text-primary text-xl" />
             </div>
           ))}
         </div>
-      </section>
-    </main>
+      </motion.section>
+    </motion.main>
   );
 }

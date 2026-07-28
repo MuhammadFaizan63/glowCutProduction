@@ -2,18 +2,11 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { MdArrowBack, MdNotifications, MdPerson, MdCall, MdNearMe } from 'react-icons/md';
+import { motion } from 'framer-motion';
 import BookingTimeline from '../../../components/booking/BookingTimeline';
 import { useBooking } from '../../../hooks/useBooking';
 import * as bookingService from '../../../services/bookingService';
 
-/**
- * LiveTracking — the backend has no GPS/dispatch model (a salon booking
- * has no "stylist en route" concept — the customer travels to the salon,
- * not the other way around), so the decorative map/pin animation below is
- * kept purely as ambiance. What actually drives this screen is the real
- * booking status, polled from the backend, which decides the timeline and
- * when to auto-advance to Payment Success.
- */
 export default function LiveTracking() {
   const navigate = useNavigate();
   const { booking } = useBooking();
@@ -34,7 +27,6 @@ export default function LiveTracking() {
           setTimeout(() => navigate('/booking/payment-success'), 1500);
         }
       } catch (err) {
-        // Non-fatal — keep last known state, retry next tick.
       }
     };
 
@@ -64,8 +56,13 @@ export default function LiveTracking() {
   }, [status, stylistName]);
 
   return (
-    <div className="bg-background min-h-screen">
-      <header className="fixed top-0 w-full z-50 flex items-center justify-between px-4 py-3 bg-surface/80 backdrop-blur-2xl border-b border-white/5">
+    <motion.div
+      className="bg-background min-h-screen"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+    >
+      <header className="fixed top-0 w-full z-50 flex items-center justify-between px-4 py-3 bg-surface/70 backdrop-blur-2xl border-b border-primary/10">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate(-1)}
@@ -73,7 +70,7 @@ export default function LiveTracking() {
           >
             <MdArrowBack className="text-primary" />
           </button>
-          <span className="font-display-lg text-headline-md font-bold tracking-tighter text-primary">
+          <span className="font-display-lg text-headline-md font-bold tracking-tight text-primary">
             GlowCut
           </span>
         </div>
@@ -89,25 +86,27 @@ export default function LiveTracking() {
 
       <main className="min-h-screen pt-16 pb-32 relative">
         <div className="fixed inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute top-1/4 -right-1/4 w-[500px] h-[500px] bg-secondary/10 rounded-full blur-[120px]" />
-          <div className="absolute bottom-1/4 -left-1/4 w-[400px] h-[400px] bg-primary-container/10 rounded-full blur-[100px]" />
+          <div className="absolute top-1/4 -right-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px]" />
+          <div className="absolute bottom-1/4 -left-1/4 w-[400px] h-[400px] bg-primary/10 rounded-full blur-[100px]" />
         </div>
 
-        {/* Decorative map (ambiance only — no live GPS backend) */}
-        <section className="relative h-[280px] w-full overflow-hidden flex items-center justify-center bg-[#121212]">
+        <section className="relative h-[280px] w-full overflow-hidden flex items-center justify-center bg-surface">
           <div className="relative flex items-center justify-center">
-            <div className="absolute w-16 h-16 bg-secondary/20 rounded-full animate-ping" />
-            <div className="relative w-10 h-10 bg-secondary rounded-full shadow-[0_0_20px_rgba(102,221,139,0.8)] flex items-center justify-center border-2 border-white/20">
-              <span className="material-symbols-outlined text-on-secondary text-base">storefront</span>
+            <div className="absolute w-16 h-16 bg-primary/20 rounded-full animate-ping" />
+            <div className="relative w-10 h-10 bg-primary rounded-full shadow-warm flex items-center justify-center border-2 border-white/20">
+              <span className="material-symbols-outlined text-on-primary text-base">storefront</span>
             </div>
           </div>
         </section>
 
-        {/* Status Card Content */}
         <section className="px-margin-mobile -mt-12 relative z-10 space-y-6">
-          <div className="glass-edge backdrop-blur-2xl rounded-xl p-8 flex flex-col items-center justify-center text-center shadow-[0_10px_40px_rgba(0,0,0,0.6)]">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-surface-container/80 backdrop-blur-2xl rounded-xl p-8 flex flex-col items-center justify-center text-center border border-primary/10 shadow-soft"
+          >
             <span className="font-label-md text-primary tracking-[0.2em] mb-2">LIVE STATUS</span>
-            <h1 className="font-display-lg text-white mb-1 capitalize">
+            <h1 className="font-display-lg text-on-surface mb-1 capitalize">
               {status === 'completed' ? "You're All Done!" : status}
             </h1>
             <p className="font-body-md text-on-surface-variant">
@@ -117,11 +116,11 @@ export default function LiveTracking() {
             </p>
             <div className="w-full h-1 bg-white/5 mt-6 rounded-full overflow-hidden">
               <div
-                className="h-full bg-primary-container shadow-[0_0_10px_rgba(255,95,31,0.8)] transition-all duration-1000"
+                className="h-full bg-primary shadow-warm-sm transition-all duration-1000"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
-          </div>
+          </motion.div>
 
           <BookingTimeline steps={steps} />
 
@@ -132,14 +131,14 @@ export default function LiveTracking() {
                   ? (window.location.href = `tel:${liveBooking.barberId.phone}`)
                   : toast.error('No phone number on file for this stylist.')
               }
-              className="flex items-center justify-center gap-2 py-4 px-4 rounded-xl glass-edge text-on-surface-variant font-label-md hover:bg-white/5 transition-all active:scale-95 duration-200"
+              className="flex items-center justify-center gap-2 py-4 px-4 rounded-xl bg-surface-container border border-white/10 text-on-surface-variant font-label-md hover:bg-white/5 transition-all active:scale-95 duration-200"
             >
               <MdCall className="text-sm" />
               Call {stylistName.split(' ')[0]}
             </button>
             <button
               onClick={() => toast('Directions coming soon!')}
-              className="flex items-center justify-center gap-2 py-4 px-4 rounded-xl bg-primary-container text-white font-label-md shadow-[0_0_15px_rgba(255,95,31,0.5)] hover:brightness-110 transition-all active:scale-95 duration-200"
+              className="flex items-center justify-center gap-2 py-4 px-4 rounded-xl bg-primary text-on-primary font-label-md shadow-warm hover:brightness-110 transition-all active:scale-95 duration-200"
             >
               <MdNearMe className="text-sm" />
               Directions
@@ -147,6 +146,6 @@ export default function LiveTracking() {
           </div>
         </section>
       </main>
-    </div>
+    </motion.div>
   );
 }

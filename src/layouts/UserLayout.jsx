@@ -1,23 +1,22 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import Header from '../components/layout/Header';
 import Footer from '../components/layout/Footer';
 import MobileBottomNav from '../components/layout/MobileBottomNav';
 
-/**
- * UserLayout
- * Wraps every standard client-facing page with the global Header, Footer,
- * and MobileBottomNav (responsive). The Header is fixed (h-20), so page
- * content is pushed down with pt-20. Bottom padding on mobile prevents
- * content from being hidden behind the fixed bottom nav.
- */
 export default function UserLayout() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
-      <main className="flex-1 pt-20 pb-20 md:pb-0">
+      <motion.main
+        className="flex-1 pt-20 pb-20 md:pb-0"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, ease: 'easeOut' }}
+      >
         <Outlet />
-      </main>
+      </motion.main>
       <Footer />
       <MobileBottomNav />
     </div>

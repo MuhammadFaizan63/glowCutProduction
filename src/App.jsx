@@ -5,12 +5,6 @@ import { AuthProvider } from './context/AuthContext';
 import { BookingProvider } from './context/BookingContext';
 import { UserProvider } from './context/UserContext';
 
-/**
- * App
- * Root component: wires global providers (Auth, Booking, User) around the
- * route tree, plus the app-wide toast notifications (react-hot-toast) themed
- * to match the Cyber-Chic glass-panel aesthetic.
- */
 export default function App() {
   return (
     <AuthProvider>
@@ -22,9 +16,9 @@ export default function App() {
             toastOptions={{
               duration: 3000,
               style: {
-                background: 'rgba(26, 26, 26, 0.9)',
-                color: '#FFFFFF',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                background: 'rgba(30, 32, 27, 0.9)',
+                color: '#EDE0D4',
+                border: '1px solid rgba(124, 140, 61, 0.2)',
                 backdropFilter: 'blur(12px)',
                 borderRadius: '12px',
                 fontFamily: 'Inter, sans-serif',
@@ -32,14 +26,14 @@ export default function App() {
               },
               success: {
                 iconTheme: {
-                  primary: '#66DD8B',
-                  secondary: '#1A1A1A',
+                  primary: '#7C8C3D',
+                  secondary: '#1E201B',
                 },
               },
               error: {
                 iconTheme: {
-                  primary: '#FF5F1F',
-                  secondary: '#1A1A1A',
+                  primary: '#D4866F',
+                  secondary: '#1E201B',
                 },
               },
             }}

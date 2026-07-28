@@ -1,19 +1,12 @@
 import React from 'react';
 
-/**
- * GlowCut Loader
- * - spinner: small inline loader (buttons, inline waits)
- * - scan:    the "AI scanning laser line" effect used in onboarding / AI Style Consultant
- * - dots:    typing/processing indicator (Live Chat)
- * - full:    full-page centered loader (route-level Suspense fallback)
- */
 export default function Loader({ variant = 'spinner', label, className = '' }) {
   if (variant === 'full') {
     return (
       <div className="min-h-screen w-full flex flex-col items-center justify-center gap-md bg-background">
         <div className="relative w-16 h-16">
           <div className="absolute inset-0 border-4 border-surface-container-high rounded-full" />
-          <div className="absolute inset-0 border-4 border-primary-container border-t-transparent rounded-full animate-spin shadow-neon-orange" />
+          <div className="absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin shadow-warm" />
         </div>
         {label && (
           <p className="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">
@@ -26,10 +19,10 @@ export default function Loader({ variant = 'spinner', label, className = '' }) {
 
   if (variant === 'scan') {
     return (
-      <div className={`relative flex items-center gap-xs text-secondary ${className}`}>
-        <span className="w-2 h-2 rounded-full bg-secondary animate-pulse shadow-neon-emerald" />
+      <div className={`relative flex items-center gap-xs text-primary ${className}`}>
+        <span className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-warm-sm" />
         <span className="font-label-md text-label-md tracking-widest uppercase">
-          {label || 'AI Analysis in Progress...'}
+          {label || 'Analysis in Progress...'}
         </span>
       </div>
     );
@@ -49,7 +42,6 @@ export default function Loader({ variant = 'spinner', label, className = '' }) {
     );
   }
 
-  // default: spinner
   return (
     <span
       className={`inline-block w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin ${className}`}

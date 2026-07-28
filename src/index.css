@@ -19,68 +19,112 @@
 }
 
 @layer utilities {
-  /* Glassmorphism panel - the core surface treatment across GlowCut */
   .glass-panel {
-    background: rgba(30, 30, 30, 0.6);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(30, 32, 27, 0.7);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(237, 224, 212, 0.08);
   }
 
   .glass-card {
-    background: rgba(30, 30, 30, 0.6);
+    background: rgba(36, 38, 31, 0.6);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(237, 224, 212, 0.06);
   }
 
-  /* Neon glow effects - simulate light-emitting elements */
-  .neon-glow-orange {
-    box-shadow: 0 0 15px rgba(255, 95, 31, 0.4);
+  .glass-elevated {
+    background: rgba(40, 42, 34, 0.75);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    border: 1px solid rgba(124, 140, 61, 0.15);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
   }
 
-  .neon-glow-emerald,
-  .neon-glow-green {
-    box-shadow: 0 0 15px rgba(102, 221, 139, 0.4);
+  .warm-overlay {
+    background: linear-gradient(180deg, rgba(24, 26, 21, 0.4) 0%, rgba(74, 93, 35, 0.6) 100%);
   }
 
-  .edge-light {
-    border-image: linear-gradient(to bottom right, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0)) 1;
+  .olive-glow {
+    box-shadow: 0 0 20px rgba(124, 140, 61, 0.25);
   }
 
-  .emerald-overlay {
-    background: linear-gradient(180deg, rgba(15, 15, 15, 0.4) 0%, rgba(0, 57, 25, 0.7) 100%);
+  .cream-glow {
+    box-shadow: 0 0 20px rgba(237, 224, 212, 0.15);
   }
 
-  .hologram-effect {
-    background: radial-gradient(circle at center, rgba(102, 221, 139, 0.2) 0%, transparent 70%);
-  }
-
-  .map-gradient-overlay {
-    background: linear-gradient(to bottom, transparent 70%, #131313 100%);
-  }
-
-  .text-gradient-primary {
-    background: linear-gradient(135deg, #ffb59c 0%, #ff5f1f 100%);
+  .text-gradient-olive {
+    background: linear-gradient(135deg, #8FA34D 0%, #7C8C3D 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
   }
+
+  .text-gradient-warm {
+    background: linear-gradient(135deg, #EDE0D4 0%, #D4C5A9 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .card-hover {
+    @apply transition-all duration-300;
+  }
+
+  .card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(124, 140, 61, 0.15);
+    border-color: rgba(124, 140, 61, 0.3);
+  }
+
+  .animate-stagger {
+    animation: fade-in-up 0.6s ease-out both;
+  }
+
+  .animate-stagger:nth-child(1) { animation-delay: 0.05s; }
+  .animate-stagger:nth-child(2) { animation-delay: 0.1s; }
+  .animate-stagger:nth-child(3) { animation-delay: 0.15s; }
+  .animate-stagger:nth-child(4) { animation-delay: 0.2s; }
+  .animate-stagger:nth-child(5) { animation-delay: 0.25s; }
+  .animate-stagger:nth-child(6) { animation-delay: 0.3s; }
+
+  .olive-border-gradient {
+    border-image: linear-gradient(to bottom right, rgba(124, 140, 61, 0.4), rgba(124, 140, 61, 0)) 1;
+  }
+
+  .shimmer-bg {
+    background: linear-gradient(90deg, transparent, rgba(124, 140, 61, 0.05), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 2s ease-in-out infinite;
+  }
+
+  .olive-dot-pattern {
+    background-image: radial-gradient(circle, rgba(124, 140, 61, 0.15) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  .cream-dot-pattern {
+    background-image: radial-gradient(circle, rgba(237, 224, 212, 0.08) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
 }
 
-/* Custom scrollbar - matches the Cyber-Chic aesthetic */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #131313;
+  background: #181A15;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #353535;
+  background: #4A5D23;
   border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #7C8C3D;
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -88,10 +132,10 @@
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: #0e0e0e;
+  background: #161812;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #ff5f1f;
+  background: #7C8C3D;
   border-radius: 10px;
 }

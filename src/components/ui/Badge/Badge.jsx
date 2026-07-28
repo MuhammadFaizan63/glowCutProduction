@@ -1,25 +1,21 @@
 import React from 'react';
 
 const VARIANTS = {
-  primary: 'bg-primary-container/10 text-primary-container border border-primary-container/20',
-  secondary: 'bg-secondary/10 text-secondary border border-secondary/20',
+  primary: 'bg-primary/15 text-primary border border-primary/25',
+  secondary: 'bg-secondary/15 text-secondary border border-secondary/25',
   neutral: 'bg-white/5 text-on-surface-variant border border-white/10',
-  success: 'bg-secondary-container/20 text-secondary border border-secondary',
-  rating: 'bg-background/80 backdrop-blur-md text-white border border-secondary/50',
+  success: 'bg-primary/20 text-primary border border-primary/30',
+  rating: 'bg-background/80 text-on-surface border border-primary/30',
   outline: 'bg-transparent text-on-surface-variant border border-outline-variant',
+  olive: 'bg-primary-container/20 text-primary-container border border-primary-container/30',
 };
 
-/**
- * GlowCut Badge
- * Small pill used for: "New AI Feature", "Available Now" dot+label,
- * rating chips (4.9★), price tiers ($/$$/$$$), status tags.
- */
 export default function Badge({
   children,
   variant = 'neutral',
   icon: Icon,
   dot = false,
-  dotColor = 'bg-secondary',
+  dotColor = 'bg-primary',
   className = '',
 }) {
   return (

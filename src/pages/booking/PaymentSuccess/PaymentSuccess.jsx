@@ -1,7 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { MdCheckCircle, MdDownload, MdHome } from 'react-icons/md';
+import { MdCheckCircle, MdDownload, MdHome, MdStar } from 'react-icons/md';
+import { motion } from 'framer-motion';
 import { useBooking } from '../../../hooks/useBooking';
 
 export default function PaymentSuccess() {
@@ -11,15 +12,11 @@ export default function PaymentSuccess() {
   const createdBookings = booking.createdBookings || [];
   const firstBooking = createdBookings[0];
 
-  // Real invoice reference — the first created booking's Mongo _id — instead
-  // of a random placeholder number.
   const invoiceNumber = firstBooking?._id ? firstBooking._id.slice(-8).toUpperCase() : 'PENDING';
   const createdAt = firstBooking?.createdAt ? new Date(firstBooking.createdAt) : new Date();
   const dateLabel = createdAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   const timeLabel = createdAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 
-  // Prefer real booking documents (with their actual finalAmount) over the
-  // in-memory cart, since discounts/fees are computed server-side.
   const lineItems = createdBookings.length
     ? createdBookings.map((b) => ({
         id: b._id,
@@ -45,14 +42,18 @@ export default function PaymentSuccess() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-margin-mobile text-on-surface antialiased">
-      {/* Success Feedback */}
+    <motion.div
+      className="min-h-screen flex flex-col items-center justify-center p-margin-mobile text-on-surface antialiased"
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.4 }}
+    >
       <div className="flex flex-col items-center mb-lg">
         <div className="relative mb-md">
-          <div className="w-24 h-24 rounded-full bg-secondary-container/20 flex items-center justify-center shadow-neon-emerald border border-secondary/30">
-            <MdCheckCircle className="text-secondary text-[48px]" />
+          <div className="w-24 h-24 rounded-full bg-primary/20 flex items-center justify-center shadow-warm border border-primary/30">
+            <MdCheckCircle className="text-primary text-[48px]" />
           </div>
-          <div className="absolute inset-0 rounded-full animate-ping bg-secondary/10 opacity-30" />
+          <div className="absolute inset-0 rounded-full animate-ping bg-primary/10 opacity-30" />
         </div>
         <h1 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface text-center">
           Payment Successful
@@ -62,12 +63,11 @@ export default function PaymentSuccess() {
         </p>
       </div>
 
-      {/* Digital Invoice Card */}
-      <main className="w-full max-w-md glass-card rounded-xl overflow-hidden relative mb-xl">
+      <main className="w-full max-w-md bg-surface-container/80 backdrop-blur-2xl rounded-xl overflow-hidden relative mb-xl border border-primary/20 shadow-soft">
         <div className="p-md space-y-md">
           <div className="flex justify-between items-start">
             <div>
-              <span className="font-label-md text-label-md text-secondary tracking-widest uppercase mb-xs block">
+              <span className="font-label-md text-label-md text-primary tracking-widest uppercase mb-xs block">
                 Invoice
               </span>
               <p className="font-headline-md text-headline-md text-on-surface">#{invoiceNumber}</p>
@@ -75,7 +75,7 @@ export default function PaymentSuccess() {
             <div className="text-right">
               <p className="font-body-md text-body-md text-on-surface-variant">{dateLabel}</p>
               <p className="font-body-md text-body-md text-on-surface-variant">{timeLabel}</p>
-              <p className="font-caption text-caption text-secondary uppercase mt-xs">
+              <p className="font-caption text-caption text-primary uppercase mt-xs">
                 {paymentStatus} · {paymentMethod}
               </p>
             </div>
@@ -92,22 +92,20 @@ export default function PaymentSuccess() {
             ))}
           </div>
 
-          <div className="flex justify-between items-center pt-md">
+          <div className="flex justify-between items-center pt-md border-t border-white/5">
             <p className="font-headline-md text-headline-md text-on-surface-variant">Total Amount</p>
-            <p className="font-headline-md text-headline-md text-secondary font-bold">
+            <p className="font-headline-md text-headline-md text-primary font-bold">
               {grandTotal.toLocaleString()} PKR
             </p>
           </div>
         </div>
 
-        {/* Perforated Tear-off */}
         <div className="relative h-6 flex items-center">
           <div className="absolute left-[-12px] w-6 h-6 rounded-full bg-background" />
-          <div className="w-full tear-off-line h-[1px]" />
+          <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
           <div className="absolute right-[-12px] w-6 h-6 rounded-full bg-background" />
         </div>
 
-        {/* Verification Section */}
         <div className="p-md bg-white/5 flex flex-col items-center">
           <div className="p-base bg-white rounded-lg mb-sm">
             <img
@@ -122,19 +120,19 @@ export default function PaymentSuccess() {
         </div>
       </main>
 
-      {/* Action Buttons */}
       <footer className="w-full max-w-md flex flex-col gap-md">
         <button
           onClick={handleDownload}
-          className="w-full h-14 bg-primary-container text-on-primary-fixed font-headline-md text-headline-md rounded-xl flex items-center justify-center gap-sm active:scale-95 transition-all shadow-neon-orange"
+          className="w-full h-14 bg-primary text-on-primary font-headline-md text-headline-md rounded-xl flex items-center justify-center gap-sm active:scale-95 transition-all shadow-warm"
         >
           <MdDownload />
           Download PDF Receipt
         </button>
         <button
           onClick={() => navigate('/profile/feedback')}
-          className="w-full h-14 border border-secondary/40 text-secondary font-headline-md text-headline-md rounded-xl flex items-center justify-center gap-sm active:scale-95 transition-all hover:bg-secondary/5"
+          className="w-full h-14 border border-primary/40 text-primary font-headline-md text-headline-md rounded-xl flex items-center justify-center gap-sm active:scale-95 transition-all hover:bg-primary/5"
         >
+          <MdStar />
           Rate Your Experience
         </button>
         <button
@@ -146,11 +144,10 @@ export default function PaymentSuccess() {
         </button>
       </footer>
 
-      {/* Background Decoration */}
       <div className="fixed top-0 left-0 w-full h-full pointer-events-none -z-10 overflow-hidden">
-        <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-primary-container/5 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] bg-secondary/5 rounded-full blur-[100px]" />
+        <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] bg-primary/5 rounded-full blur-[100px]" />
       </div>
-    </div>
+    </motion.div>
   );
 }
