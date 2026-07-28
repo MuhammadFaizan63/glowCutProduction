@@ -217,8 +217,7 @@ export default function ConfirmBooking() {
       </nav>
 
       <main className="pt-24 pb-32 px-margin-mobile md:px-margin-desktop max-w-7xl mx-auto">
-        <section className="mb-lg">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter h-auto md:h-[400px]">
+        <section className="mb-lg">              <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter h-auto">
             <div className="md:col-span-2 relative rounded-xl overflow-hidden group">
               <img
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
@@ -310,9 +309,7 @@ export default function ConfirmBooking() {
                 <span className="text-on-surface-variant font-label-md">
                   {new Date(activeDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }).toUpperCase()}
                 </span>
-              </div>
-
-              <div className="flex gap-3 overflow-x-auto pb-4 mb-4 scrollbar-hide">
+              </div>                <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-4 mb-4 scrollbar-hide">
                 {upcomingDays.map((day) => {
                   const isAvailable = workingDays.length === 0 || workingDays.includes(day.dayEnum);
                   const isSelected = activeDate === day.isoDate;
@@ -321,7 +318,7 @@ export default function ConfirmBooking() {
                     <button
                       key={day.isoDate}
                       onClick={() => handleSelectDate(day)}
-                      className={`flex flex-col items-center justify-center min-w-[80px] p-3 rounded-xl transition-all ${
+                      className={`flex flex-col items-center justify-center min-w-[72px] sm:min-w-[80px] p-2 sm:p-3 rounded-xl transition-all ${
                         !isAvailable 
                           ? 'bg-surface-container text-on-surface-variant opacity-40 cursor-not-allowed'
                           : isSelected
@@ -339,7 +336,7 @@ export default function ConfirmBooking() {
               </div>
 
               {loadingSlots ? (
-                <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-3">
                   {Array.from({ length: 10 }).map((_, i) => (
                     <div key={i} className="h-12 rounded-xl bg-surface-container animate-pulse" />
                   ))}
@@ -349,7 +346,7 @@ export default function ConfirmBooking() {
                   No available time slots on {activeDateLabel}. Try selecting another date.
                 </div>
               ) : (
-                <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-3">
                   {slots.map((slot) => (
                     <button
                       key={slot.time}

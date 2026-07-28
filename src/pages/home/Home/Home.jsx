@@ -117,7 +117,7 @@ export default function Home() {
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="visible">
       {/* Hero */}
-      <section className="relative min-h-[600px] md:min-h-[900px] flex flex-col justify-center px-margin-mobile md:px-margin-desktop py-xl overflow-hidden">
+      <section className="relative min-h-[500px] md:min-h-[900px] flex flex-col justify-center px-margin-mobile md:px-margin-desktop py-xl overflow-hidden">
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 hero-overlay-right z-10" />
           <div className="absolute inset-0 hero-overlay-up z-10" />
@@ -134,7 +134,7 @@ export default function Home() {
             <span className="text-primary font-label-md text-label-md tracking-[0.2em] uppercase block">
               Precision Grooming — Karachi
             </span>
-            <h1 className="font-display-lg text-display-lg md:text-[56px] md:leading-[64px] leading-tight text-on-surface">
+            <h1 className="font-display-lg text-[32px] sm:text-display-lg md:text-[56px] md:leading-[64px] leading-tight text-on-surface">
               Your Style,{' '}
               <span className="text-primary">Perfected</span>
               <br />
@@ -288,7 +288,7 @@ export default function Home() {
       </section>
 
       {/* Features Grid */}
-      <section className="py-xl px-margin-mobile md:px-margin-desktop">
+      <section className="py-xl section-padding">
         <motion.div variants={itemVariants} className="text-center mb-xl">
           <h2 className="font-headline-lg text-headline-lg mb-xs text-on-surface">
             Why <span className="text-primary">GlowCut</span>
@@ -314,7 +314,7 @@ export default function Home() {
       </section>
 
       {/* Top-Rated Salons */}
-      <motion.section variants={itemVariants} className="py-xl px-margin-mobile md:px-margin-desktop">
+      <motion.section variants={itemVariants} className="py-xl section-padding">
         <div className="flex justify-between items-end mb-xl">
           <div>
             <h2 className="font-headline-lg text-headline-lg mb-xs text-on-surface">
@@ -346,8 +346,8 @@ export default function Home() {
       </motion.section>
 
       {/* AI Style Suggestion */}
-      <motion.section variants={itemVariants} className="py-xl px-margin-mobile md:px-margin-desktop overflow-hidden">
-        <div className="relative rounded-3xl p-lg md:p-xl flex flex-col md:flex-row items-center gap-xl border border-primary/20 bg-gradient-to-br from-surface-container to-surface overflow-hidden">
+      <motion.section variants={itemVariants} className="py-xl section-padding overflow-hidden">
+        <div className="relative rounded-3xl p-4 md:p-xl flex flex-col md:flex-row items-center gap-xl border border-primary/20 bg-gradient-to-br from-surface-container to-surface overflow-hidden">
           <div className="absolute inset-0 z-0 pointer-events-none">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1 h-full bg-gradient-to-b from-transparent via-primary/30 to-transparent blur-sm" />
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-0.5 h-full bg-primary shadow-warm-sm" />
@@ -397,7 +397,7 @@ export default function Home() {
       </motion.section>
 
       {/* Master Stylists — Bento */}
-      <motion.section variants={itemVariants} className="py-xl px-margin-mobile md:px-margin-desktop">
+      <motion.section variants={itemVariants} className="py-xl section-padding">
         <div className="text-center mb-xl">
           <span className="text-primary font-label-md text-label-md tracking-[0.2em] uppercase mb-base block">
             Our Talent

@@ -156,8 +156,7 @@ export default function SalonDetail() {
           <p className="text-primary font-label-md flex items-center gap-xs">
             <MdVerified /> {salon.isVerified ? 'Verified GlowCut Partner' : 'Premium Grooming Destination'}
           </p>
-        </div>
-        <div className="absolute bottom-4 md:bottom-lg right-4 md:right-lg flex gap-sm">
+        </div>          <div className="absolute bottom-2 md:bottom-lg right-2 md:right-lg flex gap-1 md:gap-sm">
           <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-full bg-surface-container/80 backdrop-blur-xl border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all">
             <MdArrowBack />
           </button>
@@ -302,19 +301,19 @@ export default function SalonDetail() {
               <label className="font-label-md text-label-md block mb-sm text-on-surface-variant">
                 Select Date
               </label>
-              <div className="grid grid-cols-3 gap-xs">
+              <div className="grid grid-cols-3 gap-2 sm:gap-xs">
                 {dates.map((d, i) => (
                   <button
                     key={d.iso}
                     onClick={() => setSelectedDate(i)}
-                    className={`py-md rounded-xl text-center flex flex-col items-center transition-colors ${
+                    className={`py-2 sm:py-md rounded-xl text-center flex flex-col items-center transition-colors ${
                       selectedDate === i
                         ? 'bg-primary text-on-primary shadow-warm'
                         : 'bg-surface-container border border-white/10 hover:bg-white/10'
                     }`}
                   >
                     <span className="font-caption text-caption uppercase opacity-80">{d.label}</span>
-                    <span className="font-bold text-headline-md">{d.day}</span>
+                    <span className="font-bold text-sm sm:text-headline-md">{d.day}</span>
                   </button>
                 ))}
               </div>
@@ -325,19 +324,19 @@ export default function SalonDetail() {
                 Available Times {booking.stylist ? `for ${booking.stylist.name}` : '(pick a stylist first)'}
               </label>
               {slotsLoading ? (
-                <div className="grid grid-cols-3 gap-xs">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {Array.from({ length: 6 }).map((_, i) => (
                     <div key={i} className="h-9 rounded-xl bg-white/5 animate-pulse" />
                   ))}
                 </div>
               ) : (
-                <div className="grid grid-cols-3 gap-xs">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {slots.map((slot) => (
                     <button
                       key={slot.time}
                       disabled={slot.status === 'unavailable'}
                       onClick={() => setSelectedSlot(slot.time)}
-                      className={`py-sm rounded-xl text-caption font-label-md transition-colors border ${
+                      className={`py-2 sm:py-sm rounded-xl text-xs sm:text-caption font-label-md transition-colors border ${
                         slot.status === 'unavailable'
                           ? 'border-white/5 text-on-surface-variant opacity-30 cursor-not-allowed'
                           : selectedSlot === slot.time

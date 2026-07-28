@@ -291,16 +291,120 @@
 /* Smooth transition when toggling themes */
 html, body {
   transition: background-color 0.3s ease, color 0.3s ease;
+  max-width: 100vw;
+}
+
+/* ========== Responsive Overrides ========== */
+
+@layer utilities {
+  /* Responsive container widths */
+  .responsive-container {
+    @apply w-full max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop;
+  }
+
+  .responsive-px {
+    @apply px-margin-mobile md:px-margin-desktop;
+  }
+
+  .responsive-py {
+    @apply py-base md:py-md;
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Safe area bottom for mobile */
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* Responsive text truncation */
+  .truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .truncate-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Full-width touch targets for mobile */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+
+  /* Responsive grid helpers */
+  .auto-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-md;
+  }
+
+  .auto-grid-2 {
+    @apply grid grid-cols-1 md:grid-cols-2 gap-md;
+  }
+
+  .auto-grid-3 {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md;
+  }
+
+  /* Responsive flex helpers */
+  .flex-wrap-responsive {
+    @apply flex flex-col sm:flex-row flex-wrap;
+  }
+
+  /* Mobile-first padding helper */
+  .section-padding {
+    @apply px-margin-mobile md:px-margin-desktop py-xl;
+  }
+
+  /* Responsive card grid */
+  .card-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-gutter;
+  }
+}
+
+/* Better touch targets on mobile */
+@media (max-width: 768px) {
+  button, a, select, input[type="button"] {
+    @apply cursor-default;
+  }
+}
+
+/* Prevent horizontal scroll on all screen sizes */
+#root {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+img, video, iframe {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Responsive table wrapper */
+.table-responsive {
+  @apply w-full overflow-x-auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Theme toggle button styles */
 .theme-toggle-btn {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
+  bottom: 80px;
+  right: 16px;
   z-index: 9999;
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -313,6 +417,15 @@ html, body {
   color: rgb(var(--color-on-primary));
 }
 
+@media (min-width: 768px) {
+  .theme-toggle-btn {
+    bottom: 24px;
+    right: 24px;
+    width: 48px;
+    height: 48px;
+  }
+}
+
 .theme-toggle-btn:hover {
   transform: scale(1.1);
   box-shadow: 0 6px 24px rgba(var(--color-primary), 0.4);
@@ -323,9 +436,16 @@ html, body {
 }
 
 .theme-toggle-btn svg {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   transition: transform 0.3s ease;
+}
+
+@media (min-width: 768px) {
+  .theme-toggle-btn svg {
+    width: 24px;
+    height: 24px;
+  }
 }
 
 .theme-toggle-btn:hover svg {

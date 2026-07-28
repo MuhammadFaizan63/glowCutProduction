@@ -5,11 +5,13 @@ import {
   MdContentCut,
   MdPeople,
   MdChat,
-  MdLogout
+  MdLogout,
+  MdClose
 } from 'react-icons/md';
 import toast from 'react-hot-toast';
+import { motion, AnimatePresence } from 'framer-motion';
 
-export default function Sidebar() {
+export default function Sidebar({ mobileOpen = false, onClose = () => {} }) {
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -26,21 +28,31 @@ export default function Sidebar() {
     { name: 'Booking Manage', path: '/admin/booking', icon: <MdPeople /> },
   ];
 
-  return (
-    <aside className="w-64 h-screen bg-surface border-r border-primary/10 flex flex-col justify-between p-4 fixed left-0 top-0">
+  const sidebarContent = (
+    <div className="h-full bg-surface border-r border-primary/10 flex flex-col justify-between p-4 w-64">
       <div className="space-y-8">
-        <div className="flex items-center gap-2 px-2">
-          <div className="relative w-8 h-8 flex items-center justify-center">
-            <div className="absolute inset-0 bg-primary/20 rounded-full" />
-            <div className="absolute inset-0 border border-primary/40 rounded-full" />
-            <div className="w-1.5 h-1.5 bg-primary rounded-full" />
+        <div className="flex items-center justify-between px-2">
+          <div className="flex items-center gap-2">
+            <div className="relative w-8 h-8 flex items-center justify-center">
+              <div className="absolute inset-0 bg-primary/20 rounded-full" />
+              <div className="absolute inset-0 border border-primary/40 rounded-full" />
+              <div className="w-1.5 h-1.5 bg-primary rounded-full" />
+            </div>
+            <span className="text-xl font-black tracking-wider text-on-surface">
+              GLOW<span className="text-primary">CUT</span>
+            </span>
+            <span className="text-[9px] bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded-full uppercase font-bold">
+              Admin
+            </span>
           </div>
-          <span className="text-xl font-black tracking-wider text-on-surface">
-            GLOW<span className="text-primary">CUT</span>
-          </span>
-          <span className="text-[9px] bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded-full uppercase font-bold">
-            Admin
-          </span>
+          {/* Close button on mobile */}
+          <button
+            onClick={onClose}
+            className="lg:hidden p-1 rounded-full hover:bg-white/5 text-on-surface-variant"
+            aria-label="Close sidebar"
+          >
+            <MdClose className="text-xl" />
+          </button>
         </div>
 
         <nav className="space-y-1">
@@ -48,6 +60,7 @@ export default function Sidebar() {
             <NavLink
               key={item.path}
               to={item.path}
+              onClick={onClose}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                   isActive
@@ -64,12 +77,48 @@ export default function Sidebar() {
       </div>
 
       <button
-        onClick={handleLogout}
+        onClick={() => { handleLogout(); onClose(); }}
         className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-sm font-medium text-error hover:bg-error/10 transition-all active:scale-95"
       >
         <MdLogout className="text-lg" />
         Logout
       </button>
-    </aside>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Desktop sidebar - always visible on lg+ */}
+      <div className="hidden lg:block fixed left-0 top-0 z-40 h-screen">
+        {sidebarContent}
+      </div>
+
+      {/* Mobile sidebar overlay */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+              onClick={onClose}
+            />
+            {/* Drawer */}
+            <motion.div
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="fixed left-0 top-0 z-50 h-screen lg:hidden max-w-[85vw]"
+            >
+              {sidebarContent}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

@@ -196,9 +196,9 @@ export function AdminHeader({ title = 'Dashboard', avatarSrc, unreadChat = false
         </h2>
       </div>
       <div className="flex items-center gap-gutter">
-        <div className="relative hidden lg:block">
+        <div className="relative hidden md:block">
           <input
-            className="bg-surface-container-lowest border-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 text-sm py-2 px-4 w-64 transition-all duration-300 text-on-surface placeholder-on-surface-variant/50"
+            className="bg-surface-container-lowest border-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 text-sm py-2 px-4 w-40 lg:w-64 transition-all duration-300 text-on-surface placeholder-on-surface-variant/50"
             placeholder="Search data..."
             type="text"
           />
