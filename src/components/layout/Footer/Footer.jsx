@@ -11,7 +11,7 @@ const FOOTER_LINKS = [
 
 export default function Footer() {
   return (
-    <footer className="w-full py-xl px-margin-mobile md:px-margin-desktop bg-surface-container-lowest/80 border-t border-primary/10">
+    <footer className="w-full py-xl px-margin-mobile md:px-margin-desktop bg-[#FFF4EE] border-t border-primary/10">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-lg items-start">
         <div className="flex flex-col items-center md:items-start gap-base">
           <div className="flex items-center gap-base">

@@ -68,15 +68,20 @@ export default function WaitingLounge() {
 
     const poll = async () => {
       try {
-        const updated = await bookingService.getBookingStatus(bookingId);
+        const [updated, queueInfo] = await Promise.all([
+          bookingService.getBookingStatus(bookingId),
+          bookingService.getQueueStatusByBookingId(bookingId).catch(() => null)
+        ]);
         if (cancelled) return;
-        setLiveBooking(updated);
+        
+        const mergedData = { ...updated, queueData: queueInfo };
+        setLiveBooking(mergedData);
         setLoading(false);
         
-        if (updated.status === 'confirmed') {
+        if (updated.status === 'confirmed' || queueInfo?.status === 'called') {
           toast.success("It's your turn! Heading to live tracking...");
           setTimeout(() => navigate('/booking/live-tracking'), 1500);
-        } else if (updated.status === 'cancelled' || updated.status === 'rejected') {
+        } else if (updated.status === 'cancelled' || updated.status === 'rejected' || queueInfo?.status === 'cancelled') {
           toast.error('Your booking was cancelled by the salon.');
           navigate('/salons/nearby');
         }
@@ -98,19 +103,34 @@ export default function WaitingLounge() {
   }, [bookingId, navigate]);
 
   useEffect(() => {
-    if (!liveBooking?.bookingDate || !liveBooking?.startTime) return;
+    if (!liveBooking) return;
 
-    const [hours, minutes] = liveBooking.startTime.split(':');
-    const targetDate = new Date(liveBooking.bookingDate);
-    targetDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+    let targetDate;
+    
+    if (liveBooking.queueData && liveBooking.queueData.estimatedWaitTime !== undefined) {
+      const baseTime = new Date(liveBooking.queueData.updatedAt || liveBooking.queueData.createdAt || new Date());
+      targetDate = new Date(baseTime.getTime() + (liveBooking.queueData.estimatedWaitTime * 60 * 1000));
+    } else if (liveBooking.bookingDate && liveBooking.startTime) {
+      const [hours, minutes] = liveBooking.startTime.split(':');
+      targetDate = new Date(liveBooking.bookingDate);
+      targetDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+    } else {
+      return;
+    }
 
     const updateCountdown = () => {
-      if (liveBooking.status === 'in-progress') {
-        setCountdownText('Service In Progress');
+      const qStatus = liveBooking.queueData?.status;
+      const bStatus = liveBooking.status;
+
+      if (['in-progress', 'completed'].includes(bStatus) || ['in_service', 'completed'].includes(qStatus)) {
+        setCountdownText(bStatus === 'completed' || qStatus === 'completed' ? 'Completed' : 'Service In Progress');
         return;
       }
-      if (liveBooking.status === 'completed') {
-        setCountdownText('Completed');
+      
+      const isReady = ['called', 'checked_in'].includes(qStatus);
+
+      if (isReady) {
+        setCountdownText('Your slot is ready! Please head to the chair.');
         return;
       }
 
@@ -121,7 +141,9 @@ export default function WaitingLounge() {
         const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
         const m = Math.floor((diff / 1000 / 60) % 60);
         const s = Math.floor((diff / 1000) % 60);
-        setCountdownText(`Your Turn in: ${h > 0 ? h + 'h ' : ''}${m}m ${s}s`);
+        
+        const pad = (num) => String(num).padStart(2, '0');
+        setCountdownText(`${pad(h)}h : ${pad(m)}m : ${pad(s)}s remaining`);
       } else {
         setCountdownText('Your slot is ready! Please head to the chair.');
       }
@@ -168,7 +190,7 @@ export default function WaitingLounge() {
   }
 
   const stylistName = liveBooking?.barberId?.name || 'Your stylist';
-  const stylistImage = liveBooking?.barberId?.profileImage || 'https://via.placeholder.com/150?text=?';
+  const stylistImage = liveBooking?.barberId?.profileImage || liveBooking?.barberId?.image || '';
   const queuePosition = liveBooking?.queueNumber;
   const progressPercent = liveBooking?.status === 'confirmed' ? 100 : liveBooking?.status === 'pending' ? 30 : 60;
   const salonName = liveBooking?.salonId?.name || 'GlowCut Salon';
@@ -235,11 +257,17 @@ export default function WaitingLounge() {
 
           <div className="flex items-center gap-md w-full md:w-auto bg-surface p-4 rounded-xl border border-white/5">
             <div className="relative">
-              <img
-                className="w-20 h-20 md:w-24 md:h-24 rounded-full border-2 border-primary p-1 object-cover bg-surface-container shadow-warm-sm"
-                alt={stylistName}
-                src={stylistImage}
-              />
+              {stylistImage ? (
+                <img
+                  className="w-20 h-20 md:w-24 md:h-24 rounded-full border-2 border-primary p-1 object-cover bg-surface-container shadow-warm-sm"
+                  alt={stylistName}
+                  src={stylistImage}
+                />
+              ) : (
+                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full border-2 border-primary p-1 bg-surface-container shadow-warm-sm flex items-center justify-center">
+                  <MdPerson className="text-on-surface-variant text-4xl" />
+                </div>
+              )}
               <div className="absolute bottom-1 right-1 w-5 h-5 bg-primary rounded-full border-2 border-surface animate-pulse" />
             </div>
             <div>

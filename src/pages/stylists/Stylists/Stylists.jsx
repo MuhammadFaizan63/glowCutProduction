@@ -91,7 +91,7 @@ export default function Stylists() {
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />
               </div>
-              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/10 to-transparent pointer-events-none" />
+              {/* Gradient removed as per request */}
               <div className="absolute bottom-0 inset-x-0 p-3">
                 <div className="flex items-center gap-1 mb-0.5">
                   <div className="w-1.5 h-1.5 bg-primary rounded-full shadow-warm-sm" />
@@ -155,7 +155,7 @@ export default function Stylists() {
                     alt={stylist.name}
                     src={stylist.profileImage || 'https://via.placeholder.com/300x300?text=?'}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
+                  {/* Gradient removed as per request */}
                   <div className="absolute top-3 right-3 bg-primary/20 backdrop-blur-md px-sm py-xs rounded-full flex items-center gap-xs border border-primary/30">
                     <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
                     <span className="text-on-surface font-label-md text-[11px] font-bold">AVAILABLE</span>

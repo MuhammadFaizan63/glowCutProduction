@@ -98,7 +98,7 @@ export default function BookingSummary() {
   const salonName = liveBooking.salonId?.name || 'GlowCut Salon';
   const salonAddress = liveBooking.salonId?.address ? `${liveBooking.salonId.address.area || ''}, ${liveBooking.salonId.address.city || ''}` : 'Location available in-app';
   const stylistName = liveBooking.barberId?.name || 'Assigned Stylist';
-  const stylistImage = liveBooking.barberId?.profileImage || 'https://via.placeholder.com/150?text=?';
+  const stylistImage = liveBooking.barberId?.profileImage || liveBooking.barberId?.image || '';
   const serviceName = liveBooking.serviceId?.name || 'Grooming Service';
   
   const bookingDate = new Date(liveBooking.bookingDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
@@ -276,7 +276,13 @@ export default function BookingSummary() {
                   <MdAccountCircle className="text-primary" /> Stylist
                 </span>
                 <div className="flex items-center gap-3 bg-surface-container p-3 rounded-xl border border-white/5">
-                  <img src={stylistImage} alt={stylistName} className="w-10 h-10 rounded-full object-cover border border-white/10" />
+                  {stylistImage ? (
+                    <img src={stylistImage} alt={stylistName} className="w-10 h-10 rounded-full object-cover border border-white/10" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-surface border border-white/10 flex items-center justify-center">
+                      <MdPerson className="text-on-surface-variant text-xl" />
+                    </div>
+                  )}
                   <div>
                     <p className="font-bold text-on-surface">{stylistName}</p>
                     <p className="text-[10px] text-primary uppercase tracking-wider">GlowCut Specialist</p>

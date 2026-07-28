@@ -74,6 +74,11 @@ export async function getBookingStatus(bookingId) {
   return data.data;
 }
 
+export async function getQueueStatusByBookingId(bookingId) {
+  const { data } = await apiClient.get(`/queues/status/${bookingId}`);
+  return data.data;
+}
+
 export async function updateBooking(id, payload) {
   const { data } = await apiClient.patch(`/bookings/${id}`, payload);
   return data.data;

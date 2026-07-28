@@ -20,133 +20,137 @@
 
 /* ==========================================
    THEME: Bright (default, no class needed)
+   GlowCut — warm cream surface, coral-orange primary,
+   soft violet secondary, mint-emerald tertiary.
    ========================================== */
 :root {
-  /* Primary: vibrant fresh lime-olive green */
-  --color-primary: 99 176 50;
-  --color-on-primary: 50 58 38;
-  --color-primary-container: 213 236 178;
-  --color-on-primary-container: 34 58 16;
-  --color-primary-fixed: 226 245 200;
-  --color-primary-fixed-dim: 195 230 150;
-  --color-on-primary-fixed: 18 38 6;
-  --color-on-primary-fixed-variant: 52 96 26;
-  --color-inverse-primary: 175 220 120;
+  /* Primary: vivid coral-orange (CTAs, brand accent) */
+  --color-primary: 230 90 50;
+  --color-on-primary: 255 255 255;
+  --color-primary-container: 255 94 58;
+  --color-on-primary-container: 255 255 255;
+  --color-primary-fixed: 255 224 212;
+  --color-primary-fixed-dim: 255 190 168;
+  --color-on-primary-fixed: 60 20 6;
+  --color-on-primary-fixed-variant: 180 60 20;
+  --color-inverse-primary: 255 150 115;
 
-  /* Secondary: soft warm cream */
-  --color-secondary: 245 240 220;
-  --color-on-secondary: 55 50 40;
-  --color-secondary-container: 235 228 200;
-  --color-on-secondary-container: 55 50 40;
-  --color-secondary-fixed: 250 246 232;
-  --color-secondary-fixed-dim: 245 240 220;
-  --color-on-secondary-fixed: 35 30 22;
+  /* Secondary: soft violet */
+  --color-secondary: 124 90 220;
+  --color-on-secondary: 255 255 255;
+  --color-secondary-container: 130 100 235;
+  --color-on-secondary-container: 255 255 255;
+  --color-secondary-fixed: 230 220 255;
+  --color-secondary-fixed-dim: 200 182 255;
+  --color-on-secondary-fixed: 35 22 70;
 
-  /* Tertiary: soft sage */
-  --color-tertiary: 208 218 195;
-  --color-on-tertiary: 55 50 40;
-  --color-tertiary-container: 222 232 210;
-  --color-on-tertiary-container: 35 30 22;
+  /* Tertiary: mint-emerald (success / availability accents) */
+  --color-tertiary: 30 160 95;
+  --color-on-tertiary: 255 255 255;
+  --color-tertiary-container: 52 196 120;
+  --color-on-tertiary-container: 255 255 255;
 
-  /* Surfaces: light olive green MAJORITY */
-  --color-surface: 242 250 225;
-  --color-surface-dim: 234 244 212;
-  --color-surface-bright: 248 252 234;
-  --color-surface-container-lowest: 248 252 234;
-  --color-surface-container-low: 240 248 220;
-  --color-surface-container: 236 246 216;
-  --color-surface-container-high: 228 240 208;
-  --color-surface-container-highest: 222 236 200;
-  --color-on-surface: 55 65 42;
-  --color-on-surface-variant: 108 118 98;
-  --color-inverse-surface: 50 58 40;
-  --color-inverse-on-surface: 236 246 216;
-  --color-outline: 188 196 176;
-  --color-outline-variant: 218 222 210;
-  --color-background: 236 246 216;
-  --color-on-background: 55 65 42;
-  --color-surface-variant: 228 238 208;
+  /* Surfaces: warm cream/off-white */
+  --color-surface: 255 255 255;
+  --color-surface-dim: 246 239 234;
+  --color-surface-bright: 255 255 255;
+  --color-surface-container-lowest: 255 255 255;
+  --color-surface-container-low: 250 245 241;
+  --color-surface-container: 246 239 234;
+  --color-surface-container-high: 240 231 224;
+  --color-surface-container-highest: 233 221 212;
+  --color-on-surface: 38 28 24;
+  --color-on-surface-variant: 110 96 88;
+  --color-inverse-surface: 42 34 30;
+  --color-inverse-on-surface: 250 245 241;
+  --color-outline: 214 200 190;
+  --color-outline-variant: 230 220 212;
+  --color-background: 253 249 246;
+  --color-on-background: 38 28 24;
+  --color-surface-variant: 240 231 224;
 
-  /* Error: medium-bright red */
-  --color-error: 210 80 72;
+  /* Error: warm red */
+  --color-error: 214 60 60;
   --color-on-error: 255 255 255;
-  --color-error-container: 250 224 220;
-  --color-on-error-container: 110 30 24;
+  --color-error-container: 255 220 216;
+  --color-on-error-container: 120 20 20;
 
   /* Utility-specific variables */
-  --glass-bg: 242, 250, 225;
-  --glass-border: 99, 176, 50;
-  --scrollbar-track: #E4EED4;
-  --scrollbar-thumb: #A8C88C;
-  --scrollbar-thumb-hover: #63B032;
+  --glass-bg: 255, 255, 255;
+  --glass-border: 230, 90, 50;
+  --scrollbar-track: #F5EDE8;
+  --scrollbar-thumb: #E65A32;
+  --scrollbar-thumb-hover: #FF7A4D;
   /* Bright theme shadows - medium subtlety */
   --shadow-soft: 0 4px 24px rgba(0, 0, 0, 0.08);
   --shadow-soft-lg: 0 8px 48px rgba(0, 0, 0, 0.12);
-  /* Hero overlay - slightly darker grey */
-  --hero-overlay: 210 216 196;
+  /* Hero overlay - matches warm background */
+  --hero-overlay: 253 249 246;
 }
 
 /* ==========================================
    THEME: Dark (applied with .dark class)
+   GlowCut — near-black surface, glowing coral-orange
+   primary, violet secondary, mint-emerald tertiary.
    ========================================== */
 .dark {
-  --color-primary: 124 140 61;
-  --color-on-primary: 255 255 255;
-  --color-primary-container: 143 163 77;
+  --color-primary: 255 140 105;
+  --color-on-primary: 20 8 4;
+  --color-primary-container: 255 94 58;
   --color-on-primary-container: 255 255 255;
-  --color-primary-fixed: 212 232 160;
-  --color-primary-fixed-dim: 184 204 122;
-  --color-on-primary-fixed: 42 51 16;
-  --color-on-primary-fixed-variant: 74 93 35;
-  --color-inverse-primary: 168 184 122;
+  --color-primary-fixed: 255 214 199;
+  --color-primary-fixed-dim: 255 178 153;
+  --color-on-primary-fixed: 48 16 4;
+  --color-on-primary-fixed-variant: 255 150 115;
+  --color-inverse-primary: 230 90 50;
 
-  --color-secondary: 237 224 212;
-  --color-on-secondary: 61 50 40;
-  --color-secondary-container: 212 197 169;
-  --color-on-secondary-container: 61 50 40;
-  --color-secondary-fixed: 255 240 224;
-  --color-secondary-fixed-dim: 237 224 212;
-  --color-on-secondary-fixed: 42 34 28;
+  --color-secondary: 176 150 255;
+  --color-on-secondary: 20 12 40;
+  --color-secondary-container: 130 100 235;
+  --color-on-secondary-container: 255 255 255;
+  --color-secondary-fixed: 224 214 255;
+  --color-secondary-fixed-dim: 196 180 255;
+  --color-on-secondary-fixed: 30 20 60;
 
-  --color-tertiary: 197 186 170;
-  --color-on-tertiary: 61 50 40;
-  --color-tertiary-container: 166 152 133;
-  --color-on-tertiary-container: 42 34 28;
+  --color-tertiary: 110 224 160;
+  --color-on-tertiary: 6 30 18;
+  --color-tertiary-container: 52 196 120;
+  --color-on-tertiary-container: 255 255 255;
 
-  --color-surface: 30 32 27;
-  --color-surface-dim: 26 28 23;
-  --color-surface-bright: 61 64 51;
-  --color-surface-container-lowest: 22 24 18;
-  --color-surface-container-low: 36 38 31;
-  --color-surface-container: 40 42 34;
-  --color-surface-container-high: 50 53 43;
-  --color-surface-container-highest: 61 64 51;
-  --color-on-surface: 237 224 212;
-  --color-on-surface-variant: 197 186 170;
-  --color-inverse-surface: 237 224 212;
-  --color-inverse-on-surface: 42 42 42;
-  --color-outline: 166 152 133;
-  --color-outline-variant: 92 82 70;
-  --color-background: 24 26 21;
-  --color-on-background: 237 224 212;
-  --color-surface-variant: 50 53 43;
+  --color-surface: 20 18 24;
+  --color-surface-dim: 16 15 20;
+  --color-surface-bright: 44 40 50;
+  --color-surface-container-lowest: 13 12 16;
+  --color-surface-container-low: 24 22 28;
+  --color-surface-container: 28 26 33;
+  --color-surface-container-high: 36 33 42;
+  --color-surface-container-highest: 44 40 50;
+  --color-on-surface: 245 243 247;
+  --color-on-surface-variant: 168 163 176;
+  --color-inverse-surface: 245 243 247;
+  --color-inverse-on-surface: 28 26 33;
+  --color-outline: 92 87 100;
+  --color-outline-variant: 50 47 58;
+  --color-background: 13 12 16;
+  --color-on-background: 245 243 247;
+  --color-surface-variant: 36 33 42;
 
-  --color-error: 212 134 111;
-  --color-on-error: 255 255 255;
-  --color-error-container: 176 96 74;
+  --color-error: 255 99 99;
+  --color-on-error: 20 4 4;
+  --color-error-container: 180 50 50;
   --color-on-error-container: 255 255 255;
 
   /* Utility-specific variables for dark */
-  --glass-bg: 30, 32, 27;
-  --glass-border: 124, 140, 61;
-  --scrollbar-track: #181A15;
-  --scrollbar-thumb: #4A5D23;
-  --scrollbar-thumb-hover: #7C8C3D;
+  --glass-bg: 24, 22, 28;
+  --glass-border: 255, 111, 74;
+  --scrollbar-track: #14121A;
+  --scrollbar-thumb: #FF6B4A;
+  --scrollbar-thumb-hover: #FF8F6B;
   /* Dark mode shadows - more visible on dark bg */
-  --shadow-soft: 0 4px 24px rgba(0, 0, 0, 0.30);
-  --shadow-soft-lg: 0 8px 48px rgba(0, 0, 0, 0.40);
+  --shadow-soft: 0 4px 24px rgba(0, 0, 0, 0.45);
+  --shadow-soft-lg: 0 8px 56px rgba(0, 0, 0, 0.55);
   /* Hero overlay - matches dark background */
-  --hero-overlay: 24 26 21;
+  --hero-overlay: 13 12 16;
 }
 
 @layer utilities {
@@ -177,11 +181,11 @@
   }
 
   .olive-glow {
-    box-shadow: 0 0 12px rgba(var(--color-primary), 0.08);
+    box-shadow: 0 0 24px rgba(var(--color-primary), 0.25);
   }
 
   .cream-glow {
-    box-shadow: 0 0 12px rgba(var(--color-secondary), 0.12);
+    box-shadow: 0 0 24px rgba(var(--color-secondary), 0.3);
   }
 
   .text-gradient-olive {

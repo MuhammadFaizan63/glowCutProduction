@@ -28,7 +28,7 @@ export default function SalonCard({ salon }) {
             alt={name}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-surface/60 via-transparent to-transparent" />
+          {/* Gradient removed as per request */}
           <div className="absolute top-4 right-4 bg-background/80 backdrop-blur-md px-sm py-xs rounded-full flex items-center gap-xs border border-primary/30">
             <MdStar className="text-primary text-sm" />
             <span className="text-on-surface font-label-md text-label-md">{rating.toFixed ? rating.toFixed(1) : rating}</span>

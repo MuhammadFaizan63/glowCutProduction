@@ -433,7 +433,7 @@ export default function Home() {
                 alt={st.name}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
+              {/* Gradient removed as per request */}
               <div className="absolute bottom-0 inset-x-0 p-4">
                 <div className="flex items-center gap-1 mb-1">
                   <div className="w-2 h-2 bg-primary rounded-full shadow-warm-sm" />

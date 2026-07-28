@@ -13,7 +13,7 @@ import {
 import { motion } from 'framer-motion';
 import Loader from '../../../components/ui/Loader';
 import EmptyState from '../../../components/ui/EmptyState';
-import { useSalonList } from '../../../hooks/useSalon';
+import { getNearbySalons, getTopRatedSalons } from '../../../services/salonService';
 
 const AVAILABILITY_OPTIONS = ['Next 2 hours', 'Today', 'Tomorrow'];
 const RATING_OPTIONS = ['Any Rating', '4.0+ Stars', '4.5+ Stars'];
@@ -33,14 +33,62 @@ export default function NearbySalons() {
   const [searchParams] = useSearchParams();
   const initialArea = searchParams.get('area') || '';
 
-  const { salons, isLoading, search } = useSalonList();
+  const [salons, setSalons] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
   const [view, setView] = useState('list');
   const [availability, setAvailability] = useState('Next 2 hours');
   const [minRating, setMinRating] = useState('4.0+ Stars');
 
   React.useEffect(() => {
-    if (initialArea) search(initialArea);
-  }, [initialArea, search]);
+    let mounted = true;
+
+    const fetchSalons = async (lat, lng) => {
+      try {
+        setIsLoading(true);
+        let data = [];
+        if (lat && lng) {
+          data = await getNearbySalons({ lat, lng, maxDistance: 50000 });
+        }
+        if (!data || data.length === 0) {
+          // Fallback to top rated if no nearby found or location missing
+          data = await getTopRatedSalons(10);
+        }
+        if (mounted) setSalons(data);
+      } catch (err) {
+        console.error('Error fetching salons:', err);
+        if (mounted) {
+          try {
+            const fallback = await getTopRatedSalons(10);
+            setSalons(fallback);
+          } catch (e) {
+            setSalons([]);
+          }
+        }
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    };
+
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          fetchSalons(position.coords.latitude, position.coords.longitude);
+        },
+        (error) => {
+          console.warn('Geolocation error or denied, using fallback', error);
+          fetchSalons(null, null);
+        },
+        { timeout: 5000 }
+      );
+    } else {
+      fetchSalons(null, null);
+    }
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const filteredSalons = useMemo(() => {
     if (minRating === 'Any Rating') return salons;

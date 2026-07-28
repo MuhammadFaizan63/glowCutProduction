@@ -43,8 +43,8 @@ export default function PrivacyPolicy() {
         <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6 border border-primary/30">
           <MdShield className="text-3xl text-primary" />
         </div>
-        <h1 className="font-display-lg text-display-lg text-on-surface mb-4">Privacy Policy</h1>
-        <p className="text-on-surface-variant font-label-md">Last Updated: July 28, 2026</p>
+        <h1 className="font-display-lg text-display-lg text-gray-900 dark:text-white mb-4">Privacy Policy</h1>
+        <p className="text-gray-700 dark:text-gray-300 font-label-md">Last Updated: July 28, 2026</p>
       </motion.header>
 
       <div className="flex flex-col gap-8">
@@ -63,16 +63,16 @@ export default function PrivacyPolicy() {
                   <Icon className="text-2xl text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h2 className="font-headline-lg text-headline-lg text-on-surface mb-4">
+                  <h2 className="font-headline-lg text-headline-lg text-gray-900 dark:text-white mb-4">
                     {section.title}
                   </h2>
-                  <p className="text-on-surface-variant leading-relaxed mb-4">
+                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
                     {section.text}
                   </p>
                   {section.list && (
                     <ul className="space-y-2">
                       {section.list.map((item, i) => (
-                        <li key={i} className="flex items-start gap-3 text-on-surface-variant">
+                        <li key={i} className="flex items-start gap-3 text-gray-700 dark:text-gray-300">
                           <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
                           {item}
                         </li>

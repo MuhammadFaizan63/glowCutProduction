@@ -25,7 +25,7 @@ const JOBS = [
 
 export default function Careers() {
   return (
-    <main className="pt-24 pb-32 px-margin-mobile md:px-margin-desktop max-w-7xl mx-auto font-body-md text-on-surface">
+    <main className="pt-24 pb-32 px-margin-mobile md:px-margin-desktop max-w-7xl mx-auto font-body-md text-gray-900 dark:text-white">
       {/* Hero */}
       <section className="relative h-[200px] md:h-[400px] w-full overflow-hidden rounded-2xl mb-xl">
         <img
@@ -35,8 +35,8 @@ export default function Careers() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
         <div className="absolute bottom-10 left-10 md:left-20 max-w-2xl">
-          <h1 className="font-display-lg text-display-lg text-white mb-4">Join Our Team</h1>
-          <p className="text-on-surface-variant font-body-lg">
+          <h1 className="font-display-lg text-display-lg text-gray-900 dark:text-white mb-4">Join Our Team</h1>
+          <p className="text-gray-700 dark:text-gray-300 font-body-lg">
             Help us revolutionize the grooming industry with Cyber-Chic technology and premium service.
           </p>
         </div>
@@ -44,15 +44,15 @@ export default function Careers() {
 
       {/* Intro */}
       <section className="max-w-3xl mx-auto text-center mb-xl">
-        <h2 className="font-headline-lg text-headline-lg text-white mb-4">Why Work With Us?</h2>
-        <p className="text-on-surface-variant leading-relaxed">
+        <h2 className="font-headline-lg text-headline-lg text-gray-900 dark:text-white mb-4">Why Work With Us?</h2>
+        <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
           At Glow Cut, we're building the future of salon bookings. We combine high-end aesthetics with cutting-edge technology. Our team is passionate, diverse, and dedicated to elevating the everyday grooming experience into something extraordinary.
         </p>
       </section>
 
       {/* Open Positions */}
       <section>
-        <h2 className="font-headline-lg text-headline-lg text-white mb-8 flex items-center gap-2">
+        <h2 className="font-headline-lg text-headline-lg text-gray-900 dark:text-white mb-8 flex items-center gap-2">
           <MdWork className="text-secondary" /> Open Positions
         </h2>
         
@@ -61,21 +61,21 @@ export default function Careers() {
             <div key={job.title} className="glass-panel p-lg rounded-2xl border border-white/5 hover:border-secondary transition-colors group">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h3 className="font-headline-md text-headline-md text-white group-hover:text-secondary transition-colors">{job.title}</h3>
+                  <h3 className="font-headline-md text-headline-md text-gray-900 dark:text-white group-hover:text-secondary transition-colors">{job.title}</h3>
                   <p className="text-primary font-bold text-sm uppercase tracking-widest mt-1">{job.department}</p>
                 </div>
-                <span className="bg-surface-container-high px-3 py-1 rounded-full text-xs text-on-surface-variant">
+                <span className="bg-surface-container-high px-3 py-1 rounded-full text-xs text-gray-700 dark:text-gray-300">
                   {job.type}
                 </span>
               </div>
               
               <div className="flex justify-between items-end mt-8 pt-4 border-t border-white/5">
-                <p className="text-on-surface-variant flex items-center gap-1 text-sm">
+                <p className="text-gray-700 dark:text-gray-300 flex items-center gap-1 text-sm">
                   <MdLocationOn /> {job.location}
                 </p>
                 <button 
                   onClick={() => toast('Application portal opening soon!')}
-                  className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-white group-hover:bg-secondary group-hover:text-on-secondary transition-all shadow-sm"
+                  className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-gray-900 dark:text-white group-hover:bg-secondary group-hover:text-on-secondary transition-all shadow-sm"
                 >
                   <MdArrowForward />
                 </button>

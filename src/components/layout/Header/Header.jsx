@@ -47,7 +47,7 @@ export default function Header() {
   };
 
   return (
-    <nav className="fixed top-0 w-full z-50 flex justify-between items-center px-margin-mobile md:px-margin-desktop h-20 bg-surface/70 backdrop-blur-2xl border-b border-primary/10">
+    <nav className="fixed top-0 w-full z-50 flex justify-between items-center px-margin-mobile md:px-margin-desktop h-20 bg-[#FFF4EE] shadow-sm border-b border-primary/10">
       <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-transparent pointer-events-none" />
 
       <Link to="/" className="flex items-center gap-base flex-shrink-0 relative z-10">
